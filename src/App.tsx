@@ -1,13 +1,16 @@
 import { useCallback } from 'react'
 import Header from './components/Header.tsx'
 import Controls from './components/Controls.tsx'
-import Hero from './components/Hero.tsx'
+import AddColor from './components/AddColor.tsx'
+import AnimatedPaletteItem from './components/AnimatedPaletteItem.tsx'
 import { useHistory } from './hooks/useHistory'
 import { getSavedPalettes, savePalette, removePalette } from './helpers/storage.ts'
 import appStyles from './App.module.css'
 import OpenDialog from './components/OpenDialog.tsx'
 import SaveDialog from './components/SaveDialog.tsx'
+import EditColorDialog from './components/EditColorDialog.tsx'
 import { useState } from 'react'
+import paletteStyles from './components/Palette.module.css'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
@@ -21,17 +24,35 @@ function App() {
     undo,
     redo,
     replace,
-  } = useHistory<string>({ initialHistory: [], initialIndex: -1 })
+  } = useHistory<string[]>({ initialHistory: [], initialIndex: -1 })
 
   const generateRandomColor = useCallback((): string => {
     const value = Math.floor(Math.random() * 0xffffff)
     return `#${value.toString(16).padStart(6, '0')}`
   }, [])
 
-  const handleHeroClick = useCallback(() => {
-    const color = generateRandomColor()
-    push(color)
-  }, [generateRandomColor, push])
+  const addColor = useCallback(() => {
+    const nextColor = generateRandomColor()
+    const base = current ?? []
+    if (base.length >= 5) return
+    push([...base, nextColor])
+  }, [current, generateRandomColor, push])
+
+  const rerollAt = useCallback((index: number) => {
+    const base = current ?? []
+    if (!base[index]) return
+    const next = [...base]
+    next[index] = generateRandomColor()
+    push(next)
+  }, [current, generateRandomColor, push])
+
+  const deleteAt = useCallback((index: number) => {
+    const base = current ?? []
+    const next = base.filter((_, i) => i !== index)
+    push(next)
+  }, [current, push])
+
+  const [editIndex, setEditIndex] = useState<number | null>(null)
 
   const handleOpen = useCallback(() => {
     setIsOpenDialog(true)
@@ -54,7 +75,32 @@ function App() {
           canRedo={canRedo}
         />
       </div>
-      <Hero color={current ?? null} onClick={handleHeroClick} />
+      <div className={paletteStyles.row}>
+        {(current ?? []).map((c, i) => (
+          <AnimatedPaletteItem
+            key={`${i}-${c}`}
+            color={c}
+            index={i}
+            onEdit={() => setEditIndex(i)}
+            onReroll={() => rerollAt(i)}
+            onDelete={() => deleteAt(i)}
+          />
+        ))}
+        {(current ?? []).length < 5 ? <AddColor onAdd={addColor} /> : null}
+      </div>
+      {editIndex !== null && (current ?? [])[editIndex] ? (
+        <EditColorDialog
+          initial={(current ?? [])[editIndex]!}
+          onCancel={() => setEditIndex(null)}
+          onSave={(value) => {
+            const base = current ?? []
+            const next = [...base]
+            next[editIndex!] = value
+            push(next)
+            setEditIndex(null)
+          }}
+        />
+      ) : null}
       {isOpenDialog ? (
         <OpenDialog
           palettes={getSavedPalettes()}
@@ -62,7 +108,7 @@ function App() {
           onSelect={(id) => {
             const p = getSavedPalettes().find((x) => x.id === id)
             if (p) {
-              replace(p.colors, p.colors.length - 1)
+              replace([p.colors], p.colors.length - 1)
             }
             setIsOpenDialog(false)
           }}
@@ -80,7 +126,9 @@ function App() {
               setIsSaveDialog(false)
               return
             }
-            savePalette(history, name)
+            // Save the latest palette array (or entire history if desired)
+            const toSave = (current ?? [])
+            savePalette(toSave, name)
             setIsSaveDialog(false)
           }}
         />
