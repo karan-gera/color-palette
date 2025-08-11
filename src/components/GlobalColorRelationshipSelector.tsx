@@ -29,12 +29,10 @@ export default function GlobalColorRelationshipSelector({
           className={styles.action}
           onClick={onGlobalReroll}
           style={{ 
-            background: '#f0f0f0',
-            fontWeight: 'bold',
-            border: '2px solid #aaa'
+            fontWeight: 'bold'
           }}
         >
-          Reroll All
+          reroll all
         </button>
         <div style={{ position: 'relative' }}>
           <button
@@ -51,8 +49,8 @@ export default function GlobalColorRelationshipSelector({
                 top: '100%',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                background: '#fff',
-                border: '1px solid #cfcfcf',
+                background: 'var(--modal-bg)',
+                border: '1px solid var(--modal-border)',
                 borderRadius: '6px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 zIndex: 10,
@@ -70,7 +68,7 @@ export default function GlobalColorRelationshipSelector({
                   }}
                   title={rel.description}
                   style={{
-                    background: rel.value === currentRelationship ? '#f0f0f0' : 'transparent'
+                    background: rel.value === currentRelationship ? 'var(--hover-bg)' : 'transparent'
                   }}
                 >
                   <div style={{ fontWeight: rel.value === currentRelationship ? 'bold' : 'normal' }}>
