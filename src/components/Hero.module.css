@@ -1,0 +1,22 @@
+.hero {
+  border: 2px dotted currentColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 200px;
+  height: 200px;
+  transition: background-color 0.3s ease;
+  background: transparent;
+}
+
+.plus {
+  font-family: monospace;
+  font-size: 4rem;
+  line-height: 1;
+  color: currentColor;
+  user-select: none;
+}
+
+
