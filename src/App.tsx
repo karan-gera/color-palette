@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import Header from './components/Header.tsx'
 import Controls from './components/Controls.tsx'
-import AddColor from './components/AddColor.tsx'
-import AnimatedPaletteItem from './components/AnimatedPaletteItem.tsx'
+import AnimatedPaletteContainer from './components/AnimatedPaletteContainer.tsx'
+import GlobalColorRelationshipSelector from './components/GlobalColorRelationshipSelector.tsx'
 import { useHistory } from './hooks/useHistory'
 import { getSavedPalettes, savePalette, removePalette } from './helpers/storage.ts'
 import appStyles from './App.module.css'
@@ -10,7 +10,7 @@ import OpenDialog from './components/OpenDialog.tsx'
 import SaveDialog from './components/SaveDialog.tsx'
 import EditColorDialog from './components/EditColorDialog.tsx'
 import { useState } from 'react'
-import paletteStyles from './components/Palette.module.css'
+import { generateRelatedColor, type ColorRelationship } from './helpers/colorTheory.ts'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
@@ -31,28 +31,66 @@ function App() {
     return `#${value.toString(16).padStart(6, '0')}`
   }, [])
 
+  const [editIndex, setEditIndex] = useState<number | null>(null)
+  const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
+  const [lockedStates, setLockedStates] = useState<boolean[]>([])
+
   const addColor = useCallback(() => {
-    const nextColor = generateRandomColor()
     const base = current ?? []
     if (base.length >= 5) return
+    
+    let nextColor: string
+    if (globalRelationship === 'random') {
+      nextColor = generateRandomColor()
+    } else {
+      // Use existing colors as reference for new color
+      const lockedColors = base.filter((_, i) => lockedStates[i])
+      nextColor = generateRelatedColor(lockedColors, globalRelationship, base[base.length - 1])
+    }
+    
     push([...base, nextColor])
-  }, [current, generateRandomColor, push])
+    setLockedStates(prev => [...prev, false])
+  }, [current, globalRelationship, lockedStates, generateRandomColor, push])
 
   const rerollAt = useCallback((index: number) => {
     const base = current ?? []
-    if (!base[index]) return
+    if (!base[index] || lockedStates[index]) return
+    
+    // Get locked colors as reference
+    const lockedColors = base.filter((_, i) => lockedStates[i])
+    
     const next = [...base]
-    next[index] = generateRandomColor()
+    next[index] = generateRelatedColor(lockedColors, globalRelationship, base[index])
     push(next)
-  }, [current, generateRandomColor, push])
+  }, [current, globalRelationship, lockedStates, push])
+
+  const rerollAll = useCallback(() => {
+    const base = current ?? []
+    if (base.length === 0) return
+    
+    // Get locked colors as reference
+    const lockedColors = base.filter((_, i) => lockedStates[i])
+    
+    const next = base.map((color, index) => 
+      lockedStates[index] ? color : generateRelatedColor(lockedColors, globalRelationship, color)
+    )
+    push(next)
+  }, [current, globalRelationship, lockedStates, push])
 
   const deleteAt = useCallback((index: number) => {
     const base = current ?? []
     const next = base.filter((_, i) => i !== index)
     push(next)
+    setLockedStates(prev => prev.filter((_, i) => i !== index))
   }, [current, push])
 
-  const [editIndex, setEditIndex] = useState<number | null>(null)
+  const toggleLockAt = useCallback((index: number) => {
+    setLockedStates(prev => {
+      const next = [...prev]
+      next[index] = !next[index]
+      return next
+    })
+  }, [])
 
   const handleOpen = useCallback(() => {
     setIsOpenDialog(true)
@@ -61,6 +99,19 @@ function App() {
   const handleSave = useCallback(() => {
     setIsSaveDialog(true)
   }, [])
+
+  const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
+    setGlobalRelationship(relationship)
+    // Auto-reroll all unlocked colors when relationship changes
+    const base = current ?? []
+    if (base.length > 0) {
+      const lockedColors = base.filter((_, i) => lockedStates[i])
+      const next = base.map((color, index) => 
+        lockedStates[index] ? color : generateRelatedColor(lockedColors, relationship, color)
+      )
+      push(next)
+    }
+  }, [current, lockedStates, push])
 
   return (
     <div className={appStyles.container}>
@@ -75,19 +126,20 @@ function App() {
           canRedo={canRedo}
         />
       </div>
-      <div className={paletteStyles.row}>
-        {(current ?? []).map((c, i) => (
-          <AnimatedPaletteItem
-            key={`${i}-${c}`}
-            color={c}
-            index={i}
-            onEdit={() => setEditIndex(i)}
-            onReroll={() => rerollAt(i)}
-            onDelete={() => deleteAt(i)}
-          />
-        ))}
-        {(current ?? []).length < 5 ? <AddColor onAdd={addColor} /> : null}
-      </div>
+      <AnimatedPaletteContainer
+        colors={current ?? []}
+        lockedStates={lockedStates}
+        onEdit={setEditIndex}
+        onReroll={rerollAt}
+        onDelete={deleteAt}
+        onToggleLock={toggleLockAt}
+        onAdd={addColor}
+      />
+      <GlobalColorRelationshipSelector
+        currentRelationship={globalRelationship}
+        onRelationshipChange={handleRelationshipChange}
+        onGlobalReroll={rerollAll}
+      />
       {editIndex !== null && (current ?? [])[editIndex] ? (
         <EditColorDialog
           initial={(current ?? [])[editIndex]!}
@@ -109,11 +161,18 @@ function App() {
             const p = getSavedPalettes().find((x) => x.id === id)
             if (p) {
               replace([p.colors], p.colors.length - 1)
+              // Lock all loaded colors by default
+              setLockedStates(new Array(p.colors.length).fill(true))
             }
             setIsOpenDialog(false)
           }}
           onRemove={(id) => {
             removePalette(id)
+          }}
+          onPalettesUpdated={() => {
+            // Force refresh of dialog to show new palettes
+            setIsOpenDialog(false)
+            setTimeout(() => setIsOpenDialog(true), 100)
           }}
         />
       ) : null}

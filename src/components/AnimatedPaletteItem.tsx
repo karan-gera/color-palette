@@ -5,12 +5,14 @@ import styles from './Palette.module.css'
 type AnimatedPaletteItemProps = {
   color: string
   index: number
+  isLocked: boolean
   onEdit: () => void
   onReroll: () => void
   onDelete: () => void
+  onToggleLock: () => void
 }
 
-export default function AnimatedPaletteItem({ color, index, onEdit, onReroll, onDelete }: AnimatedPaletteItemProps) {
+export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock }: AnimatedPaletteItemProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -30,9 +32,11 @@ export default function AnimatedPaletteItem({ color, index, onEdit, onReroll, on
     <div className={`${styles.cell} ${isVisible ? styles.shown : styles.enter}`}>
       <PaletteItem
         color={color}
+        isLocked={isLocked}
         onEdit={onEdit}
         onReroll={onReroll}
         onDelete={handleDelete}
+        onToggleLock={onToggleLock}
       />
     </div>
   )

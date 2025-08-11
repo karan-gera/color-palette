@@ -25,7 +25,18 @@ export default function SaveDialog({ defaultName, onCancel, onSave }: SaveDialog
         </label>
         <div className={styles.actions}>
           <button className={styles.itemButton} onClick={onCancel}>cancel</button>
-          <button className={styles.itemButton} onClick={() => onSave(nameValue || undefined)}>save</button>
+          <button 
+            className={styles.itemButton} 
+            onClick={() => onSave(nameValue || undefined)}
+            style={{
+              background: '#222',
+              color: '#fff',
+              fontWeight: 'bold',
+              border: '1px solid #222'
+            }}
+          >
+            save
+          </button>
         </div>
       </div>
     </Modal>

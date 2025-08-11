@@ -4,6 +4,11 @@
   gap: 1.25rem;
   align-items: flex-start;
   justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.animating {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .controls {
@@ -26,6 +31,32 @@
 
 .action:hover {
   background: #f4f4f4;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  text-align: left;
+  border: none;
+  background: none;
+  font-family: monospace;
+  color: #222;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownItem:hover {
+  background: #f4f4f4;
+}
+
+.dropdownItem:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.dropdownItem:last-child {
+  border-radius: 0 0 6px 6px;
 }
 
 .cell {
