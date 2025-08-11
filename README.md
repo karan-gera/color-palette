@@ -1,69 +1,145 @@
-# React + TypeScript + Vite
+# Color Palette Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, interactive color palette generator built with React, TypeScript, and Vite. Create, edit, and save beautiful color palettes with advanced color theory relationships and a clean, monospace design aesthetic.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Interactive Color Creation
+- **Hero Color Generation**: Click the large circle to generate a random starting color
+- **Smart Color Relationships**: Choose from multiple color theory relationships:
+  - Complementary
+  - Analogous  
+  - Triadic
+  - Tetradic
+  - Split-complementary
+  - Monochromatic
+  - Random
+- **Individual Color Controls**: Edit, reroll, or delete individual colors
+- **Color Locking**: Lock colors to prevent changes during global rerolls
 
-## Expanding the ESLint configuration
+### Advanced Controls
+- **Undo/Redo**: Full history tracking with undo and redo functionality
+- **Global Reroll**: Generate entire new palettes based on selected color relationships
+- **Manual Color Editing**: Click "edit" to input specific hex values
+- **Save & Load**: Save palettes locally and reload them later
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Modern Design
+- **Dark/Light Theme**: Toggle between themes with smooth transitions
+- **Monospace Typography**: Clean, developer-friendly aesthetic
+- **Responsive Layout**: Works seamlessly across different screen sizes
+- **Smooth Animations**: Polished interactions with CSS transitions
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Persistence
+- **Local Storage**: Automatically saves palettes to your browser
+- **Palette Management**: Name, save, and organize multiple palettes
+- **Export Ready**: Copy hex values for use in your projects
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd color-palette
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist` directory.
+
+## How to Use
+
+1. **Generate a Starting Color**: Click the large circle to create a random color
+2. **Choose Relationships**: Use the dropdown to select how new colors relate to your base color
+3. **Add Colors**: The palette will automatically generate colors based on your selected relationship
+4. **Fine-tune**: 
+   - Lock colors you want to keep with the lock icon
+   - Edit individual colors by clicking "edit"
+   - Reroll individual colors with "reroll"
+   - Delete unwanted colors with "delete"
+5. **Save Your Work**: Use the "save" button to store palettes for later use
+6. **Load Saved Palettes**: Use the "open" button to browse and load saved palettes
+
+## Technical Stack
+
+- **Frontend**: React 19 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: CSS Modules with CSS custom properties
+- **State Management**: React hooks with custom history management
+- **Color Theory**: Custom HSL/hex conversion and relationship algorithms
+- **Storage**: Browser localStorage for persistence
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── Header.tsx       # App header with theme toggle
+│   ├── Controls.tsx     # Undo/redo/save/open controls  
+│   ├── Hero.tsx         # Main color circle
+│   ├── PaletteItem.tsx  # Individual color items
+│   └── ...             # Additional UI components
+├── hooks/
+│   └── useHistory.ts    # Undo/redo state management
+├── helpers/
+│   ├── colorTheory.ts   # Color relationship algorithms
+│   └── storage.ts       # localStorage utilities
+└── index.css           # Global styles and theme variables
+```
+
+## Color Theory Implementation
+
+The app implements several color harmony relationships:
+
+- **Complementary**: Colors opposite on the color wheel (180° apart)
+- **Analogous**: Adjacent colors on the color wheel (30° apart)
+- **Triadic**: Three colors equally spaced on the color wheel (120° apart)
+- **Tetradic**: Four colors forming a rectangle on the color wheel
+- **Split-complementary**: Base color plus two colors adjacent to its complement
+- **Monochromatic**: Variations in saturation and lightness of a single hue
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+### Code Style
+
+- TypeScript strict mode enabled
+- Functional components with hooks
+- CSS Modules for styling
+- Monospace typography throughout
+- Consistent naming conventions (PascalCase for components, camelCase for variables)
+
+---
+
+Built with ❤️ using React, TypeScript, and modern web technologies.
