@@ -49,4 +49,8 @@ export function removePalette(id: string): void {
   write(palettes)
 }
 
+export function setAllPalettes(next: SavedPalette[]): void {
+  write(next)
+}
+
 

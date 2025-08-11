@@ -3,10 +3,15 @@ import Header from './components/Header.tsx'
 import Controls from './components/Controls.tsx'
 import Hero from './components/Hero.tsx'
 import { useHistory } from './hooks/useHistory'
-import { getSavedPalettes, savePalette, type SavedPalette } from './helpers/storage.ts'
+import { getSavedPalettes, savePalette, removePalette } from './helpers/storage.ts'
 import appStyles from './App.module.css'
+import OpenDialog from './components/OpenDialog.tsx'
+import SaveDialog from './components/SaveDialog.tsx'
+import { useState } from 'react'
 
 function App() {
+  const [isOpenDialog, setIsOpenDialog] = useState(false)
+  const [isSaveDialog, setIsSaveDialog] = useState(false)
   const {
     history,
     current,
@@ -29,34 +34,12 @@ function App() {
   }, [generateRandomColor, push])
 
   const handleOpen = useCallback(() => {
-    const palettes: SavedPalette[] = getSavedPalettes()
-    if (palettes.length === 0) {
-      window.alert('No saved palettes found.')
-      return
-    }
-    const list = palettes
-      .map((p, idx) => `${idx}. ${p.name} (${p.colors.length} colors)`) 
-      .join('\n')
-    const input = window.prompt(`Enter the number of the palette to load:\n${list}`)
-    if (input == null) return
-    const indexToLoad = Number.parseInt(input, 10)
-    if (Number.isNaN(indexToLoad) || indexToLoad < 0 || indexToLoad >= palettes.length) {
-      window.alert('Invalid selection.')
-      return
-    }
-    const selected = palettes[indexToLoad]
-    replace(selected.colors, selected.colors.length - 1)
-  }, [replace])
+    setIsOpenDialog(true)
+  }, [])
 
   const handleSave = useCallback(() => {
-    if (history.length === 0) {
-      window.alert('Nothing to save yet. Click the plus to generate colors.')
-      return
-    }
-    const name = window.prompt('Name this palette (optional):') ?? undefined
-    const saved = savePalette(history, name)
-    window.alert(`Saved: ${saved.name}`)
-  }, [history])
+    setIsSaveDialog(true)
+  }, [])
 
   return (
     <div className={appStyles.container}>
@@ -72,6 +55,36 @@ function App() {
         />
       </div>
       <Hero color={current ?? null} onClick={handleHeroClick} />
+      {isOpenDialog ? (
+        <OpenDialog
+          palettes={getSavedPalettes()}
+          onCancel={() => setIsOpenDialog(false)}
+          onSelect={(id) => {
+            const p = getSavedPalettes().find((x) => x.id === id)
+            if (p) {
+              replace(p.colors, p.colors.length - 1)
+            }
+            setIsOpenDialog(false)
+          }}
+          onRemove={(id) => {
+            removePalette(id)
+          }}
+        />
+      ) : null}
+      {isSaveDialog ? (
+        <SaveDialog
+          defaultName={`Palette ${new Date().toLocaleString()}`}
+          onCancel={() => setIsSaveDialog(false)}
+          onSave={(name) => {
+            if (history.length === 0) {
+              setIsSaveDialog(false)
+              return
+            }
+            savePalette(history, name)
+            setIsSaveDialog(false)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

@@ -1,0 +1,84 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: #ffffff;
+  color: #222;
+  border: 1px solid #cfcfcf;
+  border-radius: 10px;
+  width: min(520px, 92vw);
+  max-width: 92vw;
+  padding: 1rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  font-family: monospace;
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: opacity 0.3s ease;
+}
+
+.itemFade {
+  opacity: 0;
+}
+
+.itemButton {
+  background: #fff;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-family: monospace;
+  color: #222;
+  text-transform: lowercase;
+  cursor: pointer;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.itemButton:hover:not(:disabled) {
+  background: #f4f4f4;
+}
+
+.itemButton:disabled {
+  opacity: 0.45;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font-family: monospace;
+  box-sizing: border-box;
+  display: block;
+}
+

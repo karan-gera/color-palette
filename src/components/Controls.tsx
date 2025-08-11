@@ -1,4 +1,3 @@
-import React from 'react'
 import styles from './Controls.module.css'
 
 type ControlsProps = {
@@ -24,7 +23,7 @@ export default function Controls({
         open
       </button>
       <button className={styles.btn} onClick={onSave}>
-        load
+        save
       </button>
       <button className={`${styles.btn} ${!canUndo ? styles.disabled : ''}`} onClick={onUndo} disabled={!canUndo}>
         [undo]

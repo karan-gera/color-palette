@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import styles from './Hero.module.css'
 
 type HeroProps = {
@@ -22,7 +22,13 @@ export default function Hero({ color, onClick }: HeroProps) {
       type="button"
       onClick={onClick}
       className={styles.hero}
-      style={{ backgroundColor: color ?? '#ffffff', color: textColor }}
+      style={{
+        // Use CSS variables to ensure transitions apply across value changes
+        ['--hero-bg' as any]: color ?? '#ffffff',
+        ['--hero-fg' as any]: textColor,
+        color: textColor,
+        borderColor: 'currentColor',
+      }}
       aria-label="Generate color"
     >
       <span className={styles.plus}>+</span>
