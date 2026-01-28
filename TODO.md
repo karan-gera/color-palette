@@ -32,6 +32,30 @@ Encode the palette in a shareable URL for frictionless sharing.
 
 ---
 
+## Export Palette
+
+Export the entire palette in standard formats for use in design tools and code.
+
+- [ ] CSS variables (`:root { --color-1: #ff5733; ... }`)
+- [ ] JSON (`{ "colors": ["#ff5733", ...] }`)
+- [ ] Tailwind config (full `colors` object)
+- [ ] SCSS variables (`$color-1: #ff5733; ...`)
+- [ ] Adobe ASE (Adobe Swatch Exchange)
+- [ ] GPL (GIMP Palette)
+
+**UI/UX:**
+- Add "Export" button in the save/load controls area
+- Icon: `Download` or `FileOutput` (something that conveys "take it with you")
+- Opens a modal/dropdown with format options
+- One-click copy or download depending on format
+
+**Help text (in export modal):**
+> Can't find your format? Click any color's hex code to copy it individually in HEX, RGB, HSL, CSS, Tailwind, or SCSS.
+
+**Implementation:** Generate formatted strings client-side. For binary formats like ASE, use appropriate encoding.
+
+---
+
 ## Color Blindness Preview
 
 Toggle to simulate how the palette appears to people with color vision deficiencies.
@@ -97,10 +121,11 @@ Drag-and-drop an image to extract dominant colors.
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
 2. **Share via URL** - Highest impact, lowest effort
-3. **Quick Palette Presets** - Lowers barrier to entry
-4. **Contrast Checker** - Accessibility focus, differentiator
-5. **Color Blindness Preview** - Accessibility focus, rarely free
-6. **Extract from Image** - Big feature, more complex
+3. **Export Palette** - Natural companion to share, completes the save/export flow
+4. **Quick Palette Presets** - Lowers barrier to entry
+5. **Contrast Checker** - Accessibility focus, differentiator
+6. **Color Blindness Preview** - Accessibility focus, rarely free
+7. **Extract from Image** - Big feature, more complex
 
 ---
 
