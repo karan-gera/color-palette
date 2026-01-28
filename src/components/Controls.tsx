@@ -1,4 +1,6 @@
-import styles from './Controls.module.css'
+import { Undo2, Redo2, FolderOpen, Save } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type ControlsProps = {
   onOpen: () => void
@@ -18,21 +20,68 @@ export default function Controls({
   canRedo,
 }: ControlsProps) {
   return (
-    <div className={styles.row}>
-      <button className={styles.btn} onClick={onOpen}>
-        open
-      </button>
-      <button className={styles.btn} onClick={onSave}>
-        save
-      </button>
-      <button className={`${styles.btn} ${!canUndo ? styles.disabled : ''}`} onClick={onUndo} disabled={!canUndo}>
-        [undo]
-      </button>
-      <button className={`${styles.btn} ${!canRedo ? styles.disabled : ''}`} onClick={onRedo} disabled={!canRedo}>
-        [redo]
-      </button>
-    </div>
+    <TooltipProvider>
+      <div className="flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={onOpen} className="lowercase font-mono">
+              <FolderOpen className="size-4" />
+              open
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">open saved palette</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" onClick={onSave} className="lowercase font-mono">
+              <Save className="size-4" />
+              save
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">save current palette</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="font-mono"
+            >
+              <Undo2 className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">undo</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="font-mono"
+            >
+              <Redo2 className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">redo</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   )
 }
-
-

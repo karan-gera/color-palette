@@ -1,5 +1,9 @@
-import Modal from './Modal.tsx'
-import styles from './Modal.module.css'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 type NotificationModalProps = {
   message: string
@@ -8,22 +12,17 @@ type NotificationModalProps = {
 
 export default function NotificationModal({ message, onClose }: NotificationModalProps) {
   return (
-    <Modal title="" onClose={onClose}>
-      <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-        <div style={{ 
-          fontSize: '1rem', 
-          fontFamily: 'monospace', 
-          marginBottom: '1.5rem',
-          lineHeight: 1.4
-        }}>
-          {message}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+        <div className="text-center py-2">
+          <p className="font-mono text-sm leading-relaxed">{message}</p>
         </div>
-        <div className={styles.actions}>
-          <button className={styles.itemButton} onClick={onClose}>
-            OK
-          </button>
-        </div>
-      </div>
-    </Modal>
+        <DialogFooter className="sm:justify-center">
+          <Button onClick={onClose} className="font-mono lowercase">
+            ok
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -1,9 +1,16 @@
-import Modal from './Modal.tsx'
-import NotificationModal from './NotificationModal.tsx'
-import styles from './Modal.module.css'
-import type { SavedPalette } from '../helpers/storage.ts'
-import { exportAllPalettes, importPalettesFromFile, mergePalettes } from '../helpers/storage.ts'
 import { useEffect, useState, useRef } from 'react'
+import { Trash2, Download, Upload } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import NotificationModal from './NotificationModal'
+import type { SavedPalette } from '@/helpers/storage'
+import { exportAllPalettes, importPalettesFromFile, mergePalettes } from '@/helpers/storage'
 
 type OpenDialogProps = {
   palettes: SavedPalette[]
@@ -41,7 +48,6 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
       const result = mergePalettes(importedPalettes)
       onPalettesUpdated()
       
-      // Show success message with detailed information
       let message = 'Palettes imported successfully!'
       if (result.duplicates > 0) {
         message += ` (${result.duplicates} duplicate${result.duplicates > 1 ? 's' : ''} skipped)`
@@ -50,73 +56,134 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
       setNotificationMessage(message)
       setShowNotification(true)
     } catch (error) {
-      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setNotificationMessage(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setShowNotification(true)
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
   }
 
+  const handleDelete = (id: string) => {
+    setFading((prev) => ({ ...prev, [id]: true }))
+    setTimeout(() => {
+      onRemove(id)
+      setList((prev) => prev.filter((x) => x.id !== id))
+    }, 200)
+  }
+
   return (
-    <Modal title="open palette" onClose={onCancel}>
-      <div className={styles.list}>
-        {list.length === 0 ? (
-          <div style={{ opacity: 0.7 }}>no saved palettes</div>
-        ) : (
-          list.map((p) => (
-            <div key={p.id} className={`${styles.item} ${fading[p.id] ? styles.itemFade : ''}`}>
-              <div style={{ display: 'grid' }}>
-                <strong>{p.name}</strong>
-                <span style={{ fontSize: '0.85rem', opacity: 0.7 }}>{new Date(p.savedAt).toLocaleString()}</span>
+    <>
+      <Dialog open onOpenChange={(open) => !open && onCancel()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-mono lowercase">open palette</DialogTitle>
+          </DialogHeader>
+          
+          <div className="max-h-[50vh] overflow-y-auto -mx-2 px-2">
+            {list.length === 0 ? (
+              <p className="text-muted-foreground text-sm font-mono text-center py-8">
+                no saved palettes
+              </p>
+            ) : (
+              <div className="grid gap-2">
+                {list.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-md border bg-card transition-opacity duration-200 ${
+                      fading[p.id] ? 'opacity-0' : 'opacity-100'
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-sm font-medium truncate">{p.name}</div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {new Date(p.savedAt).toLocaleString()}
+                      </div>
+                      <div className="flex gap-1 mt-2">
+                        {p.colors.map((color, i) => (
+                          <div
+                            key={i}
+                            className="size-5 rounded-sm border"
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSelect(p.id)}
+                        className="font-mono lowercase"
+                      >
+                        load
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => handleDelete(p.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button className={styles.itemButton} onClick={() => onSelect(p.id)}>load</button>
-                <button
-                  className={styles.itemButton}
-                  onClick={() => {
-                    setFading((prev) => ({ ...prev, [p.id]: true }))
-                    // wait for fade-out then remove
-                    setTimeout(() => {
-                      onRemove(p.id)
-                      setList((prev) => prev.filter((x) => x.id !== p.id))
-                    }, 300)
-                  }}
+            )}
+          </div>
+
+          <DialogFooter className="border-t pt-4 mt-2">
+            <div className="flex w-full justify-between">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportAll}
+                  className="font-mono lowercase"
                 >
-                  delete
-                </button>
+                  <Download className="size-4" />
+                  export
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImportClick}
+                  className="font-mono lowercase"
+                >
+                  <Upload className="size-4" />
+                  import
+                </Button>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                className="font-mono lowercase"
+              >
+                close
+              </Button>
             </div>
-          ))
-        )}
-        <div className={styles.actions} style={{ borderTop: '1px solid #e6e6e6', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
-          <button className={styles.itemButton} onClick={handleExportAll}>
-            Export All
-          </button>
-          <button className={styles.itemButton} onClick={handleImportClick}>
-            Import File
-          </button>
-          <button className={styles.itemButton} onClick={onCancel}>
-            Close
-          </button>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleFileImport}
-          style={{ display: 'none' }}
-        />
-      </div>
+          </DialogFooter>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileImport}
+            className="hidden"
+          />
+        </DialogContent>
+      </Dialog>
+
       {showNotification && (
         <NotificationModal
           message={notificationMessage}
           onClose={() => setShowNotification(false)}
         />
       )}
-    </Modal>
+    </>
   )
 }
-
-

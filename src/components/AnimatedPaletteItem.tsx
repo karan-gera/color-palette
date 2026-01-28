@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import PaletteItem from './PaletteItem.tsx'
-import styles from './Palette.module.css'
+import PaletteItem from './PaletteItem'
 
 type AnimatedPaletteItemProps = {
   color: string
@@ -16,7 +15,6 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // Trigger enter animation
     const timer = setTimeout(() => setIsVisible(true), 10)
     return () => clearTimeout(timer)
   }, [])
@@ -29,7 +27,11 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
   }
 
   return (
-    <div className={`${styles.cell} ${isVisible ? styles.shown : styles.enter}`}>
+    <div 
+      className={`flex flex-col items-center transition-all duration-250 ease-out ${
+        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
+      }`}
+    >
       <PaletteItem
         color={color}
         isLocked={isLocked}

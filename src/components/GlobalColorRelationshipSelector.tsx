@@ -1,6 +1,14 @@
-import { useState } from 'react'
-import { COLOR_RELATIONSHIPS, type ColorRelationship } from '../helpers/colorTheory.ts'
-import styles from './Palette.module.css'
+import { ChevronDown, RefreshCw } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { COLOR_RELATIONSHIPS, type ColorRelationship } from '@/helpers/colorTheory'
 
 type GlobalColorRelationshipSelectorProps = {
   currentRelationship: ColorRelationship
@@ -13,86 +21,65 @@ export default function GlobalColorRelationshipSelector({
   onRelationshipChange,
   onGlobalReroll
 }: GlobalColorRelationshipSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false)
   const currentLabel = COLOR_RELATIONSHIPS.find(r => r.value === currentRelationship)?.label || 'Random'
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      gap: '0.5rem',
-      marginTop: '1rem'
-    }}>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <button
-          className={styles.action}
-          onClick={onGlobalReroll}
-          style={{ 
-            fontWeight: 'bold'
-          }}
-        >
-          reroll all
-        </button>
-        <div style={{ position: 'relative' }}>
-          <button
-            className={styles.action}
-            onClick={() => setIsOpen(!isOpen)}
-            style={{ minWidth: '160px', textAlign: 'center' }}
-          >
-            {currentLabel} ▼
-          </button>
-          {isOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'var(--modal-bg)',
-                border: '1px solid var(--modal-border)',
-                borderRadius: '6px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                zIndex: 10,
-                marginTop: '2px',
-                minWidth: '200px',
-              }}
+    <TooltipProvider>
+      <div className="flex items-center gap-2 mt-4">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onGlobalReroll}
+              className="font-mono lowercase font-semibold"
+            >
+              <RefreshCw className="size-4" />
+              reroll all
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">regenerate all unlocked colors</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-mono lowercase min-w-[160px] justify-between"
+                >
+                  {currentLabel.toLowerCase()}
+                  <ChevronDown className="size-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">color relationship mode</p>
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="center" className="min-w-[200px]">
+            <DropdownMenuRadioGroup
+              value={currentRelationship}
+              onValueChange={(value) => onRelationshipChange(value as ColorRelationship)}
             >
               {COLOR_RELATIONSHIPS.map((rel) => (
-                <button
+                <DropdownMenuRadioItem
                   key={rel.value}
-                  className={styles.dropdownItem}
-                  onClick={() => {
-                    onRelationshipChange(rel.value)
-                    setIsOpen(false)
-                  }}
-                  title={rel.description}
-                  style={{
-                    background: rel.value === currentRelationship ? 'var(--hover-bg)' : 'transparent'
-                  }}
+                  value={rel.value}
+                  className="flex flex-col items-start gap-0.5 py-2 cursor-pointer"
                 >
-                  <div style={{ fontWeight: rel.value === currentRelationship ? 'bold' : 'normal' }}>
-                    {rel.label}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '2px' }}>
-                    {rel.description}
-                  </div>
-                </button>
+                  <span className="font-mono text-sm font-medium">{rel.label}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{rel.description}</span>
+                </DropdownMenuRadioItem>
               ))}
-            </div>
-          )}
-          {isOpen && (
-            <div
-              style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 9,
-              }}
-              onClick={() => setIsOpen(false)}
-            />
-          )}
-        </div>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }

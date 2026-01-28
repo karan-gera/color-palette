@@ -136,7 +136,7 @@ export function generateRelatedColor(
       }
       break
 
-    case 'analogous':
+    case 'analogous': {
       // Adjacent colors (±30° from reference)
       const analogousOffset = randomFloat(-30, 30)
       newHsl = {
@@ -145,8 +145,9 @@ export function generateRelatedColor(
         l: clamp(baseHsl.l + randomFloat(-15, 15), 30, 70)
       }
       break
+    }
 
-    case 'triadic':
+    case 'triadic': {
       // Exactly 120° apart from reference
       const triadicOffset = Math.random() > 0.5 ? 120 : 240
       newHsl = {
@@ -155,8 +156,9 @@ export function generateRelatedColor(
         l: clamp(baseHsl.l + randomFloat(-25, 25), 25, 75)
       }
       break
+    }
 
-    case 'tetradic':
+    case 'tetradic': {
       // Square: 90° apart from reference
       const tetradicOffsets = [90, 180, 270]
       const tetradicOffset = tetradicOffsets[Math.floor(Math.random() * tetradicOffsets.length)]
@@ -166,8 +168,9 @@ export function generateRelatedColor(
         l: clamp(baseHsl.l + randomFloat(-20, 20), 30, 70)
       }
       break
+    }
 
-    case 'split-complementary':
+    case 'split-complementary': {
       // Complement ± 30° (150° or 210° from reference)
       const splitOffset = Math.random() > 0.5 ? 150 : 210
       newHsl = {
@@ -176,6 +179,7 @@ export function generateRelatedColor(
         l: clamp(baseHsl.l + randomFloat(-18, 18), 30, 70)
       }
       break
+    }
 
     case 'monochromatic':
       // Same hue as reference, vary saturation and lightness

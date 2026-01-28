@@ -1,34 +1,55 @@
-import { useState, useEffect } from 'react'
-import styles from './ThemeToggle.module.css'
+import { Sun, Moon, Circle } from 'lucide-react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useTheme, type Theme } from '@/hooks/useTheme'
 
-type ThemeToggleProps = {
-  onThemeChange?: (isDark: boolean) => void
-}
-
-export default function ThemeToggle({ onThemeChange }: ThemeToggleProps) {
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('color-palette:theme')
-    return saved === 'dark'
-  })
-
-  useEffect(() => {
-    localStorage.setItem('color-palette:theme', isDark ? 'dark' : 'light')
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
-    onThemeChange?.(isDark)
-  }, [isDark, onThemeChange])
-
-  const toggleTheme = () => {
-    setIsDark(!isDark)
-  }
+export default function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
 
   return (
-    <button
-      className={styles.toggle}
-      onClick={toggleTheme}
-      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-    >
-      {isDark ? '☀️' : '🌙'}
-    </button>
+    <TooltipProvider>
+      <ToggleGroup
+        type="single"
+        value={theme}
+        onValueChange={(value) => {
+          if (value) setTheme(value as Theme)
+        }}
+        variant="outline"
+        size="sm"
+      >
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ToggleGroupItem value="light" aria-label="Light theme">
+              <Sun className="size-4" />
+            </ToggleGroupItem>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">light</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ToggleGroupItem value="gray" aria-label="Gray theme">
+              <Circle className="size-4" />
+            </ToggleGroupItem>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">gray</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <ToggleGroupItem value="dark" aria-label="Dark theme">
+              <Moon className="size-4" />
+            </ToggleGroupItem>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">dark</p>
+          </TooltipContent>
+        </Tooltip>
+      </ToggleGroup>
+    </TooltipProvider>
   )
 }

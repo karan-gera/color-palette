@@ -1,5 +1,4 @@
-import styles from './Header.module.css'
-import ThemeToggle from './ThemeToggle.tsx'
+import ThemeToggle from './ThemeToggle'
 
 type HeaderProps = {
   title: string
@@ -7,11 +6,9 @@ type HeaderProps = {
 
 export default function Header({ title }: HeaderProps) {
   return (
-    <div className={styles.header}>
-      <h1 className={styles.title}>{title}</h1>
+    <div className="flex items-center justify-between gap-4 w-full max-w-2xl">
+      <h1 className="text-2xl font-medium tracking-tight lowercase">{title}</h1>
       <ThemeToggle />
     </div>
   )
 }
-
-
