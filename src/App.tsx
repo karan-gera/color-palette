@@ -6,13 +6,20 @@ import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshi
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import EditColorDialog from '@/components/EditColorDialog'
+import KeyboardHints from '@/components/KeyboardHints'
 import { useHistory } from '@/hooks/useHistory'
+import { useTheme } from '@/hooks/useTheme'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
 import { generateRelatedColor, type ColorRelationship } from '@/helpers/colorTheory'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [isSaveDialog, setIsSaveDialog] = useState(false)
+  const [showHints, setShowHints] = useState(() => {
+    const stored = localStorage.getItem('color-palette:show-hints')
+    return stored !== 'false' // Default to true
+  })
   const {
     history,
     current,
@@ -23,6 +30,7 @@ function App() {
     redo,
     replace,
   } = useHistory<string[]>({ initialHistory: [], initialIndex: -1 })
+  const { cycleTheme } = useTheme()
 
   const generateRandomColor = useCallback((): string => {
     const value = Math.floor(Math.random() * 0xffffff)
@@ -32,6 +40,14 @@ function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
   const [lockedStates, setLockedStates] = useState<boolean[]>([])
+
+  const toggleHints = useCallback(() => {
+    setShowHints(prev => {
+      const next = !prev
+      localStorage.setItem('color-palette:show-hints', String(next))
+      return next
+    })
+  }, [])
 
   const addColor = useCallback(() => {
     const base = current ?? []
@@ -106,6 +122,29 @@ function App() {
       push(next)
     }
   }, [current, lockedStates, push])
+
+  const closeAllDialogs = useCallback(() => {
+    setIsOpenDialog(false)
+    setIsSaveDialog(false)
+    setEditIndex(null)
+  }, [])
+
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || editIndex !== null
+
+  useKeyboardShortcuts({
+    onAddColor: addColor,
+    onUndo: undo,
+    onRedo: redo,
+    onOpen: handleOpen,
+    onSave: handleSave,
+    onRerollAll: rerollAll,
+    onToggleLock: toggleLockAt,
+    onCycleTheme: cycleTheme,
+    onToggleHints: toggleHints,
+    onEscape: closeAllDialogs,
+    colorCount: (current ?? []).length,
+    isDialogOpen: isAnyDialogOpen,
+  })
 
   return (
     <div className="min-h-screen p-8 flex flex-col items-center gap-6">
@@ -188,6 +227,8 @@ function App() {
           }}
         />
       ) : null}
+
+      <KeyboardHints visible={showHints} onToggle={toggleHints} />
     </div>
   )
 }

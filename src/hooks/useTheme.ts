@@ -35,6 +35,13 @@ export function useTheme() {
     document.documentElement.setAttribute('data-theme', newTheme)
   }, [])
 
+  const cycleTheme = useCallback(() => {
+    const order: Theme[] = ['light', 'gray', 'dark']
+    const currentIndex = order.indexOf(theme)
+    const nextIndex = (currentIndex + 1) % order.length
+    setTheme(order[nextIndex])
+  }, [theme, setTheme])
+
   // Apply theme on mount and when it changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -56,5 +63,5 @@ export function useTheme() {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
-  return { theme, setTheme }
+  return { theme, setTheme, cycleTheme }
 }
