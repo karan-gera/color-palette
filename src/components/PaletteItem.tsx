@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import heroStyles from './Hero.module.css'
-import styles from './Palette.module.css'
-import LockIcon from './LockIcon.tsx'
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import LockIcon from './LockIcon'
 
 type PaletteItemProps = {
   color: string
@@ -27,43 +28,74 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
   const showLockIcon = isLocked || isHovered
 
   return (
-    <>
-      <button
-        type="button"
-        className={heroStyles.hero}
-        style={{ ['--hero-bg' as any]: color, ['--hero-fg' as any]: textColor, color: textColor }}
-        aria-label={`${isLocked ? 'Unlock' : 'Lock'} color ${color}`}
-        onClick={onToggleLock}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {showLockIcon && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            transition: 'opacity 0.2s ease',
-            opacity: isLocked ? 1 : 0.8,
-          }}>
-            <LockIcon isLocked={isLocked} size={32} color={textColor} />
-          </div>
-        )}
-      </button>
-      <div className={styles.controls}>
-        <button className={styles.action} onClick={onEdit}>edit</button>
-        <button 
-          className={styles.action} 
-          onClick={onReroll}
-          disabled={isLocked}
-          style={{ opacity: isLocked ? 0.45 : 1 }}
+    <TooltipProvider>
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          className="size-[200px] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-500 ease-in-out relative"
+          style={{
+            backgroundColor: color,
+            borderColor: textColor,
+            color: textColor,
+          }}
+          aria-label={`${isLocked ? 'Unlock' : 'Lock'} color ${color}`}
+          onClick={onToggleLock}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-          reroll
+          {showLockIcon && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+              style={{ opacity: isLocked ? 1 : 0.7 }}
+            >
+              <LockIcon isLocked={isLocked} size={32} color={textColor} />
+            </div>
+          )}
         </button>
-        <button className={styles.action} onClick={onDelete}>delete</button>
+
+        <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-xs" onClick={onEdit}>
+                <Pencil className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">edit</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={onReroll}
+                disabled={isLocked}
+                className={isLocked ? 'opacity-40' : ''}
+              >
+                <RefreshCw className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">reroll</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-xs" onClick={onDelete} className="text-destructive hover:text-destructive">
+                <Trash2 className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">delete</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        <span className="font-mono text-xs text-muted-foreground uppercase">{color}</span>
       </div>
-    </>
+    </TooltipProvider>
   )
 }
-
-

@@ -1,5 +1,13 @@
-import styles from './Modal.module.css'
-import Modal from './Modal.tsx'
+import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type SaveDialogProps = {
   defaultName?: string
@@ -8,39 +16,34 @@ type SaveDialogProps = {
 }
 
 export default function SaveDialog({ defaultName, onCancel, onSave }: SaveDialogProps) {
-  let nameValue = defaultName ?? ''
+  const [nameValue, setNameValue] = useState(defaultName ?? '')
+
   return (
-    <Modal title="save palette" onClose={onCancel}>
-      <div style={{ display: 'grid', gap: '0.75rem' }}>
-        <label>
-          <div style={{ marginBottom: '0.25rem' }}>name</div>
-          <input
-            className={styles.field}
-            defaultValue={nameValue}
-            onChange={(e) => {
-              nameValue = e.target.value
-            }}
-            placeholder="optional"
-          />
-        </label>
-        <div className={styles.actions}>
-          <button className={styles.itemButton} onClick={onCancel}>cancel</button>
-          <button 
-            className={styles.itemButton} 
-            onClick={() => onSave(nameValue || undefined)}
-            style={{
-              background: '#222',
-              color: '#fff',
-              fontWeight: 'bold',
-              border: '1px solid #222'
-            }}
-          >
-            save
-          </button>
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-mono lowercase">save palette</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-2">
+            <label className="text-sm font-mono lowercase">name</label>
+            <Input
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              placeholder="optional"
+              className="font-mono"
+            />
+          </div>
         </div>
-      </div>
-    </Modal>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} className="font-mono lowercase">
+            cancel
+          </Button>
+          <Button onClick={() => onSave(nameValue || undefined)} className="font-mono lowercase">
+            save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
-
-

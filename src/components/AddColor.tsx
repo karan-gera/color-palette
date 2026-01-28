@@ -1,4 +1,4 @@
-import heroStyles from './Hero.module.css'
+import { Plus } from 'lucide-react'
 
 type AddColorProps = {
   onAdd: () => void
@@ -9,13 +9,14 @@ export default function AddColor({ onAdd }: AddColorProps) {
     <button
       type="button"
       onClick={onAdd}
-      className={heroStyles.hero}
-      style={{ ['--hero-bg' as any]: '#ffffff', ['--hero-fg' as any]: '#111111' }}
+      className="size-[200px] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out bg-card hover:bg-accent"
+      style={{
+        borderColor: 'hsl(var(--border))',
+        color: 'hsl(var(--muted-foreground))',
+      }}
       aria-label="Add color"
     >
-      <span className={heroStyles.plus}>+</span>
+      <Plus className="size-16" strokeWidth={1.5} />
     </button>
   )
 }
-
-
