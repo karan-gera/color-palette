@@ -3,6 +3,7 @@ import { Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import LockIcon from './LockIcon'
+import ColorFormatMenu from './ColorFormatMenu'
 
 type PaletteItemProps = {
   color: string
@@ -94,7 +95,7 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
           </Tooltip>
         </div>
 
-        <span className="font-mono text-xs text-muted-foreground uppercase">{color}</span>
+        <ColorFormatMenu color={color} />
       </div>
     </TooltipProvider>
   )

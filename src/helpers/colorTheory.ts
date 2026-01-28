@@ -13,6 +13,63 @@ export type HSL = {
   l: number // 0-100
 }
 
+export type RGB = {
+  r: number // 0-255
+  g: number // 0-255
+  b: number // 0-255
+}
+
+export type ColorFormat = 
+  | 'hex'
+  | 'rgb'
+  | 'hsl'
+  | 'css-var'
+  | 'tailwind'
+  | 'scss'
+
+export function hexToRgb(hex: string): RGB {
+  const cleanHex = hex.replace('#', '')
+  return {
+    r: parseInt(cleanHex.slice(0, 2), 16),
+    g: parseInt(cleanHex.slice(2, 4), 16),
+    b: parseInt(cleanHex.slice(4, 6), 16),
+  }
+}
+
+export function formatColor(hex: string, format: ColorFormat, varName = 'primary'): string {
+  const cleanHex = hex.toLowerCase()
+  
+  switch (format) {
+    case 'hex':
+      return cleanHex
+    case 'rgb': {
+      const { r, g, b } = hexToRgb(hex)
+      return `rgb(${r}, ${g}, ${b})`
+    }
+    case 'hsl': {
+      const { h, s, l } = hexToHsl(hex)
+      return `hsl(${h}, ${s}%, ${l}%)`
+    }
+    case 'css-var':
+      return `--color-${varName}: ${cleanHex};`
+    case 'tailwind':
+      return `'${varName}': '${cleanHex}'`
+    case 'scss':
+      return `$color-${varName}: ${cleanHex};`
+    default:
+      return cleanHex
+  }
+}
+
+export const COLOR_FORMATS: { value: ColorFormat; label: string; preview: (hex: string) => string }[] = [
+  { value: 'hex', label: 'HEX', preview: (hex) => formatColor(hex, 'hex') },
+  { value: 'rgb', label: 'RGB', preview: (hex) => formatColor(hex, 'rgb') },
+  { value: 'hsl', label: 'HSL', preview: (hex) => formatColor(hex, 'hsl') },
+  { value: 'css-var', label: 'CSS Variable', preview: (hex) => formatColor(hex, 'css-var') },
+  { value: 'tailwind', label: 'Tailwind', preview: (hex) => formatColor(hex, 'tailwind') },
+  { value: 'scss', label: 'SCSS', preview: (hex) => formatColor(hex, 'scss') },
+]
+
 export function hexToHsl(hex: string): HSL {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
