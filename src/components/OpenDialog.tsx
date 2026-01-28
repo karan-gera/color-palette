@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { Trash2, Download, Upload } from 'lucide-react'
 import {
   Dialog,
@@ -8,6 +8,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import DialogKeyboardHints from './DialogKeyboardHints'
 import NotificationModal from './NotificationModal'
 import type { SavedPalette } from '@/helpers/storage'
 import { exportAllPalettes, importPalettesFromFile, mergePalettes } from '@/helpers/storage'
@@ -20,16 +21,41 @@ type OpenDialogProps = {
   onPalettesUpdated: () => void
 }
 
+const HINTS = [
+  { key: '↑↓', label: 'navigate' },
+  { key: 'Enter', label: 'load' },
+  { key: 'Del', label: 'delete' },
+  { key: 'Esc', label: 'close' },
+]
+
+const EMPTY_HINTS = [
+  { key: 'Esc', label: 'close' },
+]
+
 export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onPalettesUpdated }: OpenDialogProps) {
   const [list, setList] = useState<SavedPalette[]>(palettes)
   const [fading, setFading] = useState<Record<string, boolean>>({})
   const [showNotification, setShowNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
+  const [selectedIndex, setSelectedIndex] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setList(palettes)
+    setSelectedIndex(0)
   }, [palettes])
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (listRef.current && list.length > 0) {
+      const items = listRef.current.querySelectorAll('[data-palette-item]')
+      const selectedItem = items[selectedIndex] as HTMLElement
+      if (selectedItem) {
+        selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [selectedIndex, list.length])
 
   const handleExportAll = () => {
     exportAllPalettes()
@@ -65,13 +91,66 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
     }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string, index: number) => {
     setFading((prev) => ({ ...prev, [id]: true }))
     setTimeout(() => {
       onRemove(id)
-      setList((prev) => prev.filter((x) => x.id !== id))
+      setList((prev) => {
+        const newList = prev.filter((x) => x.id !== id)
+        // Adjust selected index if needed
+        if (index >= newList.length && newList.length > 0) {
+          setSelectedIndex(newList.length - 1)
+        }
+        return newList
+      })
     }, 200)
-  }
+  }, [onRemove])
+
+  const handleLoad = useCallback(() => {
+    if (list.length > 0 && list[selectedIndex]) {
+      onSelect(list[selectedIndex].id)
+    }
+  }, [list, selectedIndex, onSelect])
+
+  const handleDeleteSelected = useCallback(() => {
+    if (list.length > 0 && list[selectedIndex]) {
+      handleDelete(list[selectedIndex].id, selectedIndex)
+    }
+  }, [list, selectedIndex, handleDelete])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if notification is showing
+      if (showNotification) return
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault()
+          setSelectedIndex(prev => Math.max(0, prev - 1))
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          setSelectedIndex(prev => Math.min(list.length - 1, prev + 1))
+          break
+        case 'Enter':
+          e.preventDefault()
+          handleLoad()
+          break
+        case 'Delete':
+        case 'Backspace':
+          // Only handle if not in an input
+          if ((e.target as HTMLElement).tagName !== 'INPUT') {
+            e.preventDefault()
+            handleDeleteSelected()
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [list.length, handleLoad, handleDeleteSelected, showNotification])
 
   return (
     <>
@@ -81,18 +160,25 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
             <DialogTitle className="font-mono lowercase">open palette</DialogTitle>
           </DialogHeader>
           
-          <div className="max-h-[50vh] overflow-y-auto -mx-2 px-2">
+          <div ref={listRef} className="max-h-[50vh] overflow-y-auto -mx-2 px-2 py-1">
             {list.length === 0 ? (
               <p className="text-muted-foreground text-sm font-mono text-center py-8">
                 no saved palettes
               </p>
             ) : (
-              <div className="grid gap-2">
-                {list.map((p) => (
+              <div className="grid gap-2 py-1">
+                {list.map((p, index) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between gap-3 p-3 rounded-md border bg-card transition-opacity duration-200 ${
+                    data-palette-item
+                    onClick={() => setSelectedIndex(index)}
+                    onDoubleClick={() => onSelect(p.id)}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-md border bg-card transition-all duration-200 cursor-pointer ${
                       fading[p.id] ? 'opacity-0' : 'opacity-100'
+                    } ${
+                      index === selectedIndex 
+                        ? 'ring-2 ring-ring border-ring' 
+                        : 'hover:border-muted-foreground/50'
                     }`}
                   >
                     <div className="min-w-0 flex-1">
@@ -115,7 +201,10 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onSelect(p.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onSelect(p.id)
+                        }}
                         className="font-mono lowercase"
                       >
                         load
@@ -123,7 +212,10 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
                       <Button
                         variant="outline"
                         size="icon-sm"
-                        onClick={() => handleDelete(p.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(p.id, index)
+                        }}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="size-4" />
@@ -167,6 +259,8 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
               </Button>
             </div>
           </DialogFooter>
+
+          <DialogKeyboardHints hints={list.length > 0 ? HINTS : EMPTY_HINTS} />
 
           <input
             ref={fileInputRef}

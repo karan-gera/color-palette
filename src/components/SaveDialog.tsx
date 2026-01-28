@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import DialogKeyboardHints from './DialogKeyboardHints'
 
 type SaveDialogProps = {
   defaultName?: string
@@ -15,8 +16,29 @@ type SaveDialogProps = {
   onSave: (name?: string) => void
 }
 
+const HINTS = [
+  { key: 'Enter', label: 'save' },
+  { key: 'Esc', label: 'cancel' },
+]
+
 export default function SaveDialog({ defaultName, onCancel, onSave }: SaveDialogProps) {
   const [nameValue, setNameValue] = useState(defaultName ?? '')
+
+  const handleSave = useCallback(() => {
+    onSave(nameValue || undefined)
+  }, [nameValue, onSave])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault()
+        handleSave()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleSave])
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
@@ -32,6 +54,7 @@ export default function SaveDialog({ defaultName, onCancel, onSave }: SaveDialog
               onChange={(e) => setNameValue(e.target.value)}
               placeholder="optional"
               className="font-mono"
+              autoFocus
             />
           </div>
         </div>
@@ -39,10 +62,11 @@ export default function SaveDialog({ defaultName, onCancel, onSave }: SaveDialog
           <Button variant="outline" onClick={onCancel} className="font-mono lowercase">
             cancel
           </Button>
-          <Button onClick={() => onSave(nameValue || undefined)} className="font-mono lowercase">
+          <Button onClick={handleSave} className="font-mono lowercase">
             save
           </Button>
         </DialogFooter>
+        <DialogKeyboardHints hints={HINTS} />
       </DialogContent>
     </Dialog>
   )
