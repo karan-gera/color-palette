@@ -6,6 +6,7 @@ type KeyboardShortcutsConfig = {
   onRedo: () => void
   onOpen: () => void
   onSave: () => void
+  onShare: () => void
   onRerollAll: () => void
   onToggleLock: (index: number) => void
   onCycleTheme: () => void
@@ -21,6 +22,7 @@ export function useKeyboardShortcuts({
   onRedo,
   onOpen,
   onSave,
+  onShare,
   onRerollAll,
   onToggleLock,
   onCycleTheme,
@@ -83,6 +85,10 @@ export function useKeyboardShortcuts({
         event.preventDefault()
         onSave()
         break
+      case 'c':
+        event.preventDefault()
+        onShare()
+        break
       case 'r':
         event.preventDefault()
         onRerollAll()
@@ -115,6 +121,7 @@ export function useKeyboardShortcuts({
     onRedo,
     onOpen,
     onSave,
+    onShare,
     onRerollAll,
     onToggleLock,
     onCycleTheme,
@@ -138,6 +145,7 @@ export const KEYBOARD_SHORTCUTS = [
   { key: 'Shift+Z', description: 'redo' },
   { key: 'O', description: 'open' },
   { key: 'S', description: 'save' },
+  { key: 'C', description: 'copy link' },
   { key: 'T', description: 'cycle theme' },
   { key: 'Esc', description: 'close dialog' },
 ] as const
