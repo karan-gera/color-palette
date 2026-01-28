@@ -19,16 +19,16 @@ Let users click a color and copy in various formats:
 
 ---
 
-## Share via URL
+## Share via URL ✅
 
 Encode the palette in a shareable URL for frictionless sharing.
 
-- [ ] Encode colors in URL params (e.g., `?colors=ff5733,3498db,2ecc71`)
-- [ ] Auto-load palette from URL on page load
-- [ ] Add "Copy Link" button to share current palette
-- [ ] Include locked states in URL (optional)
+- [x] Encode colors in URL params (e.g., `?colors=ff5733,3498db,2ecc71`)
+- [x] Auto-load palette from URL on page load
+- [x] Add "Copy Link" button to share current palette
+- [x] Include locked states in URL (optional)
 
-**Implementation:** Use `URLSearchParams` to read/write. No backend needed.
+**Implementation:** Share button in controls area with Link icon. Press `C` to copy link. URL params auto-load on page visit and clear after loading.
 
 ---
 
@@ -120,7 +120,7 @@ Drag-and-drop an image to extract dominant colors.
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
-2. **Share via URL** - Highest impact, lowest effort
+2. ~~**Share via URL** - Highest impact, lowest effort~~ ✅ Done!
 3. **Export Palette** - Natural companion to share, completes the save/export flow
 4. **Quick Palette Presets** - Lowers barrier to entry
 5. **Contrast Checker** - Accessibility focus, differentiator

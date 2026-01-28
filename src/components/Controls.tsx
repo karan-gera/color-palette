@@ -1,23 +1,27 @@
-import { Undo2, Redo2, FolderOpen, Save } from 'lucide-react'
+import { Undo2, Redo2, FolderOpen, Save, Link } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type ControlsProps = {
   onOpen: () => void
   onSave: () => void
+  onShare: () => void
   onUndo: () => void
   onRedo: () => void
   canUndo: boolean
   canRedo: boolean
+  canShare: boolean
 }
 
 export default function Controls({
   onOpen,
   onSave,
+  onShare,
   onUndo,
   onRedo,
   canUndo,
   canRedo,
+  canShare,
 }: ControlsProps) {
   return (
     <TooltipProvider>
@@ -43,6 +47,24 @@ export default function Controls({
           </TooltipTrigger>
           <TooltipContent>
             <p className="font-mono text-xs lowercase">save current palette</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onShare} 
+              disabled={!canShare}
+              className="lowercase font-mono"
+            >
+              <Link className="size-4" />
+              share
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">copy link to palette</p>
           </TooltipContent>
         </Tooltip>
 

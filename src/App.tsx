@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import Controls from '@/components/Controls'
 import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
@@ -12,10 +12,12 @@ import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
 import { generateRelatedColor, type ColorRelationship } from '@/helpers/colorTheory'
+import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [isSaveDialog, setIsSaveDialog] = useState(false)
+  const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-hints')
     return stored !== 'false' // Default to true
@@ -31,6 +33,7 @@ function App() {
     replace,
   } = useHistory<string[]>({ initialHistory: [], initialIndex: -1 })
   const { cycleTheme } = useTheme()
+  const [urlLoaded, setUrlLoaded] = useState(false)
 
   const generateRandomColor = useCallback((): string => {
     const value = Math.floor(Math.random() * 0xffffff)
@@ -40,6 +43,27 @@ function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
   const [lockedStates, setLockedStates] = useState<boolean[]>([])
+
+  // Load palette from URL on mount
+  useEffect(() => {
+    if (urlLoaded) return
+    
+    const shared = decodePaletteFromUrl()
+    if (shared && shared.colors.length > 0) {
+      replace([shared.colors], 0)
+      setLockedStates(shared.lockedStates)
+      clearUrlParams()
+    }
+    setUrlLoaded(true)
+  }, [urlLoaded, replace])
+
+  // Auto-dismiss notification
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [notification])
 
   const toggleHints = useCallback(() => {
     setShowHints(prev => {
@@ -111,6 +135,18 @@ function App() {
     setIsSaveDialog(true)
   }, [])
 
+  const handleShare = useCallback(async () => {
+    const colors = current ?? []
+    if (colors.length === 0) return
+    
+    const success = await copyShareUrl(colors, lockedStates)
+    if (success) {
+      setNotification('Link copied to clipboard!')
+    } else {
+      setNotification('Failed to copy link')
+    }
+  }, [current, lockedStates])
+
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
@@ -137,6 +173,7 @@ function App() {
     onRedo: redo,
     onOpen: handleOpen,
     onSave: handleSave,
+    onShare: handleShare,
     onRerollAll: rerollAll,
     onToggleLock: toggleLockAt,
     onCycleTheme: cycleTheme,
@@ -153,10 +190,12 @@ function App() {
         <Controls
           onOpen={handleOpen}
           onSave={handleSave}
+          onShare={handleShare}
           onUndo={undo}
           onRedo={redo}
           canUndo={canUndo}
           canRedo={canRedo}
+          canShare={(current ?? []).length > 0}
         />
       </div>
 
@@ -229,6 +268,13 @@ function App() {
       ) : null}
 
       <KeyboardHints visible={showHints} onToggle={toggleHints} />
+
+      {/* Notification toast */}
+      {notification && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
+          {notification}
+        </div>
+      )}
     </div>
   )
 }
