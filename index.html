@@ -4,7 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>Color Palette</title>
+    <script>
+      // Prevent flash of wrong theme - runs before body renders
+      (function() {
+        var theme = localStorage.getItem('color-palette:theme');
+        if (!theme) {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            theme = 'dark';
+          } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            theme = 'light';
+          } else {
+            theme = 'gray';
+          }
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+        // Set initial background to prevent white flash
+        var bg = theme === 'dark' ? '#1f1f1f' : theme === 'gray' ? '#8a8a8a' : '#fafafa';
+        document.documentElement.style.backgroundColor = bg;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
