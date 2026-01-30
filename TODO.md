@@ -64,21 +64,25 @@ Export the entire palette in standard formats for use in design tools and code.
 
 ---
 
-## Color Blindness Preview
+## Color Blindness Preview (Phase 1 ✅)
 
 Toggle to simulate how the palette appears to people with color vision deficiencies.
 
-- [ ] Deuteranopia (red-green, most common)
-- [ ] Protanopia (red-green)
-- [ ] Tritanopia (blue-yellow)
-- [ ] Achromatopsia (monochromacy, rare)
-- [ ] Toggle in UI to switch between normal and simulated views
+- [x] Deuteranopia (red-green, most common)
+- [x] Protanopia (red-green)
+- [x] Tritanopia (blue-yellow)
+- [x] Achromatopsia (monochromacy, rare)
+- [x] Toggle in UI to switch between normal and simulated views
+- [x] Site-wide filter application (entire UI, not just palette)
+- [x] localStorage persistence
+- [x] Cross-browser support (Chrome, Firefox, Waterfox)
+- [ ] Circle wipe transition animation (Phase 3)
 
-**Implementation:** Apply color transformation matrices to simulate CVD. Can use CSS filters or transform hex values directly.
+**Implementation:** SVG filters with feColorMatrix using Viénot 1999 (deuteranopia, protanopia) and Brettel 1997 (tritanopia) algorithms. Filters embedded in React and applied to wrapper element for consistent cross-browser rendering.
 
 **UX Notes:**
-- This setting should change theming **site-wide**, not just the palette preview. The entire UI should be viewable through the CVD simulation so users can experience what others see.
-- Transition animation: **circle wipe** effect that emits outward from the toggle component's origin coordinates (like the iOS accessibility zoom or a radial reveal). This makes the mode switch feel intentional and helps users understand the transformation is happening.
+- This setting changes theming **site-wide** ✅ — the entire UI is viewable through the CVD simulation
+- Transition animation: **circle wipe** effect (pending Phase 3) — will emit outward from toggle component origin
 
 ---
 
@@ -130,9 +134,9 @@ Drag-and-drop an image to extract dominant colors.
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
 2. ~~**Share via URL** - Highest impact, lowest effort~~ ✅ Done!
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
-4. **Quick Palette Presets** - Lowers barrier to entry
-5. **Contrast Checker** - Accessibility focus, differentiator
-6. **Color Blindness Preview** - Accessibility focus, rarely free
+4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
+5. **Quick Palette Presets** - Lowers barrier to entry
+6. **Contrast Checker** - Accessibility focus, differentiator
 7. **Extract from Image** - Big feature, more complex
 
 ---
