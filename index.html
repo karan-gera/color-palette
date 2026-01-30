@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Color Palette</title>
     <script>
-      // Prevent flash of wrong theme - runs before body renders
+      // Prevent flash of wrong theme/CVD - runs before body renders
       (function() {
+        // Theme
         var theme = localStorage.getItem('color-palette:theme');
         if (!theme) {
           if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -22,11 +23,66 @@
         // Set initial background to prevent white flash
         var bg = theme === 'dark' ? '#1f1f1f' : theme === 'gray' ? '#8a8a8a' : '#fafafa';
         document.documentElement.style.backgroundColor = bg;
+        
+        // CVD (Color Vision Deficiency) simulation
+        // Note: We only set the data attribute here for state tracking.
+        // The actual filter is applied by React to the wrapper element
+        // to ensure consistent rendering across all browsers.
+        var cvd = localStorage.getItem('color-palette:cvd');
+        if (cvd && cvd !== 'normal') {
+          document.documentElement.setAttribute('data-cvd', cvd);
+        }
       })();
     </script>
   </head>
   <body>
     <div id="root"></div>
+    
+    <!-- CVD (Color Vision Deficiency) Simulation Filters -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+      <defs>
+        <!-- Deuteranopia (red-green, most common ~6% males) - Viénot 1999 -->
+        <filter id="cvd-deuteranopia" color-interpolation-filters="linearRGB">
+          <feColorMatrix type="matrix" values="
+            0.367  0.861 -0.228  0  0
+            0.280  0.673  0.047  0  0
+           -0.012  0.043  0.969  0  0
+            0      0      0      1  0
+          "/>
+        </filter>
+        
+        <!-- Protanopia (red-green ~1% males) - Viénot 1999 -->
+        <filter id="cvd-protanopia" color-interpolation-filters="linearRGB">
+          <feColorMatrix type="matrix" values="
+            0.152  1.053 -0.205  0  0
+            0.115  0.786  0.099  0  0
+           -0.004 -0.048  1.052  0  0
+            0      0      0      1  0
+          "/>
+        </filter>
+        
+        <!-- Tritanopia (blue-yellow, rare ~0.003%) - Brettel 1997 -->
+        <filter id="cvd-tritanopia" color-interpolation-filters="linearRGB">
+          <feColorMatrix type="matrix" values="
+            1.256 -0.077 -0.179  0  0
+           -0.078  0.931  0.148  0  0
+            0.005  0.691  0.304  0  0
+            0      0      0      1  0
+          "/>
+        </filter>
+        
+        <!-- Achromatopsia (monochromacy, rare) - Grayscale -->
+        <filter id="cvd-achromatopsia" color-interpolation-filters="linearRGB">
+          <feColorMatrix type="matrix" values="
+            0.2126  0.7152  0.0722  0  0
+            0.2126  0.7152  0.0722  0  0
+            0.2126  0.7152  0.0722  0  0
+            0       0       0       1  0
+          "/>
+        </filter>
+      </defs>
+    </svg>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
