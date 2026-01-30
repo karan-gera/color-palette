@@ -9,13 +9,17 @@ type KeyboardHintsProps = {
 
 export default function KeyboardHints({ visible, onToggle }: KeyboardHintsProps) {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50">
       <div 
-        className={`flex flex-wrap justify-center gap-x-4 gap-y-1 px-4 py-2 bg-card/80 backdrop-blur-sm border rounded-lg shadow-lg max-w-2xl transition-all duration-300 ease-out ${
+        className={`flex flex-wrap justify-center gap-x-4 gap-y-1 px-4 py-2 bg-card border rounded-lg shadow-lg max-w-2xl transition-all duration-300 ease-out ${
           visible 
             ? 'opacity-100 translate-y-0' 
             : 'opacity-0 translate-y-2 pointer-events-none'
         }`}
+        style={{ 
+          // Firefox fallback: use solid bg if backdrop-filter not supported
+          backgroundColor: 'var(--card)',
+        }}
       >
         {KEYBOARD_SHORTCUTS.map(({ key, description }) => (
           <div key={key} className="flex items-center gap-1.5 text-xs">

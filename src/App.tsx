@@ -290,16 +290,17 @@ function App() {
             onCopied={setNotification}
           />
         ) : null}
-
-        <KeyboardHints visible={showHints} onToggle={toggleHints} />
-
-        {/* Notification toast */}
-        {notification && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
-            {notification}
-          </div>
-        )}
       </div>
+
+      {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
+      <KeyboardHints visible={showHints} onToggle={toggleHints} />
+
+      {/* Notification toast */}
+      {notification && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+          {notification}
+        </div>
+      )}
     </>
   )
 }

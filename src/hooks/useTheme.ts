@@ -26,13 +26,59 @@ function getInitialTheme(): Theme {
   return getSystemTheme()
 }
 
+function applyTheme(theme: Theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+  // Also update background color immediately to prevent flash
+  const bg = theme === 'dark' ? '#1f1f1f' : theme === 'gray' ? '#8a8a8a' : '#fafafa'
+  document.documentElement.style.backgroundColor = bg
+}
+
+export interface ThemeTransition {
+  from: Theme
+  to: Theme
+  origin: { x: number; y: number }
+}
+
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme)
+  const [transition, setTransition] = useState<ThemeTransition | null>(null)
 
+  // Set theme without animation
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme)
     localStorage.setItem(STORAGE_KEY, newTheme)
-    document.documentElement.setAttribute('data-theme', newTheme)
+    applyTheme(newTheme)
+  }, [])
+
+  // Set theme with circle wipe animation
+  const setThemeWithTransition = useCallback((newTheme: Theme, origin: { x: number; y: number }) => {
+    if (newTheme === theme) return // No change
+    if (transition) return // Already transitioning - ignore click
+    
+    // Start transition - overlay will show new theme expanding
+    // Keep OLD theme on document during animation
+    setTransition({
+      from: theme,
+      to: newTheme,
+      origin,
+    })
+    
+    // Update state but DON'T apply theme yet - overlay handles visual
+    setThemeState(newTheme)
+    localStorage.setItem(STORAGE_KEY, newTheme)
+    // Note: applyTheme() is called in applyTransitionTarget, not here
+  }, [theme, transition])
+
+  // Apply the new theme during animation (overlay masks the change)
+  const applyTransitionTarget = useCallback(() => {
+    if (transition) {
+      applyTheme(transition.to)
+    }
+  }, [transition])
+
+  // Called when animation completes - clear transition state
+  const completeTransition = useCallback(() => {
+    setTransition(null)
   }, [])
 
   const cycleTheme = useCallback(() => {
@@ -42,10 +88,12 @@ export function useTheme() {
     setTheme(order[nextIndex])
   }, [theme, setTheme])
 
-  // Apply theme on mount and when it changes
+  // Apply theme on mount (but not during transitions)
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+    if (!transition) {
+      applyTheme(theme)
+    }
+  }, [theme, transition])
 
   // Listen for system theme changes (only if no stored preference)
   useEffect(() => {
@@ -56,12 +104,21 @@ export function useTheme() {
     const handleChange = () => {
       const newTheme = getSystemTheme()
       setThemeState(newTheme)
-      document.documentElement.setAttribute('data-theme', newTheme)
+      applyTheme(newTheme)
     }
 
     mediaQuery.addEventListener('change', handleChange)
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
-  return { theme, setTheme, cycleTheme }
+  return { 
+    theme, 
+    setTheme, 
+    setThemeWithTransition,
+    cycleTheme,
+    // Transition state for overlay component
+    transition,
+    applyTransitionTarget,
+    completeTransition,
+  }
 }
