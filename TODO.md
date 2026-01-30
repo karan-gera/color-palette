@@ -32,27 +32,35 @@ Encode the palette in a shareable URL for frictionless sharing.
 
 ---
 
-## Export Palette
+## Export Palette ✅
 
 Export the entire palette in standard formats for use in design tools and code.
 
-- [ ] CSS variables (`:root { --color-1: #ff5733; ... }`)
-- [ ] JSON (`{ "colors": ["#ff5733", ...] }`)
-- [ ] Tailwind config (full `colors` object)
-- [ ] SCSS variables (`$color-1: #ff5733; ...`)
-- [ ] Adobe ASE (Adobe Swatch Exchange)
-- [ ] GPL (GIMP Palette)
+### Code Formats
+- [x] CSS variables (`:root { --color-1: #ff5733; ... }`)
+- [x] JSON (`{ "colors": ["#ff5733", ...] }`)
+- [x] Tailwind config (full `colors` object)
+- [x] SCSS variables (`$color-1: #ff5733; ...`)
+
+### Art App Formats
+- [x] Adobe ASE (.ase) — Photoshop, Illustrator, Procreate, Clip Studio Paint
+- [x] Adobe ACO (.aco) — Photoshop
+- [x] Procreate Swatches (.swatches) — Procreate
+- [x] GIMP Palette (.gpl) — GIMP, Krita, Inkscape
+- [x] Paint.NET Palette (.txt) — Paint.NET
 
 **UI/UX:**
-- Add "Export" button in the save/load controls area
-- Icon: `Download` or `FileOutput` (something that conveys "take it with you")
-- Opens a modal/dropdown with format options
-- One-click copy or download depending on format
+- Export button in controls area with Download icon
+- Press `E` to open export dialog
+- Two-tab interface: "For Code" and "For Art Apps"
+- App-specific selection with import instructions for each software
+- Keyboard navigation with arrow keys, Tab to switch tabs
+- Copy to clipboard for text formats, download for binary formats
 
 **Help text (in export modal):**
-> Can't find your format? Click any color's hex code to copy it individually in HEX, RGB, HSL, CSS, Tailwind, or SCSS.
+> Can't find your format? Click any color's hex code to copy it individually.
 
-**Implementation:** Generate formatted strings client-side. For binary formats like ASE, use appropriate encoding.
+**Implementation:** Text formats copied to clipboard, binary formats downloaded as files. Art app formats include full import instructions for each software.
 
 ---
 
@@ -121,7 +129,7 @@ Drag-and-drop an image to extract dominant colors.
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
 2. ~~**Share via URL** - Highest impact, lowest effort~~ ✅ Done!
-3. **Export Palette** - Natural companion to share, completes the save/export flow
+3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. **Quick Palette Presets** - Lowers barrier to entry
 5. **Contrast Checker** - Accessibility focus, differentiator
 6. **Color Blindness Preview** - Accessibility focus, rarely free
