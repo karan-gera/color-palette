@@ -5,6 +5,7 @@ import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
+import ExportDialog from '@/components/ExportDialog'
 import EditColorDialog from '@/components/EditColorDialog'
 import KeyboardHints from '@/components/KeyboardHints'
 import { useHistory } from '@/hooks/useHistory'
@@ -17,6 +18,7 @@ import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/ur
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [isSaveDialog, setIsSaveDialog] = useState(false)
+  const [isExportDialog, setIsExportDialog] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-hints')
@@ -147,6 +149,10 @@ function App() {
     }
   }, [current, lockedStates])
 
+  const handleExport = useCallback(() => {
+    setIsExportDialog(true)
+  }, [])
+
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
@@ -162,10 +168,11 @@ function App() {
   const closeAllDialogs = useCallback(() => {
     setIsOpenDialog(false)
     setIsSaveDialog(false)
+    setIsExportDialog(false)
     setEditIndex(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || editIndex !== null
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || editIndex !== null
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -174,6 +181,7 @@ function App() {
     onOpen: handleOpen,
     onSave: handleSave,
     onShare: handleShare,
+    onExport: handleExport,
     onRerollAll: rerollAll,
     onToggleLock: toggleLockAt,
     onCycleTheme: cycleTheme,
@@ -191,11 +199,13 @@ function App() {
           onOpen={handleOpen}
           onSave={handleSave}
           onShare={handleShare}
+          onExport={handleExport}
           onUndo={undo}
           onRedo={redo}
           canUndo={canUndo}
           canRedo={canRedo}
           canShare={(current ?? []).length > 0}
+          canExport={(current ?? []).length > 0}
         />
       </div>
 
@@ -264,6 +274,14 @@ function App() {
             savePalette(toSave, name)
             setIsSaveDialog(false)
           }}
+        />
+      ) : null}
+
+      {isExportDialog ? (
+        <ExportDialog
+          colors={current ?? []}
+          onCancel={() => setIsExportDialog(false)}
+          onCopied={setNotification}
         />
       ) : null}
 
