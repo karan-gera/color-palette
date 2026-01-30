@@ -13,28 +13,199 @@ export type ExportFormat =
   | 'procreate'
   | 'paintnet'
 
+export type ExportCategory = 'code' | 'art'
+
 export type ExportFormatInfo = {
   value: ExportFormat
   label: string
   description: string
   extension: string
   mimeType: string
-  isDownload: boolean // true = download file, false = copy to clipboard
+  isDownload: boolean
+  category: ExportCategory
+  compatibleApps: string[] // App IDs that support this format
 }
+
+export type AppId = 
+  | 'photoshop'
+  | 'illustrator'
+  | 'procreate'
+  | 'clipstudio'
+  | 'gimp'
+  | 'krita'
+  | 'paintnet'
+
+export type AppInfo = {
+  id: AppId
+  name: string
+  preferredFormat: ExportFormat
+  importSteps: string[]
+}
+
+export const APP_INFO: AppInfo[] = [
+  {
+    id: 'photoshop',
+    name: 'Photoshop / Illustrator',
+    preferredFormat: 'ase',
+    importSteps: [
+      'Download the .ase file',
+      'Open Swatches panel (Window > Swatches)',
+      'Click menu > Import Swatches (or Open Swatch Library > Other Library)',
+      'Select your .ase file',
+    ],
+  },
+  {
+    id: 'procreate',
+    name: 'Procreate',
+    preferredFormat: 'procreate',
+    importSteps: [
+      'Save the .swatches file to Files app',
+      'In Procreate, tap Colors > Palettes > + > New from file',
+      'Select your .swatches file',
+    ],
+  },
+  {
+    id: 'clipstudio',
+    name: 'Clip Studio Paint',
+    preferredFormat: 'ase',
+    importSteps: [
+      'Download the .ase file',
+      'Window > Color Set > Import color set',
+      'Select your .ase file',
+    ],
+  },
+  {
+    id: 'gimp',
+    name: 'GIMP',
+    preferredFormat: 'gpl',
+    importSteps: [
+      'Download the .gpl file',
+      'Place in ~/.config/GIMP/palettes/ (or Windows equivalent)',
+      'Restart GIMP',
+      'Find palette in Windows > Dockable Dialogs > Palettes',
+    ],
+  },
+  {
+    id: 'krita',
+    name: 'Krita',
+    preferredFormat: 'gpl',
+    importSteps: [
+      'Download the .gpl file',
+      'Go to Settings > Manage Resources > Open Resource Folder',
+      'Place file in palettes/ folder',
+      'Restart Krita',
+    ],
+  },
+  {
+    id: 'paintnet',
+    name: 'Paint.NET',
+    preferredFormat: 'paintnet',
+    importSteps: [
+      'Download the .txt file',
+      'Place in Documents/Paint.NET User Files/Palettes/',
+      'Restart Paint.NET',
+    ],
+  },
+]
 
 export const EXPORT_FORMATS: ExportFormatInfo[] = [
   // Code formats
-  { value: 'css', label: 'CSS Variables', description: ':root { --color-1: ... }', extension: 'css', mimeType: 'text/css', isDownload: false },
-  { value: 'json', label: 'JSON', description: '{ "colors": [...] }', extension: 'json', mimeType: 'application/json', isDownload: false },
-  { value: 'tailwind', label: 'Tailwind Config', description: 'colors: { ... }', extension: 'js', mimeType: 'text/javascript', isDownload: false },
-  { value: 'scss', label: 'SCSS Variables', description: '$color-1: ...', extension: 'scss', mimeType: 'text/x-scss', isDownload: false },
+  { 
+    value: 'css', 
+    label: 'CSS Variables', 
+    description: ':root { --color-1: ... }', 
+    extension: 'css', 
+    mimeType: 'text/css', 
+    isDownload: false,
+    category: 'code',
+    compatibleApps: [],
+  },
+  { 
+    value: 'json', 
+    label: 'JSON', 
+    description: '{ "colors": [...] }', 
+    extension: 'json', 
+    mimeType: 'application/json', 
+    isDownload: false,
+    category: 'code',
+    compatibleApps: [],
+  },
+  { 
+    value: 'tailwind', 
+    label: 'Tailwind Config', 
+    description: 'colors: { ... }', 
+    extension: 'js', 
+    mimeType: 'text/javascript', 
+    isDownload: false,
+    category: 'code',
+    compatibleApps: [],
+  },
+  { 
+    value: 'scss', 
+    label: 'SCSS Variables', 
+    description: '$color-1: ...', 
+    extension: 'scss', 
+    mimeType: 'text/x-scss', 
+    isDownload: false,
+    category: 'code',
+    compatibleApps: [],
+  },
   // Art app formats
-  { value: 'ase', label: 'Adobe ASE', description: 'Adobe Swatch Exchange', extension: 'ase', mimeType: 'application/octet-stream', isDownload: true },
-  { value: 'aco', label: 'Adobe ACO', description: 'Photoshop Color Swatches', extension: 'aco', mimeType: 'application/octet-stream', isDownload: true },
-  { value: 'procreate', label: 'Procreate', description: 'Procreate Swatches', extension: 'swatches', mimeType: 'application/octet-stream', isDownload: true },
-  { value: 'gpl', label: 'GIMP Palette', description: '.gpl palette file', extension: 'gpl', mimeType: 'text/plain', isDownload: true },
-  { value: 'paintnet', label: 'Paint.NET', description: 'Paint.NET Palette', extension: 'txt', mimeType: 'text/plain', isDownload: true },
+  { 
+    value: 'ase', 
+    label: 'Adobe ASE', 
+    description: 'Adobe Swatch Exchange', 
+    extension: 'ase', 
+    mimeType: 'application/octet-stream', 
+    isDownload: true,
+    category: 'art',
+    compatibleApps: ['photoshop', 'illustrator', 'procreate', 'clipstudio'],
+  },
+  { 
+    value: 'aco', 
+    label: 'Adobe ACO', 
+    description: 'Photoshop Color Swatches', 
+    extension: 'aco', 
+    mimeType: 'application/octet-stream', 
+    isDownload: true,
+    category: 'art',
+    compatibleApps: ['photoshop', 'clipstudio'],
+  },
+  { 
+    value: 'procreate', 
+    label: 'Procreate Swatches', 
+    description: '.swatches file', 
+    extension: 'swatches', 
+    mimeType: 'application/octet-stream', 
+    isDownload: true,
+    category: 'art',
+    compatibleApps: ['procreate'],
+  },
+  { 
+    value: 'gpl', 
+    label: 'GIMP Palette', 
+    description: '.gpl palette file', 
+    extension: 'gpl', 
+    mimeType: 'text/plain', 
+    isDownload: true,
+    category: 'art',
+    compatibleApps: ['gimp', 'krita'],
+  },
+  { 
+    value: 'paintnet', 
+    label: 'Paint.NET Palette', 
+    description: '.txt palette file', 
+    extension: 'txt', 
+    mimeType: 'text/plain', 
+    isDownload: true,
+    category: 'art',
+    compatibleApps: ['paintnet'],
+  },
 ]
+
+// Helper functions
+export const CODE_FORMATS = EXPORT_FORMATS.filter(f => f.category === 'code')
+export const ART_FORMATS = EXPORT_FORMATS.filter(f => f.category === 'art')
 
 /**
  * Generate CSS variables format
