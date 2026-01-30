@@ -76,13 +76,15 @@ Toggle to simulate how the palette appears to people with color vision deficienc
 - [x] Site-wide filter application (entire UI, not just palette)
 - [x] localStorage persistence
 - [x] Cross-browser support (Chrome, Firefox, Waterfox)
-- [ ] Circle wipe transition animation (Phase 3)
+- [x] Circle wipe transition for theme toggle (Phase 3)
+- [ ] **FIX:** Horizontal wipe for CVD toggle — currently full-screen left-to-right, should wipe across palette bounds only (leftmost color left edge → rightmost color right edge)
 
 **Implementation:** SVG filters with feColorMatrix using Viénot 1999 (deuteranopia, protanopia) and Brettel 1997 (tritanopia) algorithms. Filters embedded in React and applied to wrapper element for consistent cross-browser rendering.
 
 **UX Notes:**
 - This setting changes theming **site-wide** ✅ — the entire UI is viewable through the CVD simulation
-- Transition animation: **circle wipe** effect (pending Phase 3) — will emit outward from toggle component origin
+- Theme toggle: circle wipe from click point ✅
+- CVD toggle: horizontal wipe (needs refinement — should span palette colors, not full screen)
 
 ---
 
