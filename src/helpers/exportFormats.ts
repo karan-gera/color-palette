@@ -28,7 +28,6 @@ export type ExportFormatInfo = {
 
 export type AppId = 
   | 'photoshop'
-  | 'illustrator'
   | 'procreate'
   | 'clipstudio'
   | 'gimp'
@@ -159,7 +158,7 @@ export const EXPORT_FORMATS: ExportFormatInfo[] = [
     mimeType: 'application/octet-stream', 
     isDownload: true,
     category: 'art',
-    compatibleApps: ['photoshop', 'illustrator', 'procreate', 'clipstudio'],
+    compatibleApps: ['photoshop', 'procreate', 'clipstudio'],
   },
   { 
     value: 'aco', 
@@ -169,7 +168,7 @@ export const EXPORT_FORMATS: ExportFormatInfo[] = [
     mimeType: 'application/octet-stream', 
     isDownload: true,
     category: 'art',
-    compatibleApps: ['photoshop', 'clipstudio'],
+    compatibleApps: ['photoshop'],
   },
   { 
     value: 'procreate', 
