@@ -8,6 +8,7 @@ import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
 import EditColorDialog from '@/components/EditColorDialog'
 import KeyboardHints from '@/components/KeyboardHints'
+import CVDFilters from '@/components/CVDFilters'
 import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -192,108 +193,114 @@ function App() {
   })
 
   return (
-    <div className="min-h-screen p-8 flex flex-col items-center gap-6">
-      <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-        <Header title="color palette" />
-        <Controls
-          onOpen={handleOpen}
-          onSave={handleSave}
-          onShare={handleShare}
-          onExport={handleExport}
-          onUndo={undo}
-          onRedo={redo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          canShare={(current ?? []).length > 0}
-          canExport={(current ?? []).length > 0}
-        />
-      </div>
-
-      <AnimatedPaletteContainer
-        colors={current ?? []}
-        lockedStates={lockedStates}
-        onEdit={setEditIndex}
-        onReroll={rerollAt}
-        onDelete={deleteAt}
-        onToggleLock={toggleLockAt}
-        onAdd={addColor}
-      />
-
-      <GlobalColorRelationshipSelector
-        currentRelationship={globalRelationship}
-        onRelationshipChange={handleRelationshipChange}
-        onGlobalReroll={rerollAll}
-      />
-
-      {editIndex !== null && (current ?? [])[editIndex] ? (
-        <EditColorDialog
-          initial={(current ?? [])[editIndex]!}
-          onCancel={() => setEditIndex(null)}
-          onSave={(value) => {
-            const base = current ?? []
-            const next = [...base]
-            next[editIndex!] = value
-            push(next)
-            setEditIndex(null)
-          }}
-        />
-      ) : null}
-
-      {isOpenDialog ? (
-        <OpenDialog
-          palettes={getSavedPalettes()}
-          onCancel={() => setIsOpenDialog(false)}
-          onSelect={(id) => {
-            const p = getSavedPalettes().find((x) => x.id === id)
-            if (p) {
-              replace([p.colors], p.colors.length - 1)
-              setLockedStates(new Array(p.colors.length).fill(true))
-            }
-            setIsOpenDialog(false)
-          }}
-          onRemove={(id) => {
-            removePalette(id)
-          }}
-          onPalettesUpdated={() => {
-            setIsOpenDialog(false)
-            setTimeout(() => setIsOpenDialog(true), 100)
-          }}
-        />
-      ) : null}
-
-      {isSaveDialog ? (
-        <SaveDialog
-          defaultName={`Palette ${new Date().toLocaleString()}`}
-          onCancel={() => setIsSaveDialog(false)}
-          onSave={(name) => {
-            if (history.length === 0) {
-              setIsSaveDialog(false)
-              return
-            }
-            const toSave = (current ?? [])
-            savePalette(toSave, name)
-            setIsSaveDialog(false)
-          }}
-        />
-      ) : null}
-
-      {isExportDialog ? (
-        <ExportDialog
-          colors={current ?? []}
-          onCancel={() => setIsExportDialog(false)}
-          onCopied={setNotification}
-        />
-      ) : null}
-
-      <KeyboardHints visible={showHints} onToggle={toggleHints} />
-
-      {/* Notification toast */}
-      {notification && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
-          {notification}
+    <>
+      {/* SVG filters for Firefox/Waterfox compatibility - must be in same document */}
+      <CVDFilters />
+      
+      {/* Wrapper for CVD filter application (Firefox workaround) */}
+      <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
+          <Header title="color palette" />
+          <Controls
+            onOpen={handleOpen}
+            onSave={handleSave}
+            onShare={handleShare}
+            onExport={handleExport}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            canShare={(current ?? []).length > 0}
+            canExport={(current ?? []).length > 0}
+          />
         </div>
-      )}
-    </div>
+
+        <AnimatedPaletteContainer
+          colors={current ?? []}
+          lockedStates={lockedStates}
+          onEdit={setEditIndex}
+          onReroll={rerollAt}
+          onDelete={deleteAt}
+          onToggleLock={toggleLockAt}
+          onAdd={addColor}
+        />
+
+        <GlobalColorRelationshipSelector
+          currentRelationship={globalRelationship}
+          onRelationshipChange={handleRelationshipChange}
+          onGlobalReroll={rerollAll}
+        />
+
+        {editIndex !== null && (current ?? [])[editIndex] ? (
+          <EditColorDialog
+            initial={(current ?? [])[editIndex]!}
+            onCancel={() => setEditIndex(null)}
+            onSave={(value) => {
+              const base = current ?? []
+              const next = [...base]
+              next[editIndex!] = value
+              push(next)
+              setEditIndex(null)
+            }}
+          />
+        ) : null}
+
+        {isOpenDialog ? (
+          <OpenDialog
+            palettes={getSavedPalettes()}
+            onCancel={() => setIsOpenDialog(false)}
+            onSelect={(id) => {
+              const p = getSavedPalettes().find((x) => x.id === id)
+              if (p) {
+                replace([p.colors], p.colors.length - 1)
+                setLockedStates(new Array(p.colors.length).fill(true))
+              }
+              setIsOpenDialog(false)
+            }}
+            onRemove={(id) => {
+              removePalette(id)
+            }}
+            onPalettesUpdated={() => {
+              setIsOpenDialog(false)
+              setTimeout(() => setIsOpenDialog(true), 100)
+            }}
+          />
+        ) : null}
+
+        {isSaveDialog ? (
+          <SaveDialog
+            defaultName={`Palette ${new Date().toLocaleString()}`}
+            onCancel={() => setIsSaveDialog(false)}
+            onSave={(name) => {
+              if (history.length === 0) {
+                setIsSaveDialog(false)
+                return
+              }
+              const toSave = (current ?? [])
+              savePalette(toSave, name)
+              setIsSaveDialog(false)
+            }}
+          />
+        ) : null}
+
+        {isExportDialog ? (
+          <ExportDialog
+            colors={current ?? []}
+            onCancel={() => setIsExportDialog(false)}
+            onCopied={setNotification}
+          />
+        ) : null}
+
+        <KeyboardHints visible={showHints} onToggle={toggleHints} />
+
+        {/* Notification toast */}
+        {notification && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {notification}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

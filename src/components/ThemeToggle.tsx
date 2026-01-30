@@ -19,7 +19,11 @@ export default function ThemeToggle() {
       >
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToggleGroupItem value="light" aria-label="Light theme">
+            <ToggleGroupItem 
+              value="light" 
+              aria-label="Light theme"
+              className={theme === 'light' ? 'bg-accent text-accent-foreground' : ''}
+            >
               <Sun className="size-4" />
             </ToggleGroupItem>
           </TooltipTrigger>
@@ -30,7 +34,11 @@ export default function ThemeToggle() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToggleGroupItem value="gray" aria-label="Gray theme">
+            <ToggleGroupItem 
+              value="gray" 
+              aria-label="Gray theme"
+              className={theme === 'gray' ? 'bg-accent text-accent-foreground' : ''}
+            >
               <Circle className="size-4" />
             </ToggleGroupItem>
           </TooltipTrigger>
@@ -41,7 +49,11 @@ export default function ThemeToggle() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <ToggleGroupItem value="dark" aria-label="Dark theme">
+            <ToggleGroupItem 
+              value="dark" 
+              aria-label="Dark theme"
+              className={theme === 'dark' ? 'bg-accent text-accent-foreground' : ''}
+            >
               <Moon className="size-4" />
             </ToggleGroupItem>
           </TooltipTrigger>

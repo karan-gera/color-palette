@@ -122,3 +122,8 @@
     display: none; /* Chrome, Safari, Opera */
   }
 }
+
+/* Color Vision Deficiency (CVD) Simulation Filters */
+/* Note: Filters are applied via inline style to #cvd-wrapper element
+   for consistent cross-browser behavior (Chrome + Firefox/Waterfox).
+   CSS selectors are not used to avoid double-filtering issues. */
