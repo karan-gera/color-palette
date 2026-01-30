@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Copy, Download, Check } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Copy, Download, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -7,11 +7,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import DialogKeyboardHints from './DialogKeyboardHints'
 import { 
-  CODE_FORMATS,
-  ART_FORMATS,
+  EXPORT_FORMATS,
   APP_INFO,
   exportPalette, 
   copyToClipboard, 
@@ -24,7 +28,15 @@ import {
 type ExportDialogProps = {
   colors: string[]
   onCancel: () => void
+  onCopied?: (message: string) => void
 }
+
+type DialogView = 
+  | { type: 'selecting' }
+  | { type: 'confirmation'; format: ExportFormatInfo; wasDownload: boolean }
+  | { type: 'howToUse'; format: ExportFormatInfo }
+
+type SelectedOption = AppInfo | 'other' | null
 
 const HINTS = [
   { key: '↑↓', label: 'select' },
@@ -32,76 +44,165 @@ const HINTS = [
   { key: 'Esc', label: 'cancel' },
 ]
 
-export default function ExportDialog({ colors, onCancel }: ExportDialogProps) {
-  const [activeTab, setActiveTab] = useState<'code' | 'art'>('code')
-  const [selectedIndex, setSelectedIndex] = useState(0)
-  const [selectedApp, setSelectedApp] = useState<AppInfo | null>(null)
-  const [copiedFormat, setCopiedFormat] = useState<ExportFormat | null>(null)
+const SCROLL_INDICATOR_DEBOUNCE = 500
 
-  // Get current list of formats based on tab and app selection
-  const currentFormats = activeTab === 'code' 
-    ? CODE_FORMATS 
-    : selectedApp 
-      ? ART_FORMATS.filter(f => f.compatibleApps.includes(selectedApp.id))
-      : ART_FORMATS
+export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialogProps) {
+  const [view, setView] = useState<DialogView>({ type: 'selecting' })
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [selectedApp, setSelectedApp] = useState<SelectedOption>(null)
+  
+  // Scroll indicator state
+  const [canScrollUp, setCanScrollUp] = useState(false)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+  const [showArrowUp, setShowArrowUp] = useState(false)
+  const [showArrowDown, setShowArrowDown] = useState(false)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const arrowUpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const arrowDownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Check scroll position
+  const updateScrollIndicators = useCallback(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const { scrollTop, scrollHeight, clientHeight } = container
+    const atTop = scrollTop <= 1
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 1
+
+    const newCanScrollUp = !atTop
+    const newCanScrollDown = !atBottom && scrollHeight > clientHeight
+
+    // Update gradient visibility immediately
+    setCanScrollUp(newCanScrollUp)
+    setCanScrollDown(newCanScrollDown)
+
+    // Handle arrow up with debounce
+    if (newCanScrollUp) {
+      if (!arrowUpTimeoutRef.current) {
+        arrowUpTimeoutRef.current = setTimeout(() => {
+          setShowArrowUp(true)
+          arrowUpTimeoutRef.current = null
+        }, SCROLL_INDICATOR_DEBOUNCE)
+      }
+    } else {
+      if (arrowUpTimeoutRef.current) {
+        clearTimeout(arrowUpTimeoutRef.current)
+        arrowUpTimeoutRef.current = null
+      }
+      setShowArrowUp(false)
+    }
+
+    // Handle arrow down with debounce
+    if (newCanScrollDown) {
+      if (!arrowDownTimeoutRef.current) {
+        arrowDownTimeoutRef.current = setTimeout(() => {
+          setShowArrowDown(true)
+          arrowDownTimeoutRef.current = null
+        }, SCROLL_INDICATOR_DEBOUNCE)
+      }
+    } else {
+      if (arrowDownTimeoutRef.current) {
+        clearTimeout(arrowDownTimeoutRef.current)
+        arrowDownTimeoutRef.current = null
+      }
+      setShowArrowDown(false)
+    }
+  }, [])
+
+  // Initial check and cleanup
+  useEffect(() => {
+    if (view.type === 'selecting') {
+      // Small delay to let the DOM render
+      const timer = setTimeout(updateScrollIndicators, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [view.type, updateScrollIndicators])
+
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (arrowUpTimeoutRef.current) clearTimeout(arrowUpTimeoutRef.current)
+      if (arrowDownTimeoutRef.current) clearTimeout(arrowDownTimeoutRef.current)
+    }
+  }, [])
 
   const handleExport = useCallback(async (format: ExportFormat) => {
-    const formatInfo = [...CODE_FORMATS, ...ART_FORMATS].find(f => f.value === format)
+    const formatInfo = EXPORT_FORMATS.find(f => f.value === format)
     if (!formatInfo) return
 
     const content = await exportPalette(colors, format)
     
     if (formatInfo.isDownload) {
       downloadFile(content, `palette.${formatInfo.extension}`)
-      setCopiedFormat(format)
-      setTimeout(() => setCopiedFormat(null), 1500)
+      setView({ type: 'confirmation', format: formatInfo, wasDownload: true })
     } else {
+      // Clipboard copy - show toast and close immediately
       const success = await copyToClipboard(content as string)
       if (success) {
-        setCopiedFormat(format)
-        setTimeout(() => setCopiedFormat(null), 1500)
+        onCopied?.(`Copied ${formatInfo.label}`)
+        onCancel()
       }
     }
-  }, [colors])
+  }, [colors, onCopied, onCancel])
 
-  const handleAppSelect = useCallback((app: AppInfo) => {
-    setSelectedApp(app)
-    setSelectedIndex(0)
+  const handleDone = useCallback(() => {
+    onCancel()
+  }, [onCancel])
+
+  const handleHowToUse = useCallback(() => {
+    if (view.type === 'confirmation') {
+      setSelectedApp(null)
+      setView({ type: 'howToUse', format: view.format })
+    }
+  }, [view])
+
+  const handleBackToConfirmation = useCallback(() => {
+    if (view.type === 'howToUse') {
+      setView({ type: 'confirmation', format: view.format, wasDownload: true })
+    }
+  }, [view])
+
+  // Scroll selected item into view
+  const scrollToSelected = useCallback((index: number) => {
+    const item = itemRefs.current[index]
+    if (item) {
+      // Use 'start' for first item, 'end' for last item, 'nearest' for middle items
+      const isFirst = index === 0
+      const isLast = index === EXPORT_FORMATS.length - 1
+      const block = isFirst ? 'start' : isLast ? 'end' : 'nearest'
+      item.scrollIntoView({ block, behavior: 'smooth' })
+    }
   }, [])
 
-  const clearAppSelection = useCallback(() => {
-    setSelectedApp(null)
-    setSelectedIndex(0)
-  }, [])
-
-  // Reset selection when switching tabs
+  // Keyboard navigation (only in selecting state)
   useEffect(() => {
-    setSelectedIndex(0)
-    setSelectedApp(null)
-  }, [activeTab])
+    if (view.type !== 'selecting') return
 
-  // Keyboard navigation
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowUp':
+        case 'ArrowUp': {
           e.preventDefault()
-          setSelectedIndex(prev => (prev > 0 ? prev - 1 : currentFormats.length - 1))
-          break
-        case 'ArrowDown':
-          e.preventDefault()
-          setSelectedIndex(prev => (prev < currentFormats.length - 1 ? prev + 1 : 0))
-          break
-        case 'Enter':
-          e.preventDefault()
-          if (currentFormats[selectedIndex]) {
-            handleExport(currentFormats[selectedIndex].value)
+          if (selectedIndex > 0) {
+            const newIndex = selectedIndex - 1
+            setSelectedIndex(newIndex)
+            scrollToSelected(newIndex)
           }
           break
-        case 'Tab':
-          if (!e.shiftKey) {
-            e.preventDefault()
-            setActiveTab(prev => prev === 'code' ? 'art' : 'code')
+        }
+        case 'ArrowDown': {
+          e.preventDefault()
+          if (selectedIndex < EXPORT_FORMATS.length - 1) {
+            const newIndex = selectedIndex + 1
+            setSelectedIndex(newIndex)
+            scrollToSelected(newIndex)
+          }
+          break
+        }
+        case 'Enter':
+          e.preventDefault()
+          if (EXPORT_FORMATS[selectedIndex]) {
+            handleExport(EXPORT_FORMATS[selectedIndex].value)
           }
           break
       }
@@ -109,176 +210,257 @@ export default function ExportDialog({ colors, onCancel }: ExportDialogProps) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedIndex, currentFormats, handleExport])
+  }, [view.type, selectedIndex, handleExport, scrollToSelected])
 
-  return (
-    <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-lg">
+  // Get compatible apps for How To Use view
+  const compatibleApps = view.type === 'howToUse' 
+    ? APP_INFO.filter(app => view.format.compatibleApps.includes(app.id))
+    : []
+
+  const getSelectedLabel = () => {
+    if (!selectedApp) return 'Select your app...'
+    if (selectedApp === 'other') return 'Other / Not listed'
+    return selectedApp.name
+  }
+
+  // Render content based on current view
+  const renderContent = () => {
+    // How To Use view
+    if (view.type === 'howToUse') {
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-mono lowercase">
+              how to use {view.format.label}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="pt-1">
+            <p className="text-xs text-muted-foreground font-mono mb-2">
+              What app are you importing to?
+            </p>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between font-mono text-sm lowercase"
+                >
+                  {getSelectedLabel()}
+                  <ChevronDown className="size-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width]">
+                {compatibleApps.map((app) => (
+                  <DropdownMenuItem
+                    key={app.id}
+                    onClick={() => setSelectedApp(app)}
+                    className="font-mono text-sm lowercase cursor-pointer"
+                  >
+                    {app.name}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuItem
+                  onClick={() => setSelectedApp('other')}
+                  className="font-mono text-sm lowercase cursor-pointer"
+                >
+                  Other / Not listed
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Instructions for selected app */}
+          {selectedApp && selectedApp !== 'other' && (
+            <div className="bg-muted/50 rounded-md p-3 mt-2 mb-4">
+              <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mb-2">
+                import steps for {selectedApp.name}
+              </p>
+              <ol className="text-xs font-mono space-y-1.5">
+                {selectedApp.importSteps.map((step, i) => (
+                  <li key={i} className="text-muted-foreground">
+                    <span className="text-foreground font-medium">{i + 1}.</span> {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Other / Not listed instructions */}
+          {selectedApp === 'other' && (
+            <div className="bg-muted/50 rounded-md p-3 mt-2 mb-4 space-y-3">
+              <div>
+                <p className="text-xs font-mono font-medium mb-1">Check your software's documentation</p>
+                <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
+                  Look for "import palette", "load swatches", or "color presets" in your app's 
+                  help menu. The file extension ({view.format.extension}) can help you find the right import option.
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs font-mono font-medium mb-1">If no format works</p>
+                <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
+                  You can copy colors one-by-one: click any color's hex code on the main palette 
+                  to copy it in your preferred format (HEX, RGB, HSL, etc).
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs font-mono font-medium mb-1">Missing your app?</p>
+                <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
+                  We'd love to add support for more formats!{' '}
+                  <a 
+                    href="https://github.com/your-repo/issues" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground underline underline-offset-2"
+                  >
+                    Submit a request
+                  </a>
+                  {' '}and let us know what software and format you need.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 font-mono lowercase"
+              onClick={handleBackToConfirmation}
+            >
+              back
+            </Button>
+            <Button
+              className="flex-1 font-mono lowercase"
+              onClick={handleDone}
+            >
+              done
+            </Button>
+          </div>
+        </>
+      )
+    }
+
+    // Confirmation view
+    if (view.type === 'confirmation') {
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-mono lowercase">export complete</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="size-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <Check className="size-6 text-green-500" />
+              </div>
+            </div>
+            <p className="font-mono text-sm">
+              {view.wasDownload 
+                ? 'Your palette has been downloaded!' 
+                : 'Copied to clipboard!'}
+            </p>
+            <p className="text-xs text-muted-foreground font-mono mt-1">
+              {view.format.label} ({view.format.extension})
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 font-mono lowercase"
+              onClick={handleHowToUse}
+            >
+              how to use
+            </Button>
+            <Button
+              className="flex-1 font-mono lowercase"
+              onClick={handleDone}
+            >
+              done
+            </Button>
+          </div>
+        </>
+      )
+    }
+
+    // Selecting view (default)
+    return (
+      <>
         <DialogHeader>
           <DialogTitle className="font-mono lowercase">export palette</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'code' | 'art')}>
-          <TabsList className="w-full">
-            <TabsTrigger value="code" className="flex-1 font-mono lowercase text-xs">
-              for code
-            </TabsTrigger>
-            <TabsTrigger value="art" className="flex-1 font-mono lowercase text-xs">
-              for art apps
-            </TabsTrigger>
-          </TabsList>
+        <div className="relative">
+          {/* Scroll up indicator */}
+          <div 
+            className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10 flex items-start justify-center pt-1 transition-opacity duration-200 ${
+              canScrollUp ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <ChevronUp className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowUp ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          </div>
 
-          <TabsContent value="code" className="mt-4">
-            <FormatList
-              formats={CODE_FORMATS}
-              selectedIndex={selectedIndex}
-              copiedFormat={copiedFormat}
-              onExport={handleExport}
-              onSelect={setSelectedIndex}
-            />
-          </TabsContent>
-
-          <TabsContent value="art" className="mt-4">
-            {/* App Selection */}
-            {!selectedApp && (
-              <div className="mb-4">
-                <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mb-2">
-                  select your app
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {APP_INFO.map((app) => (
-                    <Button
-                      key={app.id}
-                      variant="outline"
-                      size="sm"
-                      className="font-mono text-xs lowercase"
-                      onClick={() => handleAppSelect(app)}
-                    >
-                      {app.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Selected App View */}
-            {selectedApp && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-sm lowercase">{selectedApp.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="font-mono text-xs lowercase text-muted-foreground"
-                    onClick={clearAppSelection}
-                  >
-                    change app
-                  </Button>
-                </div>
-
-                {/* Import Instructions */}
-                <div className="bg-muted/50 rounded-md p-3 mb-4">
-                  <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mb-2">
-                    how to import
-                  </p>
-                  <ol className="text-xs font-mono space-y-1">
-                    {selectedApp.importSteps.map((step, i) => (
-                      <li key={i} className="text-muted-foreground">
-                        <span className="text-foreground">{i + 1}.</span> {step}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </div>
-            )}
-
-            {/* Format separator for non-app view */}
-            {!selectedApp && (
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-background px-2 text-[10px] text-muted-foreground font-mono uppercase tracking-wider">
-                    or choose format
+          <div 
+            ref={scrollContainerRef}
+            onScroll={updateScrollIndicators}
+            className="grid gap-0.5 py-1 px-1 max-h-[400px] overflow-y-auto scrollbar-none"
+          >
+            {EXPORT_FORMATS.map((format, index) => (
+              <Button
+                key={format.value}
+                ref={(el) => { itemRefs.current[index] = el }}
+                variant="ghost"
+                className={`w-full justify-between font-mono text-sm h-auto py-2.5 px-3 ${
+                  selectedIndex === index ? 'ring-2 ring-ring bg-accent' : ''
+                }`}
+                onClick={() => handleExport(format.value)}
+                onMouseEnter={() => setSelectedIndex(index)}
+              >
+                <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1 mr-2">
+                  <span className="lowercase">{format.label}</span>
+                  <span className="text-[10px] text-muted-foreground text-left">
+                    {format.compatibleApps.length > 0 
+                      ? `Works with: ${getAppNames(format.compatibleApps)}`
+                      : format.description
+                    }
                   </span>
                 </div>
-              </div>
-            )}
+                {format.isDownload ? (
+                  <Download className="size-4 opacity-50 shrink-0" />
+                ) : (
+                  <Copy className="size-4 opacity-50 shrink-0" />
+                )}
+              </Button>
+            ))}
+          </div>
 
-            {/* Format List */}
-            <FormatList
-              formats={currentFormats}
-              selectedIndex={selectedIndex}
-              copiedFormat={copiedFormat}
-              onExport={handleExport}
-              onSelect={setSelectedIndex}
-              showCompatibility={!selectedApp}
-            />
-          </TabsContent>
-        </Tabs>
+          {/* Scroll down indicator */}
+          <div 
+            className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none z-10 flex items-end justify-center pb-1 transition-opacity duration-200 ${
+              canScrollDown ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <ChevronDown className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowDown ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          </div>
+        </div>
 
-        <p className="text-[10px] text-muted-foreground font-mono text-center px-4 py-2 border-t">
+        <p className="text-[9px] text-muted-foreground font-mono text-center px-4 py-1.5 border-t">
           Can't find your format? Click any color's hex code to copy it individually.
         </p>
 
         <DialogKeyboardHints hints={HINTS} />
+      </>
+    )
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="sm:max-w-lg">
+        {renderContent()}
       </DialogContent>
     </Dialog>
-  )
-}
-
-// Format list component
-type FormatListProps = {
-  formats: ExportFormatInfo[]
-  selectedIndex: number
-  copiedFormat: ExportFormat | null
-  onExport: (format: ExportFormat) => void
-  onSelect: (index: number) => void
-  showCompatibility?: boolean
-}
-
-function FormatList({ 
-  formats, 
-  selectedIndex, 
-  copiedFormat, 
-  onExport, 
-  onSelect,
-  showCompatibility = false,
-}: FormatListProps) {
-  return (
-    <div className="grid gap-1 max-h-[300px] overflow-y-auto py-1">
-      {formats.map((format, index) => (
-        <Button
-          key={format.value}
-          variant="ghost"
-          className={`w-full justify-between font-mono text-sm h-auto py-3 px-3 ${
-            selectedIndex === index ? 'ring-2 ring-ring bg-accent' : ''
-          }`}
-          onClick={() => onExport(format.value)}
-          onMouseEnter={() => onSelect(index)}
-        >
-          <div className="flex flex-col items-start gap-0.5">
-            <span className="lowercase">{format.label}</span>
-            <span className="text-[10px] text-muted-foreground">
-              {format.description}
-              {showCompatibility && format.compatibleApps.length > 0 && (
-                <span className="ml-1 opacity-70">
-                  — {getAppNames(format.compatibleApps)}
-                </span>
-              )}
-            </span>
-          </div>
-          {copiedFormat === format.value ? (
-            <Check className="size-4 text-green-500" />
-          ) : format.isDownload ? (
-            <Download className="size-4 opacity-50" />
-          ) : (
-            <Copy className="size-4 opacity-50" />
-          )}
-        </Button>
-      ))}
-    </div>
   )
 }
 
