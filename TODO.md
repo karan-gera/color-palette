@@ -131,6 +131,60 @@ Drag-and-drop an image to extract dominant colors.
 
 ---
 
+## Color Naming
+
+Show the closest human-readable color name under each palette item (e.g. "Coral Reef", "Midnight Blue").
+
+- [ ] Nearest-neighbor lookup by OKLCH/Lab distance
+- [ ] Display color name below hex code on each palette item
+- [ ] Use `color-name-list` (MIT license, ~30K names) or similar open library
+- [ ] Optionally show CSS named color if within threshold
+
+**Implementation:** Import color name database, convert to OKLCH, find nearest match by deltaE. Pure client-side. **No Pantone** — their color codes/names are proprietary and aggressively enforced (they forced Adobe to strip Pantone libraries from Creative Cloud in 2022). Use open-source naming databases only.
+
+---
+
+## Color Variations Panel
+
+Click any color to see tints (lighter), shades (darker), and tones (desaturated).
+
+- [ ] Generate 8-10 tints (increase L toward white)
+- [ ] Generate 8-10 shades (decrease L toward black)
+- [ ] Generate 8-10 tones (decrease S toward gray)
+- [ ] Click any variation to copy or replace the palette color
+- [ ] Panel UI (flyout, modal, or inline expand)
+
+**Implementation:** HSL math — adjust L for tints/shades, S for tones. No dependencies needed. Competitors (Coolors Pro, Colorffy Pro) paywall this.
+
+---
+
+## Palette Visualization
+
+Preview palette colors applied to a sample UI layout (card, button, nav bar, text).
+
+- [ ] Sample mockup with primary, secondary, accent, background, text slots
+- [ ] Auto-assign palette colors to slots based on luminance
+- [ ] Toggle between mockup templates (dashboard, landing page, mobile app)
+- [ ] Copy the CSS variable assignments
+
+**Implementation:** Pure CSS/HTML mockup components. No external assets. Realtime Colors does a version of this; most tools paywall it or don't offer it.
+
+---
+
+## Gradient Generator
+
+Generate CSS gradients from palette colors.
+
+- [ ] Linear gradient (configurable angle)
+- [ ] Radial gradient
+- [ ] Conic gradient
+- [ ] Copy as CSS
+- [ ] Visual preview of gradient
+
+**Implementation:** Build gradient CSS strings from palette hex values. Simple UI with angle picker and type selector. Coolors Pro and Colorffy Pro paywall this.
+
+---
+
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
@@ -138,8 +192,12 @@ Drag-and-drop an image to extract dominant colors.
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
 5. **Quick Palette Presets** - Lowers barrier to entry
-6. **Contrast Checker** - Accessibility focus, differentiator
-7. **Extract from Image** - Big feature, more complex
+6. **Color Naming** - Instant perceived value, low effort
+7. **Contrast Checker** - Accessibility focus, differentiator
+8. **Color Variations Panel** - Commonly paywalled, moderate effort
+9. **Gradient Generator** - Nice companion feature, low effort
+10. **Palette Visualization** - High wow factor, moderate effort
+11. **Extract from Image** - Big feature, most complex
 
 ---
 
