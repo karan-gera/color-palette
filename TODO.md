@@ -6,17 +6,9 @@ Features we're making free that competitors paywall.
 
 ## CRITICAL BUGS
 
-### Double-delete crash
+### ~~Double-delete crash~~ ✅ Fixed
 
-**Severity:** Critical — requires page reload to recover.
-
-**Repro:** Click the delete button on a color, then click delete again while the exit animation is still playing (~250ms window).
-
-**Behavior:** The app enters an unusable state — all colors disappear, and you can no longer add colors or interact with the palette. Requires a full page reload to recover.
-
-**Root cause (likely):** The delete callback fires twice for the same index. The first delete removes the color and triggers the exit animation. The second delete operates on stale state (the color is already gone), corrupting the palette array or history state.
-
-**Fix direction:** Guard against double-delete — either disable the delete button during the exit animation, or debounce/deduplicate the delete callback so subsequent calls for the same index within the animation window are ignored.
+**Fix:** Added `isDeleting` state guard in `AnimatedPaletteItem.tsx` — same early-return pattern used by theme/CVD transition guards (`if (isDeleting) return`). Subsequent clicks during the 250ms exit animation are ignored.
 
 ---
 

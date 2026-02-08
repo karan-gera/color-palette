@@ -19,7 +19,11 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
     return () => clearTimeout(timer)
   }, [])
 
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const handleDelete = () => {
+    if (isDeleting) return // Already deleting - ignore click
+    setIsDeleting(true)
     setIsVisible(false)
     setTimeout(() => {
       onDelete()
