@@ -204,23 +204,63 @@ export function useKeyboardShortcuts({
   }, [handleKeyDown])
 }
 
-export const KEYBOARD_SHORTCUTS = [
-  { key: 'A', description: 'add color' },
-  { key: 'R', description: 'reroll all' },
-  { key: '1-5', description: 'toggle lock' },
-  { key: 'Shift+1-5', description: 'delete color' },
-  { key: 'Alt+1-5', description: 'reroll color' },
-  { key: 'Shift+Alt+1-5', description: 'edit color' },
-  { key: 'Z', description: 'undo' },
-  { key: 'Shift+Z', description: 'redo' },
-  { key: 'O', description: 'open' },
-  { key: 'S', description: 'save' },
-  { key: 'C', description: 'copy link' },
-  { key: 'E', description: 'export' },
-  { key: 'T', description: 'cycle theme' },
-  { key: 'Shift+T', description: 'cycle cvd mode' },
-  { key: 'Q', description: 'cycle relationship' },
-  { key: 'K', description: 'contrast' },
-  { key: 'Shift+K', description: 'cycle contrast tab', minColors: 2 },
-  { key: 'Esc', description: 'close dialog' },
-] as const
+export type Modifier = 'shift' | 'alt'
+
+export type ShortcutDef = {
+  modifiers?: Modifier[]
+  key: string
+  description: string
+  minColors?: number
+}
+
+export type ShortcutGroup = {
+  label: string
+  shortcuts: ShortcutDef[]
+}
+
+export const SHORTCUT_GROUPS: ShortcutGroup[] = [
+  {
+    label: 'palette',
+    shortcuts: [
+      { key: 'A', description: 'add color' },
+      { key: 'R', description: 'reroll all' },
+      { key: 'Q', description: 'cycle relationship' },
+    ],
+  },
+  {
+    label: 'per-color (1-5)',
+    shortcuts: [
+      { key: '1-5', description: 'toggle lock' },
+      { modifiers: ['shift'], key: '1-5', description: 'delete color' },
+      { modifiers: ['alt'], key: '1-5', description: 'reroll color' },
+      { modifiers: ['shift', 'alt'], key: '1-5', description: 'edit color' },
+    ],
+  },
+  {
+    label: 'file',
+    shortcuts: [
+      { key: 'O', description: 'open' },
+      { key: 'S', description: 'save' },
+      { key: 'C', description: 'copy link' },
+      { key: 'E', description: 'export' },
+    ],
+  },
+  {
+    label: 'view',
+    shortcuts: [
+      { key: 'T', description: 'cycle theme' },
+      { modifiers: ['shift'], key: 'T', description: 'cycle cvd mode' },
+      { key: 'K', description: 'contrast' },
+      { modifiers: ['shift'], key: 'K', description: 'cycle contrast tab', minColors: 2 },
+    ],
+  },
+  {
+    label: 'general',
+    shortcuts: [
+      { key: 'Z', description: 'undo' },
+      { modifiers: ['shift'], key: 'Z', description: 'redo' },
+      { key: 'Esc', description: 'close dialog' },
+      { key: '/', description: 'shortcuts' },
+    ],
+  },
+]

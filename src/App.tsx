@@ -24,7 +24,7 @@ function App() {
   const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-hints')
-    return stored !== 'false' // Default to true
+    return stored !== 'false'
   })
   const [showContrast, setShowContrast] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-contrast')

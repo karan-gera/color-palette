@@ -1,6 +1,7 @@
 import { EyeOff, Keyboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { KEYBOARD_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
+import { SHORTCUT_GROUPS, type ShortcutDef, type ShortcutGroup } from '@/hooks/useKeyboardShortcuts'
+import { getModifierLabel } from '@/helpers/platform'
 
 type KeyboardHintsProps = {
   visible: boolean
@@ -8,31 +9,60 @@ type KeyboardHintsProps = {
   colorCount: number
 }
 
+function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCount: number }) {
+  const disabled = shortcut.minColors !== undefined && colorCount < shortcut.minColors
+
+  return (
+    <div className={`flex items-center gap-1.5 text-xs transition-opacity duration-200 ${disabled ? 'opacity-30' : ''}`}>
+      <span className="flex items-center gap-0.5 shrink-0">
+        {shortcut.modifiers?.map((mod) => (
+          <kbd
+            key={mod}
+            className="px-1 bg-muted rounded text-sm leading-[18px] font-mono font-medium border border-border/50 min-w-[18px] text-center"
+          >
+            {getModifierLabel(mod)}
+          </kbd>
+        ))}
+        <kbd className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[18px] text-center">
+          {shortcut.key}
+        </kbd>
+      </span>
+      <span className="text-muted-foreground font-mono">{shortcut.description}</span>
+    </div>
+  )
+}
+
+function ShortcutGroupSection({ group, colorCount }: { group: ShortcutGroup; colorCount: number }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <h3 className="text-[9px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-wider mb-0.5">
+        {group.label}
+      </h3>
+      {group.shortcuts.map((shortcut) => (
+        <ShortcutRow
+          key={`${(shortcut.modifiers ?? []).join('-')}-${shortcut.key}`}
+          shortcut={shortcut}
+          colorCount={colorCount}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function KeyboardHints({ visible, onToggle, colorCount }: KeyboardHintsProps) {
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50">
-      <div 
-        className={`flex flex-wrap justify-center gap-x-4 gap-y-1 px-4 py-2 bg-card border rounded-lg shadow-lg max-w-2xl transition-all duration-300 ease-out ${
-          visible 
-            ? 'opacity-100 translate-y-0' 
+      <div
+        className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out ${
+          visible
+            ? 'opacity-100 translate-y-0'
             : 'opacity-0 translate-y-2 pointer-events-none'
         }`}
-        style={{ 
-          // Firefox fallback: use solid bg if backdrop-filter not supported
-          backgroundColor: 'var(--card)',
-        }}
+        style={{ backgroundColor: 'var(--card)' }}
       >
-        {KEYBOARD_SHORTCUTS.map((shortcut) => {
-          const disabled = 'minColors' in shortcut && colorCount < shortcut.minColors
-          return (
-            <div key={shortcut.key} className={`flex items-center gap-1.5 text-xs transition-opacity duration-200 ${disabled ? 'opacity-30' : ''}`}>
-              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[20px] text-center">
-                {shortcut.key}
-              </kbd>
-              <span className="text-muted-foreground font-mono">{shortcut.description}</span>
-            </div>
-          )
-        })}
+        {SHORTCUT_GROUPS.map((group) => (
+          <ShortcutGroupSection key={group.label} group={group} colorCount={colorCount} />
+        ))}
       </div>
       <Button
         variant="ghost"
