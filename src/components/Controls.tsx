@@ -1,8 +1,7 @@
-import { Undo2, Redo2, FolderOpen, Save, Link, Download, Sparkles, ChevronDown } from 'lucide-react'
+import { Undo2, Redo2, FolderOpen, Save, Link, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { PALETTE_PRESETS } from '@/helpers/colorTheory'
+import PresetBrowser from './PresetBrowser'
 
 type ControlsProps = {
   onOpen: () => void
@@ -10,6 +9,8 @@ type ControlsProps = {
   onShare: () => void
   onExport: () => void
   onPresetSelect: (presetId: string) => void
+  onPresetReroll: () => void
+  activePresetId: string | null
   onUndo: () => void
   onRedo: () => void
   canUndo: boolean
@@ -24,6 +25,8 @@ export default function Controls({
   onShare,
   onExport,
   onPresetSelect,
+  onPresetReroll,
+  activePresetId,
   onUndo,
   onRedo,
   canUndo,
@@ -96,34 +99,11 @@ export default function Controls({
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="lowercase font-mono">
-                  <Sparkles className="size-4" />
-                  presets
-                  <ChevronDown className="size-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="font-mono text-xs lowercase">generate a preset palette</p>
-            </TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="center" className="font-mono lowercase">
-            {PALETTE_PRESETS.map((preset) => (
-              <DropdownMenuItem
-                key={preset.id}
-                onClick={() => onPresetSelect(preset.id)}
-                className="flex flex-col items-start gap-0.5 cursor-pointer"
-              >
-                <span className="text-sm">{preset.label}</span>
-                <span className="text-xs text-muted-foreground">{preset.description}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <PresetBrowser
+          activePresetId={activePresetId}
+          onSelect={onPresetSelect}
+          onReroll={onPresetReroll}
+        />
 
         <div className="w-px h-6 bg-border mx-1" />
 

@@ -16,7 +16,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
-import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, type ColorRelationship } from '@/helpers/colorTheory'
+import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 
 function App() {
@@ -182,12 +182,15 @@ function App() {
     setIsExportDialog(true)
   }, [])
 
+  const [activePresetId, setActivePresetId] = useState<string | null>(null)
+
   const applyPreset = useCallback((presetId: string) => {
     const preset = PALETTE_PRESETS.find(p => p.id === presetId)
     if (!preset) return
     const colors = generatePresetPalette(preset)
     replace([colors], 0)
     setLockedStates(new Array(colors.length).fill(false))
+    setActivePresetId(presetId)
   }, [replace])
 
   const handlePresetSelect = useCallback((presetId: string) => {
@@ -199,13 +202,27 @@ function App() {
     }
   }, [lockedStates, applyPreset])
 
-  const [lastPresetIndex, setLastPresetIndex] = useState(-1)
+  const rerollPreset = useCallback(() => {
+    if (!activePresetId) return
+    handlePresetSelect(activePresetId)
+  }, [activePresetId, handlePresetSelect])
 
   const cyclePreset = useCallback(() => {
-    const nextIndex = (lastPresetIndex + 1) % PALETTE_PRESETS.length
-    setLastPresetIndex(nextIndex)
+    const currentIndex = activePresetId
+      ? PALETTE_PRESETS.findIndex(p => p.id === activePresetId)
+      : -1
+    const nextIndex = (currentIndex + 1) % PALETTE_PRESETS.length
     handlePresetSelect(PALETTE_PRESETS[nextIndex].id)
-  }, [lastPresetIndex, handlePresetSelect])
+  }, [activePresetId, handlePresetSelect])
+
+  // Drift detection: clear active preset if colors leave its HSL bounds
+  useEffect(() => {
+    if (!activePresetId || !current?.length) return
+    const preset = PALETTE_PRESETS.find(p => p.id === activePresetId)
+    if (!preset || !isPresetActive(current, preset)) {
+      setActivePresetId(null)
+    }
+  }, [current, activePresetId])
 
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
@@ -297,6 +314,8 @@ function App() {
             onShare={handleShare}
             onExport={handleExport}
             onPresetSelect={handlePresetSelect}
+            onPresetReroll={rerollPreset}
+            activePresetId={activePresetId}
             onUndo={undo}
             onRedo={redo}
             canUndo={canUndo}

@@ -284,6 +284,30 @@ export const PALETTE_PRESETS: PalettePreset[] = [
   { id: 'muted', label: 'Muted', description: 'Low saturation, subtle', hue: [0, 360], saturation: [10, 30], lightness: [40, 65] },
 ]
 
+const HSL_TOLERANCE = 2
+
+function isHueInRange(hue: number, [min, max]: [number, number]): boolean {
+  if (min === 0 && max === 360) return true
+  if (min === 0 && max === 0) return true // monochrome — hue irrelevant
+  if (min > max) {
+    // Wrapping range (e.g. warm: 330–60)
+    return hue >= min - HSL_TOLERANCE || hue <= max + HSL_TOLERANCE
+  }
+  return hue >= min - HSL_TOLERANCE && hue <= max + HSL_TOLERANCE
+}
+
+export function isPresetActive(colors: string[], preset: PalettePreset): boolean {
+  if (colors.length === 0) return false
+  const isMonochrome = preset.saturation[1] <= 5
+  return colors.every(hex => {
+    const hsl = hexToHsl(hex)
+    if (!isMonochrome && !isHueInRange(hsl.h, preset.hue)) return false
+    if (hsl.s < preset.saturation[0] - HSL_TOLERANCE || hsl.s > preset.saturation[1] + HSL_TOLERANCE) return false
+    if (hsl.l < preset.lightness[0] - HSL_TOLERANCE || hsl.l > preset.lightness[1] + HSL_TOLERANCE) return false
+    return true
+  })
+}
+
 export function generatePresetPalette(preset: PalettePreset, count = 5): string[] {
   const [hMin, hMax] = preset.hue
   const [sMin, sMax] = preset.saturation
