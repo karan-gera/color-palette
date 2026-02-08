@@ -201,24 +201,20 @@ Generate CSS gradients from palette colors.
 
 ---
 
-## Keyboard Shortcut Dialog Overhaul
+## Keyboard Shortcut Dialog Overhaul ✅
 
-The keyboard hints overlay is getting cluttered as we add more features and shortcuts. Redesign it to scale gracefully.
+Redesigned the keyboard hints overlay to scale gracefully with grouped layout and OS-aware modifier symbols.
 
-- [ ] Group shortcuts by category (palette, file, view, etc.)
-- [ ] Cleaner layout that accommodates growing shortcut list without feeling overwhelming
-- [ ] Consider a modal/dialog instead of the fixed bottom overlay
-- [ ] Visual hierarchy — primary shortcuts prominent, secondary shortcuts discoverable
-- [ ] Disabled/contextual shortcuts should be clearly communicated
+- [x] Group shortcuts by category (palette, per-color, file, view, general)
+- [x] Cleaner layout — 5-column grouped bottom bar with category labels
+- [x] Visual hierarchy — group labels, disabled shortcuts dimmed at 30% opacity
+- [x] Structured shortcut data (`SHORTCUT_GROUPS` with `ShortcutDef` / `ShortcutGroup` types)
+- [x] OS-aware modifier rendering — `⇧`/`⌥` on macOS, `Shift`/`Alt` on Windows/Linux
+- [x] Platform detection via `navigator.userAgentData` with `navigator.platform` fallback (`src/helpers/platform.ts`)
+- [x] Separate `<kbd>` per modifier — `⇧` `⌥` `1-5` instead of single `Shift+Alt+1-5` box
+- [x] Modifier symbol kbds sized larger to compensate for Unicode glyph rendering
 
-### OS-aware key rendering
-- [ ] Detect platform (macOS vs Windows/Linux) via `navigator.platform` or `navigator.userAgentData`
-- [ ] Render modifier symbols instead of text: `⇧` instead of "Shift", `⌥` instead of "Alt" (macOS) / `Alt` (Windows), `⌘` instead of "Cmd" (macOS) / `Ctrl` (Windows)
-- [ ] Replace the single `key` string in `KEYBOARD_SHORTCUTS` with a structured format — e.g. `{ modifiers: ['shift'], key: '1-5' }` — so each part renders in its own `<kbd>` tag
-- [ ] Render combos as separate styled `<kbd>` elements: `⇧` `1-5` instead of a single `Shift+1-5` box
-- [ ] Standard symbols reference: `⇧` = Shift, `⌥` = Option/Alt, `⌘` = Command, `⌃` = Control, `⎋` = Escape, `⌫` = Delete/Backspace
-
-**Why now:** With contrast checker tabs (`Shift+K`), conditional shortcuts, and more features incoming, the flat list of hints is hitting its limits. The modifier key labels are also getting long ("Shift+Alt+1-5" crammed into one `<kbd>`) and should be split into individual symbols. This should be addressed before adding more shortcuts.
+**Implementation:** Replaced flat `KEYBOARD_SHORTCUTS` array with grouped `SHORTCUT_GROUPS` constant. `getModifierLabel()` in `platform.ts` maps modifier names to OS-appropriate symbols at module load. Bottom bar preserved (not a dialog) for glanceability — new users can reference shortcuts while building muscle memory.
 
 ---
 
@@ -277,7 +273,7 @@ Replace the edit color modal with inline editing directly on the hex label below
 2. ~~**Share via URL** - Highest impact, lowest effort~~ ✅ Done!
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
-5. **Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts
+5. ~~**Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts~~ ✅ Done!
 6. **Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream
 7. **Quick Palette Presets** - Lowers barrier to entry
 8. **Color Naming** - Instant perceived value, low effort

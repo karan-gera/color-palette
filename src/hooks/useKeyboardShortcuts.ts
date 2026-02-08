@@ -19,6 +19,7 @@ type KeyboardShortcutsConfig = {
   onEditColor: (index: number) => void
   onCycleCVD: () => void
   onCycleRelationship: () => void
+  onCyclePreset: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -43,6 +44,7 @@ export function useKeyboardShortcuts({
   onEditColor,
   onCycleCVD,
   onCycleRelationship,
+  onCyclePreset,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -148,6 +150,10 @@ export function useKeyboardShortcuts({
         event.preventDefault()
         onCycleRelationship()
         break
+      case 'p':
+        event.preventDefault()
+        onCyclePreset()
+        break
       case 'k':
         event.preventDefault()
         if (event.shiftKey) {
@@ -193,6 +199,7 @@ export function useKeyboardShortcuts({
     onEditColor,
     onCycleCVD,
     onCycleRelationship,
+    onCyclePreset,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -225,6 +232,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'A', description: 'add color' },
       { key: 'R', description: 'reroll all' },
       { key: 'Q', description: 'cycle relationship' },
+      { key: 'P', description: 'cycle preset' },
     ],
   },
   {

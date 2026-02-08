@@ -263,3 +263,75 @@ export const COLOR_RELATIONSHIPS: { value: ColorRelationship; label: string; des
   { value: 'split-complementary', label: 'Split Complementary', description: 'Complement + neighbors' },
   { value: 'monochromatic', label: 'Monochromatic', description: 'Same hue, different saturation/lightness' },
 ]
+
+export type PalettePreset = {
+  id: string
+  label: string
+  description: string
+  hue: [number, number]
+  saturation: [number, number]
+  lightness: [number, number]
+}
+
+export const PALETTE_PRESETS: PalettePreset[] = [
+  { id: 'pastel', label: 'Pastel', description: 'Soft, light tones', hue: [0, 360], saturation: [25, 45], lightness: [75, 88] },
+  { id: 'neon', label: 'Neon', description: 'Vivid, electric colors', hue: [0, 360], saturation: [85, 100], lightness: [50, 60] },
+  { id: 'earth', label: 'Earth Tones', description: 'Warm, natural hues', hue: [15, 50], saturation: [25, 55], lightness: [35, 55] },
+  { id: 'jewel', label: 'Jewel Tones', description: 'Rich, deep saturation', hue: [0, 360], saturation: [55, 80], lightness: [30, 50] },
+  { id: 'monochrome', label: 'Monochrome', description: 'Grayscale spread', hue: [0, 0], saturation: [0, 5], lightness: [15, 90] },
+  { id: 'warm', label: 'Warm', description: 'Reds, oranges, yellows', hue: [330, 60], saturation: [50, 85], lightness: [45, 70] },
+  { id: 'cool', label: 'Cool', description: 'Blues, teals, purples', hue: [180, 280], saturation: [40, 75], lightness: [40, 65] },
+  { id: 'muted', label: 'Muted', description: 'Low saturation, subtle', hue: [0, 360], saturation: [10, 30], lightness: [40, 65] },
+]
+
+export function generatePresetPalette(preset: PalettePreset, count = 5): string[] {
+  const [hMin, hMax] = preset.hue
+  const [sMin, sMax] = preset.saturation
+  const [lMin, lMax] = preset.lightness
+
+  const isFullHue = hMin === 0 && hMax === 360
+  const isWrapping = hMin > hMax
+
+  // Lightness stratification: divide range into segments for contrast spread
+  const lRange = lMax - lMin
+  const lSegmentSize = lRange / count
+  const lightnessValues = Array.from({ length: count }, (_, i) => {
+    const segStart = lMin + i * lSegmentSize
+    return randomFloat(segStart, segStart + lSegmentSize)
+  })
+  // Shuffle lightness values so they aren't in order
+  for (let i = lightnessValues.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lightnessValues[i], lightnessValues[j]] = [lightnessValues[j], lightnessValues[i]]
+  }
+
+  // Hue distribution
+  const hueValues: number[] = []
+  if (isFullHue) {
+    // Space hues apart with jitter
+    const hueSegment = 360 / count
+    const jitter = hueSegment * 0.3
+    const offset = randomFloat(0, 360)
+    for (let i = 0; i < count; i++) {
+      hueValues.push(normalizeHue(offset + i * hueSegment + randomFloat(-jitter, jitter)))
+    }
+  } else if (isWrapping) {
+    // Wrapping range (e.g. warm: 330–60 wraps through 0)
+    const effectiveMax = hMax + 360
+    for (let i = 0; i < count; i++) {
+      hueValues.push(normalizeHue(randomFloat(hMin, effectiveMax)))
+    }
+  } else {
+    // Narrow range
+    for (let i = 0; i < count; i++) {
+      hueValues.push(randomFloat(hMin, hMax))
+    }
+  }
+
+  return Array.from({ length: count }, (_, i) => {
+    const h = preset.id === 'monochrome' ? 0 : hueValues[i]
+    const s = clamp(randomFloat(sMin, sMax), 0, 100)
+    const l = clamp(lightnessValues[i], 0, 100)
+    return hslToHex({ h: Math.round(h), s: Math.round(s), l: Math.round(l) })
+  })
+}

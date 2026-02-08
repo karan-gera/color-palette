@@ -8,19 +8,22 @@ import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
 import EditColorDialog from '@/components/EditColorDialog'
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import KeyboardHints from '@/components/KeyboardHints'
 import CVDFilters from '@/components/CVDFilters'
 import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
-import { generateRelatedColor, type ColorRelationship } from '@/helpers/colorTheory'
+import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [isSaveDialog, setIsSaveDialog] = useState(false)
   const [isExportDialog, setIsExportDialog] = useState(false)
+  const [pendingPreset, setPendingPreset] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-hints')
@@ -169,6 +172,31 @@ function App() {
     setIsExportDialog(true)
   }, [])
 
+  const applyPreset = useCallback((presetId: string) => {
+    const preset = PALETTE_PRESETS.find(p => p.id === presetId)
+    if (!preset) return
+    const colors = generatePresetPalette(preset)
+    replace([colors], 0)
+    setLockedStates(new Array(colors.length).fill(false))
+  }, [replace])
+
+  const handlePresetSelect = useCallback((presetId: string) => {
+    const hasLocked = lockedStates.some(Boolean)
+    if (hasLocked) {
+      setPendingPreset(presetId)
+    } else {
+      applyPreset(presetId)
+    }
+  }, [lockedStates, applyPreset])
+
+  const [lastPresetIndex, setLastPresetIndex] = useState(-1)
+
+  const cyclePreset = useCallback(() => {
+    const nextIndex = (lastPresetIndex + 1) % PALETTE_PRESETS.length
+    setLastPresetIndex(nextIndex)
+    handlePresetSelect(PALETTE_PRESETS[nextIndex].id)
+  }, [lastPresetIndex, handlePresetSelect])
+
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
@@ -196,10 +224,11 @@ function App() {
     setIsOpenDialog(false)
     setIsSaveDialog(false)
     setIsExportDialog(false)
+    setPendingPreset(null)
     setEditIndex(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || editIndex !== null
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -220,6 +249,7 @@ function App() {
     onEditColor: setEditIndex,
     onCycleCVD: () => cycleCVDRef.current?.(),
     onCycleRelationship: cycleRelationship,
+    onCyclePreset: cyclePreset,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -239,6 +269,7 @@ function App() {
             onSave={handleSave}
             onShare={handleShare}
             onExport={handleExport}
+            onPresetSelect={handlePresetSelect}
             onUndo={undo}
             onRedo={redo}
             canUndo={canUndo}
@@ -325,6 +356,32 @@ function App() {
             onCopied={setNotification}
           />
         ) : null}
+
+        {pendingPreset !== null && (
+          <Dialog open onOpenChange={(open) => !open && setPendingPreset(null)}>
+            <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+              <div className="text-center py-2">
+                <p className="font-mono text-sm leading-relaxed">
+                  this will replace all colors, including locked ones. continue?
+                </p>
+              </div>
+              <DialogFooter className="sm:justify-center gap-2">
+                <Button variant="outline" onClick={() => setPendingPreset(null)} className="font-mono lowercase">
+                  cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    applyPreset(pendingPreset)
+                    setPendingPreset(null)
+                  }}
+                  className="font-mono lowercase"
+                >
+                  continue
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Spacer to clear fixed keyboard hints overlay */}
         <div className="h-24" aria-hidden="true" />
