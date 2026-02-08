@@ -4,7 +4,10 @@ import AddColor from './AddColor'
 type AnimatedPaletteContainerProps = {
   colors: string[]
   lockedStates: boolean[]
-  onEdit: (index: number) => void
+  editIndex: number | null
+  onEditStart: (index: number) => void
+  onEditSave: (index: number, hex: string) => void
+  onEditCancel: () => void
   onReroll: (index: number) => void
   onDelete: (index: number) => void
   onToggleLock: (index: number) => void
@@ -15,7 +18,10 @@ type AnimatedPaletteContainerProps = {
 export default function AnimatedPaletteContainer({
   colors,
   lockedStates,
-  onEdit,
+  editIndex,
+  onEditStart,
+  onEditSave,
+  onEditCancel,
   onReroll,
   onDelete,
   onToggleLock,
@@ -32,7 +38,10 @@ export default function AnimatedPaletteContainer({
           color={color}
           index={index}
           isLocked={lockedStates[index] ?? false}
-          onEdit={() => onEdit(index)}
+          isEditing={editIndex === index}
+          onEditStart={() => onEditStart(index)}
+          onEditSave={(hex) => onEditSave(index, hex)}
+          onEditCancel={onEditCancel}
           onReroll={() => onReroll(index)}
           onDelete={() => onDelete(index)}
           onToggleLock={() => onToggleLock(index)}

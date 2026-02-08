@@ -5,14 +5,17 @@ type AnimatedPaletteItemProps = {
   color: string
   index: number
   isLocked: boolean
-  onEdit: () => void
+  isEditing: boolean
+  onEditStart: () => void
+  onEditSave: (hex: string) => void
+  onEditCancel: () => void
   onReroll: () => void
   onDelete: () => void
   onToggleLock: () => void
   onViewVariations: () => void
 }
 
-export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
+export default function AnimatedPaletteItem({ color, isLocked, isEditing, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -42,7 +45,10 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
       <PaletteItem
         color={color}
         isLocked={isLocked}
-        onEdit={onEdit}
+        isEditing={isEditing}
+        onEditStart={onEditStart}
+        onEditSave={onEditSave}
+        onEditCancel={onEditCancel}
         onReroll={onReroll}
         onDelete={handleDelete}
         onToggleLock={onToggleLock}

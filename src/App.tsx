@@ -8,7 +8,6 @@ import ContrastChecker from '@/components/ContrastChecker'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
-import EditColorDialog from '@/components/EditColorDialog'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import KeyboardHints from '@/components/KeyboardHints'
@@ -222,6 +221,14 @@ function App() {
     })
   }, [])
 
+  const handleEditSave = useCallback((index: number, newHex: string) => {
+    const base = current ?? []
+    const next = [...base]
+    next[index] = newHex
+    push(next)
+    setEditIndex(null)
+  }, [current, push])
+
   const replaceColorFromVariation = useCallback((index: number, newHex: string) => {
     const next = [...(current ?? [])]
     next[index] = newHex
@@ -299,7 +306,10 @@ function App() {
             <AnimatedPaletteContainer
               colors={current ?? []}
               lockedStates={lockedStates}
-              onEdit={setEditIndex}
+              editIndex={variationsIndex !== null ? null : editIndex}
+              onEditStart={setEditIndex}
+              onEditSave={handleEditSave}
+              onEditCancel={() => setEditIndex(null)}
               onReroll={rerollAt}
               onDelete={deleteAt}
               onToggleLock={toggleLockAt}
@@ -334,20 +344,6 @@ function App() {
         />
 
         <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
-
-        {editIndex !== null && (current ?? [])[editIndex] ? (
-          <EditColorDialog
-            initial={(current ?? [])[editIndex]!}
-            onCancel={() => setEditIndex(null)}
-            onSave={(value) => {
-              const base = current ?? []
-              const next = [...base]
-              next[editIndex!] = value
-              push(next)
-              setEditIndex(null)
-            }}
-          />
-        ) : null}
 
         {isOpenDialog ? (
           <OpenDialog

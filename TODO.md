@@ -330,20 +330,20 @@ Every action in the tool should be reachable from the keyboard. Power users shou
 
 ---
 
-## Inline Color Editing
+## Inline Color Editing ✅
 
-Replace the edit color modal with inline editing directly on the hex label below each color circle. Clicking the pencil icon (or `Shift+Alt+1-5`) should turn the hex label into a text input in-place, so it feels like you're renaming the color itself.
+Replace the edit color modal with inline editing directly on the hex label below each color circle. Clicking the pencil icon (or `Shift+Alt+1-5`) turns the hex label into a text input in-place.
 
-- [ ] When editing, swap the hex `<p>` with a styled `<input>` at the same position/size
-- [ ] Input should be pre-filled with the current hex value, auto-selected
-- [ ] Enter to confirm, Escape to cancel (same as current dialog)
-- [ ] Input styling should match the existing hex label exactly (font-mono, text-xs, lowercase) — the transition from label to input should feel seamless
-- [ ] Live preview: update the circle color as the user types a valid hex value
-- [ ] Validation: only accept valid hex on confirm, revert on invalid
-- [ ] Remove `EditColorDialog.tsx` once inline editing is complete
-- [ ] Update `Shift+Alt+1-5` shortcut to trigger inline edit instead of opening a dialog
+- [x] When editing, swap the hex label with a styled `<input>` at the same position/size
+- [x] Input pre-filled with current hex value, auto-selected
+- [x] Enter to confirm, Escape to cancel, click-away cancels
+- [x] Input styling matches hex label (font-mono, text-xs, uppercase, underline)
+- [x] Live preview: circle color updates as user types valid hex
+- [x] Validation: invalid hex on Enter flashes red border, stays in edit mode
+- [x] Removed `EditColorDialog.tsx`
+- [x] `Shift+Alt+1-5` triggers inline edit (unchanged shortcut, new behavior)
 
-**Why:** The modal is heavy-handed for a single text input. Inline editing feels more direct, more fun, and keeps you in flow. It also removes one dialog from the codebase.
+**Implementation:** `isEditing` prop flows from `App.tsx` → `AnimatedPaletteContainer` → `AnimatedPaletteItem` → `PaletteItem`. When active, `<ColorFormatMenu>` is replaced by `<input>` with matching styling. Live preview via `previewColor` on the circle's `backgroundColor`. `EditColorDialog.tsx` deleted.
 
 ---
 
@@ -355,13 +355,17 @@ Replace the edit color modal with inline editing directly on the hex label below
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
 5. ~~**Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts~~ ✅ Done!
 6. ~~**Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream~~ ✅ Done!
-7. **Quick Palette Presets** - Lowers barrier to entry
+7. ~~**Quick Palette Presets** - Lowers barrier to entry~~ ✅ Done!
 8. ~~**Color Naming** - Instant perceived value, low effort~~ ✅ Done!
 9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
 10. ~~**Color Variations Panel** - Commonly paywalled, moderate effort~~ ✅ Done!
-11. **Gradient Generator** - Nice companion feature, low effort
-12. **Palette Visualization** - High wow factor, moderate effort
-13. **Extract from Image** - Big feature, most complex
+11. **Preset Browser Overhaul** - VST-style navigation, active label with drift detection
+12. **Gradient Generator** - Nice companion feature, low effort
+13. **Palette Visualization** - High wow factor, moderate effort
+14. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
+15. **Extract from Image** - Big feature, most complex
+16. **Onboarding Flow** - First-time UX, research-heavy
+17. **IndexedDB Migration** - Low priority, not needed yet
 
 ---
 
