@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 
 type KeyboardShortcutsConfig = {
   onAddColor: () => void
@@ -20,6 +20,7 @@ type KeyboardShortcutsConfig = {
   onCycleCVD: () => void
   onCycleRelationship: () => void
   onCyclePreset: () => void
+  onViewVariations: (index: number) => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -45,10 +46,12 @@ export function useKeyboardShortcuts({
   onCycleCVD,
   onCycleRelationship,
   onCyclePreset,
+  onViewVariations,
   onEscape,
   colorCount,
   isDialogOpen,
 }: KeyboardShortcutsConfig) {
+  const lastKeyRef = useRef<{ key: string; time: number } | null>(null)
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // Don't trigger shortcuts when typing in inputs
     const target = event.target as HTMLElement
@@ -104,6 +107,14 @@ export function useKeyboardShortcuts({
         if (event.altKey) {
           event.preventDefault()
           onRerollColor(index)
+          return
+        }
+
+        // V then 1-5 chord (within 500ms)
+        if (lastKeyRef.current?.key === 'v' && Date.now() - lastKeyRef.current.time < 500 && index < colorCount) {
+          event.preventDefault()
+          lastKeyRef.current = null
+          onViewVariations(index)
           return
         }
       }
@@ -180,6 +191,8 @@ export function useKeyboardShortcuts({
         break
       }
     }
+
+    lastKeyRef.current = { key, time: Date.now() }
   }, [
     onAddColor,
     onUndo,
@@ -200,6 +213,7 @@ export function useKeyboardShortcuts({
     onCycleCVD,
     onCycleRelationship,
     onCyclePreset,
+    onViewVariations,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -242,6 +256,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { modifiers: ['shift'], key: '1-5', description: 'delete color' },
       { modifiers: ['alt'], key: '1-5', description: 'reroll color' },
       { modifiers: ['shift', 'alt'], key: '1-5', description: 'edit color' },
+      { key: 'V 1-5', description: 'variations' },
     ],
   },
   {

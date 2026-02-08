@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
 import Controls from '@/components/Controls'
 import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
+import ColorVariations from '@/components/ColorVariations'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
 import ContrastChecker from '@/components/ContrastChecker'
 import OpenDialog from '@/components/OpenDialog'
@@ -56,6 +57,7 @@ function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
   const [lockedStates, setLockedStates] = useState<boolean[]>([])
+  const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
 
   // Load palette from URL on mount
   useEffect(() => {
@@ -220,15 +222,23 @@ function App() {
     })
   }, [])
 
+  const replaceColorFromVariation = useCallback((index: number, newHex: string) => {
+    const next = [...(current ?? [])]
+    next[index] = newHex
+    push(next)
+    setVariationsIndex(null)
+  }, [current, push])
+
   const closeAllDialogs = useCallback(() => {
     setIsOpenDialog(false)
     setIsSaveDialog(false)
     setIsExportDialog(false)
     setPendingPreset(null)
     setEditIndex(null)
+    setVariationsIndex(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -250,6 +260,7 @@ function App() {
     onCycleCVD: () => cycleCVDRef.current?.(),
     onCycleRelationship: cycleRelationship,
     onCyclePreset: cyclePreset,
+    onViewVariations: setVariationsIndex,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -279,15 +290,42 @@ function App() {
           />
         </div>
 
-        <AnimatedPaletteContainer
-          colors={current ?? []}
-          lockedStates={lockedStates}
-          onEdit={setEditIndex}
-          onReroll={rerollAt}
-          onDelete={deleteAt}
-          onToggleLock={toggleLockAt}
-          onAdd={addColor}
-        />
+        <div className="relative w-full flex justify-center">
+          <div className={`transition-all duration-300 ease-out ${
+            variationsIndex !== null
+              ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
+              : 'opacity-100 scale-100'
+          }`}>
+            <AnimatedPaletteContainer
+              colors={current ?? []}
+              lockedStates={lockedStates}
+              onEdit={setEditIndex}
+              onReroll={rerollAt}
+              onDelete={deleteAt}
+              onToggleLock={toggleLockAt}
+              onViewVariations={setVariationsIndex}
+              onAdd={addColor}
+            />
+          </div>
+          <div className={`transition-all duration-300 ease-out ${
+            variationsIndex !== null
+              ? 'opacity-100 scale-100'
+              : 'opacity-0 scale-[0.98] pointer-events-none absolute'
+          }`}>
+            {variationsIndex !== null && (current ?? [])[variationsIndex] && (
+              <ColorVariations
+                sourceColor={(current ?? [])[variationsIndex]!}
+                sourceIndex={variationsIndex}
+                onClose={() => setVariationsIndex(null)}
+                onCopyHex={(hex) => {
+                  navigator.clipboard.writeText(hex)
+                  setNotification(`copied ${hex}`)
+                }}
+                onReplaceColor={replaceColorFromVariation}
+              />
+            )}
+          </div>
+        </div>
 
         <GlobalColorRelationshipSelector
           currentRelationship={globalRelationship}

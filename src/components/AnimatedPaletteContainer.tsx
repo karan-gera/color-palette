@@ -8,6 +8,7 @@ type AnimatedPaletteContainerProps = {
   onReroll: (index: number) => void
   onDelete: (index: number) => void
   onToggleLock: (index: number) => void
+  onViewVariations: (index: number) => void
   onAdd: () => void
 }
 
@@ -18,6 +19,7 @@ export default function AnimatedPaletteContainer({
   onReroll,
   onDelete,
   onToggleLock,
+  onViewVariations,
   onAdd,
 }: AnimatedPaletteContainerProps) {
   const showAddButton = colors.length < 5
@@ -34,6 +36,7 @@ export default function AnimatedPaletteContainer({
           onReroll={() => onReroll(index)}
           onDelete={() => onDelete(index)}
           onToggleLock={() => onToggleLock(index)}
+          onViewVariations={() => onViewVariations(index)}
         />
       ))}
       {showAddButton && <AddColor onAdd={onAdd} />}

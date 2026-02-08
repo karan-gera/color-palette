@@ -23,9 +23,11 @@ function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCou
             {getModifierLabel(mod)}
           </kbd>
         ))}
-        <kbd className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[18px] text-center">
-          {shortcut.key}
-        </kbd>
+        {shortcut.key.split(' ').map((part, i) => (
+          <kbd key={i} className="px-1 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[18px] text-center">
+            {part}
+          </kbd>
+        ))}
       </span>
       <span className="text-muted-foreground font-mono">{shortcut.description}</span>
     </div>

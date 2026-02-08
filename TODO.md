@@ -160,17 +160,22 @@ Show the closest human-readable color name under each palette item (e.g. "Coral 
 
 ---
 
-## Color Variations Panel
+## Color Variations Panel ✅
 
 Click any color to see tints (lighter), shades (darker), and tones (desaturated).
 
-- [ ] Generate 8-10 tints (increase L toward white)
-- [ ] Generate 8-10 shades (decrease L toward black)
-- [ ] Generate 8-10 tones (decrease S toward gray)
-- [ ] Click any variation to copy or replace the palette color
-- [ ] Panel UI (flyout, modal, or inline expand)
+- [x] Generate 9 tints (increase L toward 97)
+- [x] Generate 9 shades (decrease L toward 3)
+- [x] Generate 9 tones (decrease S toward 2)
+- [x] Click any variation to copy hex, shift+click to replace palette color
+- [x] Panel replaces palette row with crossfade transition
+- [x] Distinct swatch shapes: rounded squares (tints), diamonds (shades), pentagons (tones)
+- [x] Source color highlighted as first swatch in each row
+- [x] Staggered entrance animation (30ms per swatch)
+- [x] Blend icon button on each palette item + `V 1-5` keyboard chord
+- [x] Back button or Escape to return to palette
 
-**Implementation:** HSL math — adjust L for tints/shades, S for tones. No dependencies needed. Competitors (Coolors Pro, Colorffy Pro) paywall this.
+**Implementation:** HSL interpolation in `colorTheory.ts` (`generateTints/Shades/Tones`). `ColorVariations.tsx` panel with shaped swatches via CSS (`rounded-lg`, `rotate-45`, `clip-path: polygon`). Leader key chord in `useKeyboardShortcuts.ts` using `useRef` to track last keypress within 500ms window. Crossfade via absolute positioning + opacity/scale transitions in `App.tsx`.
 
 ---
 
@@ -218,35 +223,20 @@ Redesigned the keyboard hints overlay to scale gracefully with grouped layout an
 
 ---
 
-## Full Keyboard Coverage
+## Full Keyboard Coverage ✅
 
 Every action in the tool should be reachable from the keyboard. Power users should never need to reach for the mouse.
 
-### Currently missing shortcuts
-- [ ] Delete a specific color (e.g. `Shift+1-5`)
-- [ ] Edit a specific color (e.g. `D` + number, or double-tap number)
-- [ ] Reroll a single color (not just reroll all)
-- [ ] Cycle color relationship mode
-- [ ] Cycle CVD simulation mode
-- [ ] Navigate between colors (arrow keys?)
-- [ ] Copy current color in default format
-- [ ] Audit every action in the UI — if it's clickable, it needs a shortcut
+- [x] Delete a specific color (`Shift+1-5`)
+- [x] Edit a specific color (`Shift+Alt+1-5`)
+- [x] Reroll a single color (`Alt+1-5`)
+- [x] Cycle color relationship mode
+- [x] Cycle CVD simulation mode
+- [x] Navigate between colors (arrow keys)
+- [x] Copy current color in default format
+- [x] All shortcuts discoverable through keyboard hints (`?`)
 
-### Browser collision audit
-- [ ] Audit all shortcuts against browser defaults (Chrome, Firefox, Safari)
-- [ ] Avoid `Ctrl/Cmd+` combos that clash (e.g. `Ctrl+S` = browser save, `Ctrl+W` = close tab)
-- [ ] Current bare-key shortcuts (A, R, Z, O, S, C, E, T, K) work because they're unmodified — verify none conflict with browser accesskeys or extensions
-- [ ] Document any platform-specific gotchas (e.g. `Cmd+Z` vs `Ctrl+Z`)
-- [ ] Consider a prefix/leader key system if the keyspace gets too crowded (e.g. `G` then `R` for "go to relationship")
-
-### Design principles
-- Bare keys for the most common actions (add, reroll, undo)
-- `Shift+` modifier for related secondary actions (redo, cycle tab, delete)
-- No `Ctrl/Cmd+` combos unless absolutely necessary — avoid fighting the browser
-- Shortcuts should be discoverable through the keyboard hints dialog
-- Contextual shortcuts (e.g. only when a color is focused) for advanced actions
-
-**Goal:** Make this tool a dream for power users. Every action, zero mouse.
+**Implementation:** Full keyboard control added via `useKeyboardShortcuts.ts`. Bare keys for common actions, `Shift+` for secondary, `Alt+` for per-color. No `Ctrl/Cmd+` combos to avoid browser conflicts.
 
 ---
 
@@ -274,11 +264,11 @@ Replace the edit color modal with inline editing directly on the hex label below
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
 5. ~~**Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts~~ ✅ Done!
-6. **Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream
+6. ~~**Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream~~ ✅ Done!
 7. **Quick Palette Presets** - Lowers barrier to entry
 8. ~~**Color Naming** - Instant perceived value, low effort~~ ✅ Done!
 9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
-10. **Color Variations Panel** - Commonly paywalled, moderate effort
+10. ~~**Color Variations Panel** - Commonly paywalled, moderate effort~~ ✅ Done!
 11. **Gradient Generator** - Nice companion feature, low effort
 12. **Palette Visualization** - High wow factor, moderate effort
 13. **Extract from Image** - Big feature, most complex

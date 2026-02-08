@@ -9,9 +9,10 @@ type AnimatedPaletteItemProps = {
   onReroll: () => void
   onDelete: () => void
   onToggleLock: () => void
+  onViewVariations: () => void
 }
 
-export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock }: AnimatedPaletteItemProps) {
+export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
         onReroll={onReroll}
         onDelete={handleDelete}
         onToggleLock={onToggleLock}
+        onViewVariations={onViewVariations}
       />
     </div>
   )

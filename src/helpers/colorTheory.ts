@@ -140,7 +140,7 @@ function normalizeHue(hue: number): number {
   return ((hue % 360) + 360) % 360
 }
 
-function clamp(value: number, min: number, max: number): number {
+export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
@@ -333,5 +333,32 @@ export function generatePresetPalette(preset: PalettePreset, count = 5): string[
     const s = clamp(randomFloat(sMin, sMax), 0, 100)
     const l = clamp(lightnessValues[i], 0, 100)
     return hslToHex({ h: Math.round(h), s: Math.round(s), l: Math.round(l) })
+  })
+}
+
+export function generateTints(hex: string, count = 9): string[] {
+  const { h, s, l } = hexToHsl(hex)
+  const target = 97
+  return Array.from({ length: count }, (_, i) => {
+    const step = (i + 1) / count
+    return hslToHex({ h, s, l: clamp(Math.round(l + (target - l) * step), 0, 100) })
+  })
+}
+
+export function generateShades(hex: string, count = 9): string[] {
+  const { h, s, l } = hexToHsl(hex)
+  const target = 3
+  return Array.from({ length: count }, (_, i) => {
+    const step = (i + 1) / count
+    return hslToHex({ h, s, l: clamp(Math.round(l + (target - l) * step), 0, 100) })
+  })
+}
+
+export function generateTones(hex: string, count = 9): string[] {
+  const { h, s, l } = hexToHsl(hex)
+  const target = 2
+  return Array.from({ length: count }, (_, i) => {
+    const step = (i + 1) / count
+    return hslToHex({ h, s: clamp(Math.round(s + (target - s) * step), 0, 100), l })
   })
 }

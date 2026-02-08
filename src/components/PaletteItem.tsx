@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Pencil, RefreshCw, Trash2 } from 'lucide-react'
+import { Blend, Pencil, RefreshCw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import LockIcon from './LockIcon'
@@ -13,9 +13,10 @@ type PaletteItemProps = {
   onReroll: () => void
   onDelete: () => void
   onToggleLock: () => void
+  onViewVariations: () => void
 }
 
-export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock }: PaletteItemProps) {
+export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelete, onToggleLock, onViewVariations }: PaletteItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   
   const textColor = useMemo(() => {
@@ -94,6 +95,17 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
             </TooltipTrigger>
             <TooltipContent>
               <p className="font-mono text-xs lowercase">delete</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon-xs" onClick={onViewVariations}>
+                <Blend className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">variations</p>
             </TooltipContent>
           </Tooltip>
         </div>
