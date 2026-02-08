@@ -12,6 +12,8 @@ type KeyboardShortcutsConfig = {
   onToggleLock: (index: number) => void
   onCycleTheme: () => void
   onToggleHints: () => void
+  onToggleContrast: () => void
+  onCycleContrastTab: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -29,6 +31,8 @@ export function useKeyboardShortcuts({
   onToggleLock,
   onCycleTheme,
   onToggleHints,
+  onToggleContrast,
+  onCycleContrastTab,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -103,6 +107,14 @@ export function useKeyboardShortcuts({
         event.preventDefault()
         onCycleTheme()
         break
+      case 'k':
+        event.preventDefault()
+        if (event.shiftKey) {
+          if (colorCount >= 2) onCycleContrastTab()
+        } else {
+          onToggleContrast()
+        }
+        break
       case '?':
       case '/':
         event.preventDefault()
@@ -133,6 +145,8 @@ export function useKeyboardShortcuts({
     onToggleLock,
     onCycleTheme,
     onToggleHints,
+    onToggleContrast,
+    onCycleContrastTab,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -155,5 +169,7 @@ export const KEYBOARD_SHORTCUTS = [
   { key: 'C', description: 'copy link' },
   { key: 'E', description: 'export' },
   { key: 'T', description: 'cycle theme' },
+  { key: 'K', description: 'contrast' },
+  { key: 'Shift+K', description: 'cycle contrast tab', minColors: 2 },
   { key: 'Esc', description: 'close dialog' },
 ] as const

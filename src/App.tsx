@@ -1,8 +1,9 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
 import Controls from '@/components/Controls'
 import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
+import ContrastChecker from '@/components/ContrastChecker'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
@@ -25,6 +26,11 @@ function App() {
     const stored = localStorage.getItem('color-palette:show-hints')
     return stored !== 'false' // Default to true
   })
+  const [showContrast, setShowContrast] = useState(() => {
+    const stored = localStorage.getItem('color-palette:show-contrast')
+    return stored === 'true'
+  })
+  const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const {
     history,
     current,
@@ -72,6 +78,14 @@ function App() {
     setShowHints(prev => {
       const next = !prev
       localStorage.setItem('color-palette:show-hints', String(next))
+      return next
+    })
+  }, [])
+
+  const toggleContrast = useCallback(() => {
+    setShowContrast(prev => {
+      const next = !prev
+      localStorage.setItem('color-palette:show-contrast', String(next))
       return next
     })
   }, [])
@@ -187,6 +201,8 @@ function App() {
     onToggleLock: toggleLockAt,
     onCycleTheme: cycleTheme,
     onToggleHints: toggleHints,
+    onToggleContrast: toggleContrast,
+    onCycleContrastTab: () => cycleContrastTabRef.current?.(),
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -230,6 +246,8 @@ function App() {
           onRelationshipChange={handleRelationshipChange}
           onGlobalReroll={rerollAll}
         />
+
+        <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
 
         {editIndex !== null && (current ?? [])[editIndex] ? (
           <EditColorDialog
@@ -290,10 +308,20 @@ function App() {
             onCopied={setNotification}
           />
         ) : null}
+
+        {/* Spacer to clear fixed keyboard hints overlay */}
+        <div className="h-24" aria-hidden="true" />
       </div>
 
+      {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
+      <div
+        className="fixed bottom-0 left-0 right-0 h-28 bg-background pointer-events-none z-40 transition-colors duration-300"
+        style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
+        aria-hidden="true"
+      />
+
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
-      <KeyboardHints visible={showHints} onToggle={toggleHints} />
+      <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
 
       {/* Notification toast */}
       {notification && (

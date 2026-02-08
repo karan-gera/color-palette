@@ -5,9 +5,10 @@ import { KEYBOARD_SHORTCUTS } from '@/hooks/useKeyboardShortcuts'
 type KeyboardHintsProps = {
   visible: boolean
   onToggle: () => void
+  colorCount: number
 }
 
-export default function KeyboardHints({ visible, onToggle }: KeyboardHintsProps) {
+export default function KeyboardHints({ visible, onToggle, colorCount }: KeyboardHintsProps) {
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50">
       <div 
@@ -21,14 +22,17 @@ export default function KeyboardHints({ visible, onToggle }: KeyboardHintsProps)
           backgroundColor: 'var(--card)',
         }}
       >
-        {KEYBOARD_SHORTCUTS.map(({ key, description }) => (
-          <div key={key} className="flex items-center gap-1.5 text-xs">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[20px] text-center">
-              {key}
-            </kbd>
-            <span className="text-muted-foreground font-mono">{description}</span>
-          </div>
-        ))}
+        {KEYBOARD_SHORTCUTS.map((shortcut) => {
+          const disabled = 'minColors' in shortcut && colorCount < shortcut.minColors
+          return (
+            <div key={shortcut.key} className={`flex items-center gap-1.5 text-xs transition-opacity duration-200 ${disabled ? 'opacity-30' : ''}`}>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono font-medium border border-border/50 min-w-[20px] text-center">
+                {shortcut.key}
+              </kbd>
+              <span className="text-muted-foreground font-mono">{shortcut.description}</span>
+            </div>
+          )
+        })}
       </div>
       <Button
         variant="ghost"
