@@ -211,7 +211,14 @@ The keyboard hints overlay is getting cluttered as we add more features and shor
 - [ ] Visual hierarchy — primary shortcuts prominent, secondary shortcuts discoverable
 - [ ] Disabled/contextual shortcuts should be clearly communicated
 
-**Why now:** With contrast checker tabs (`Shift+K`), conditional shortcuts, and more features incoming, the flat list of hints is hitting its limits. This should be addressed before adding more shortcuts.
+### OS-aware key rendering
+- [ ] Detect platform (macOS vs Windows/Linux) via `navigator.platform` or `navigator.userAgentData`
+- [ ] Render modifier symbols instead of text: `⇧` instead of "Shift", `⌥` instead of "Alt" (macOS) / `Alt` (Windows), `⌘` instead of "Cmd" (macOS) / `Ctrl` (Windows)
+- [ ] Replace the single `key` string in `KEYBOARD_SHORTCUTS` with a structured format — e.g. `{ modifiers: ['shift'], key: '1-5' }` — so each part renders in its own `<kbd>` tag
+- [ ] Render combos as separate styled `<kbd>` elements: `⇧` `1-5` instead of a single `Shift+1-5` box
+- [ ] Standard symbols reference: `⇧` = Shift, `⌥` = Option/Alt, `⌘` = Command, `⌃` = Control, `⎋` = Escape, `⌫` = Delete/Backspace
+
+**Why now:** With contrast checker tabs (`Shift+K`), conditional shortcuts, and more features incoming, the flat list of hints is hitting its limits. The modifier key labels are also getting long ("Shift+Alt+1-5" crammed into one `<kbd>`) and should be split into individual symbols. This should be addressed before adding more shortcuts.
 
 ---
 
@@ -244,6 +251,23 @@ Every action in the tool should be reachable from the keyboard. Power users shou
 - Contextual shortcuts (e.g. only when a color is focused) for advanced actions
 
 **Goal:** Make this tool a dream for power users. Every action, zero mouse.
+
+---
+
+## Inline Color Editing
+
+Replace the edit color modal with inline editing directly on the hex label below each color circle. Clicking the pencil icon (or `Shift+Alt+1-5`) should turn the hex label into a text input in-place, so it feels like you're renaming the color itself.
+
+- [ ] When editing, swap the hex `<p>` with a styled `<input>` at the same position/size
+- [ ] Input should be pre-filled with the current hex value, auto-selected
+- [ ] Enter to confirm, Escape to cancel (same as current dialog)
+- [ ] Input styling should match the existing hex label exactly (font-mono, text-xs, lowercase) — the transition from label to input should feel seamless
+- [ ] Live preview: update the circle color as the user types a valid hex value
+- [ ] Validation: only accept valid hex on confirm, revert on invalid
+- [ ] Remove `EditColorDialog.tsx` once inline editing is complete
+- [ ] Update `Shift+Alt+1-5` shortcut to trigger inline edit instead of opening a dialog
+
+**Why:** The modal is heavy-handed for a single text input. Inline editing feels more direct, more fun, and keeps you in flow. It also removes one dialog from the codebase.
 
 ---
 

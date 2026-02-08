@@ -1,4 +1,4 @@
-import { useCallback, type MouseEvent } from 'react'
+import { useCallback, useEffect, type MouseEvent } from 'react'
 import { Eye } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -13,8 +13,17 @@ const CVD_OPTIONS: { value: CVDType; label: string; shortLabel: string }[] = [
   { value: 'achromatopsia', label: CVD_LABELS.achromatopsia, shortLabel: 'A' },
 ]
 
-export default function CVDToggle() {
-  const { cvd, setCVDWithTransition, transition, applyTransitionTarget, completeTransition } = useCVD()
+type CVDToggleProps = {
+  onCycleCVD: React.MutableRefObject<(() => void) | null>
+}
+
+export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
+  const { cvd, setCVDWithTransition, cycleCVD, transition, applyTransitionTarget, completeTransition } = useCVD()
+
+  useEffect(() => {
+    onCycleCVD.current = cycleCVD
+    return () => { onCycleCVD.current = null }
+  }, [cycleCVD, onCycleCVD])
 
   // Handle click with coordinates for circle wipe animation
   const handleOptionClick = useCallback((e: MouseEvent, value: CVDType) => {

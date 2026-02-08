@@ -31,6 +31,7 @@ function App() {
     return stored === 'true'
   })
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
+  const cycleCVDRef = useRef<(() => void) | null>(null)
   const {
     history,
     current,
@@ -180,6 +181,17 @@ function App() {
     }
   }, [current, lockedStates, push])
 
+  const cycleRelationship = useCallback(() => {
+    const modes: ColorRelationship[] = [
+      'random', 'complementary', 'analogous', 'triadic',
+      'tetradic', 'split-complementary', 'monochromatic',
+    ]
+    setGlobalRelationship(prev => {
+      const idx = modes.indexOf(prev)
+      return modes[(idx + 1) % modes.length]
+    })
+  }, [])
+
   const closeAllDialogs = useCallback(() => {
     setIsOpenDialog(false)
     setIsSaveDialog(false)
@@ -203,6 +215,11 @@ function App() {
     onToggleHints: toggleHints,
     onToggleContrast: toggleContrast,
     onCycleContrastTab: () => cycleContrastTabRef.current?.(),
+    onDeleteColor: deleteAt,
+    onRerollColor: rerollAt,
+    onEditColor: setEditIndex,
+    onCycleCVD: () => cycleCVDRef.current?.(),
+    onCycleRelationship: cycleRelationship,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -216,7 +233,7 @@ function App() {
       {/* Wrapper for CVD filter application (Firefox workaround) */}
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-          <Header title="color palette" />
+          <Header title="color palette" onCycleCVD={cycleCVDRef} />
           <Controls
             onOpen={handleOpen}
             onSave={handleSave}
