@@ -64,6 +64,7 @@ export default function CircleWipeOverlay({
   const configRef = useRef(config)
   const targetRectRef = useRef<{ top: number; left: number; width: number; height: number } | null>(null)
   const targetClassRef = useRef('')
+  const inheritedFilterRef = useRef('')
   
   // Keep callbacks in refs to avoid effect deps issues
   const onApplyStateRef = useRef(onApplyState)
@@ -109,8 +110,12 @@ export default function CircleWipeOverlay({
         const rect = cloneSource.getBoundingClientRect()
         targetRectRef.current = { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
         targetClassRef.current = cloneSource.className
+        inheritedFilterRef.current = ''
       } else {
         targetRectRef.current = null
+        // Capture any active filter (e.g. CVD) on the clone source so the
+        // overlay preserves it even when config.oldFilter isn't explicitly set
+        inheritedFilterRef.current = cloneSource.style.filter || ''
       }
     }
     
@@ -180,7 +185,7 @@ export default function CircleWipeOverlay({
     transition: phase === 'animating'
       ? `clip-path ${CIRCLE_WIPE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`
       : 'none',
-    filter: activeConfig.oldFilter || undefined,
+    filter: activeConfig.oldFilter || inheritedFilterRef.current || undefined,
     overflow: 'hidden',
   }
 
