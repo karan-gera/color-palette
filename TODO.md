@@ -134,6 +134,38 @@ One-click generation of popular palette styles for users who don't know color th
 
 ---
 
+## Preset Browser Overhaul
+
+Redesign the preset selector to feel like a synth VST preset browser.
+
+### Icon
+- [ ] Replace Sparkles icon — it's been co-opted by gen AI and sends the wrong signal
+- [ ] Pick a neutral icon (e.g. Palette, Layers, SwatchBook, or similar)
+
+### Navigation
+- [ ] Left/right arrow buttons flanking the preset name, visually attached
+- [ ] Arrows cycle through presets and auto-apply on click (no extra confirm step)
+- [ ] Lock warning modal still triggers when locked colors exist
+
+### Hover interaction
+- [ ] On hover, preset name text becomes two icon-only buttons: expand dropdown + reroll
+- [ ] Both buttons are purely symbol-based (no text labels)
+- [ ] Dropdown opens full preset list for direct selection
+- [ ] Reroll regenerates the current preset
+
+### Active preset label
+- [ ] When a preset is selected, show its name in the text label (e.g. "pastel")
+- [ ] Default text when no preset is active (e.g. "presets")
+- [ ] Detect "broken" preset state: if one or more colors fall outside the preset's stated HSL bounds, the preset is no longer active
+- [ ] Broken state triggers: user edits a color, rerolls, adds/removes colors, or any color drifts out of the preset's H/S/L ranges
+- [ ] Transition from preset name back to default text with a fade animation
+
+### Keyboard
+- [ ] `P` continues to cycle presets (existing)
+- [ ] Consider left/right arrow support when preset selector is focused
+
+---
+
 ## Extract from Image
 
 Drag-and-drop an image to extract dominant colors.
