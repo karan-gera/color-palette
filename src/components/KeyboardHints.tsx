@@ -38,7 +38,7 @@ export default function KeyboardHints({ visible, onToggle }: KeyboardHintsProps)
       >
         {visible ? <EyeOff className="size-3" /> : <Keyboard className="size-3" />}
         <span className="transition-all duration-200">{visible ? 'hide' : 'shortcuts'}</span>
-        <kbd className="ml-0.5 px-1 py-0.5 bg-muted rounded text-[10px] font-mono border border-border/50">?</kbd>
+        <kbd className="ml-0.5 px-1 py-0.5 bg-muted rounded text-[10px] font-mono border border-border/50">/</kbd>
       </Button>
     </div>
   )
