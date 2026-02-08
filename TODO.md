@@ -215,6 +215,38 @@ The keyboard hints overlay is getting cluttered as we add more features and shor
 
 ---
 
+## Full Keyboard Coverage
+
+Every action in the tool should be reachable from the keyboard. Power users should never need to reach for the mouse.
+
+### Currently missing shortcuts
+- [ ] Delete a specific color (e.g. `Shift+1-5`)
+- [ ] Edit a specific color (e.g. `D` + number, or double-tap number)
+- [ ] Reroll a single color (not just reroll all)
+- [ ] Cycle color relationship mode
+- [ ] Cycle CVD simulation mode
+- [ ] Navigate between colors (arrow keys?)
+- [ ] Copy current color in default format
+- [ ] Audit every action in the UI — if it's clickable, it needs a shortcut
+
+### Browser collision audit
+- [ ] Audit all shortcuts against browser defaults (Chrome, Firefox, Safari)
+- [ ] Avoid `Ctrl/Cmd+` combos that clash (e.g. `Ctrl+S` = browser save, `Ctrl+W` = close tab)
+- [ ] Current bare-key shortcuts (A, R, Z, O, S, C, E, T, K) work because they're unmodified — verify none conflict with browser accesskeys or extensions
+- [ ] Document any platform-specific gotchas (e.g. `Cmd+Z` vs `Ctrl+Z`)
+- [ ] Consider a prefix/leader key system if the keyspace gets too crowded (e.g. `G` then `R` for "go to relationship")
+
+### Design principles
+- Bare keys for the most common actions (add, reroll, undo)
+- `Shift+` modifier for related secondary actions (redo, cycle tab, delete)
+- No `Ctrl/Cmd+` combos unless absolutely necessary — avoid fighting the browser
+- Shortcuts should be discoverable through the keyboard hints dialog
+- Contextual shortcuts (e.g. only when a color is focused) for advanced actions
+
+**Goal:** Make this tool a dream for power users. Every action, zero mouse.
+
+---
+
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
@@ -222,13 +254,14 @@ The keyboard hints overlay is getting cluttered as we add more features and shor
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
 5. **Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts
-6. **Quick Palette Presets** - Lowers barrier to entry
-7. **Color Naming** - Instant perceived value, low effort
-8. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
-9. **Color Variations Panel** - Commonly paywalled, moderate effort
-10. **Gradient Generator** - Nice companion feature, low effort
-11. **Palette Visualization** - High wow factor, moderate effort
-12. **Extract from Image** - Big feature, most complex
+6. **Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream
+7. **Quick Palette Presets** - Lowers barrier to entry
+8. **Color Naming** - Instant perceived value, low effort
+9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
+10. **Color Variations Panel** - Commonly paywalled, moderate effort
+11. **Gradient Generator** - Nice companion feature, low effort
+12. **Palette Visualization** - High wow factor, moderate effort
+13. **Extract from Image** - Big feature, most complex
 
 ---
 
