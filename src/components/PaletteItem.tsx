@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import LockIcon from './LockIcon'
 import ColorFormatMenu from './ColorFormatMenu'
+import { getColorName } from '@/helpers/colorNaming'
 
 type PaletteItemProps = {
   color: string
@@ -25,6 +26,8 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
     const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
     return luminance > 160 ? '#111111' : '#ffffff'
   }, [color])
+
+  const colorName = useMemo(() => getColorName(color), [color])
 
   const showLockIcon = isLocked || isHovered
 
@@ -94,6 +97,29 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
             </TooltipContent>
           </Tooltip>
         </div>
+
+        {colorName.cssName ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center cursor-default"
+                title={colorName.name}
+              >
+                {colorName.name}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">css: {colorName.cssName}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span
+            className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center"
+            title={colorName.name}
+          >
+            {colorName.name}
+          </span>
+        )}
 
         <ColorFormatMenu color={color} />
       </div>

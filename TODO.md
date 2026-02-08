@@ -117,20 +117,20 @@ Show WCAG contrast ratios between colors for accessibility compliance.
 
 ---
 
-## Quick Palette Presets
+## Quick Palette Presets ✅
 
 One-click generation of popular palette styles for users who don't know color theory.
 
-- [ ] Pastel
-- [ ] Neon / Vibrant
-- [ ] Earth tones
-- [ ] Jewel tones
-- [ ] Monochrome
-- [ ] Warm
-- [ ] Cool
-- [ ] Muted / Desaturated
+- [x] Pastel
+- [x] Neon / Vibrant
+- [x] Earth tones
+- [x] Jewel tones
+- [x] Monochrome
+- [x] Warm
+- [x] Cool
+- [x] Muted / Desaturated
 
-**Implementation:** Predefined HSL ranges for each preset. Generate random colors within those constraints.
+**Implementation:** Predefined HSL ranges for each preset with lightness stratification for contrast spread. Toolbar dropdown with Sparkles icon, `P` key to cycle presets, confirmation dialog when locked colors would be replaced. Generator in `colorTheory.ts` handles hue wrapping (warm preset), full-hue spacing with jitter, and monochrome special case.
 
 ---
 
@@ -147,16 +147,16 @@ Drag-and-drop an image to extract dominant colors.
 
 ---
 
-## Color Naming
+## Color Naming ✅
 
 Show the closest human-readable color name under each palette item (e.g. "Coral Reef", "Midnight Blue").
 
-- [ ] Nearest-neighbor lookup by OKLCH/Lab distance
-- [ ] Display color name below hex code on each palette item
-- [ ] Use `color-name-list` (MIT license, ~30K names) or similar open library
-- [ ] Optionally show CSS named color if within threshold
+- [x] Nearest-neighbor lookup by Oklab distance
+- [x] Display color name between action buttons and hex code on each palette item
+- [x] Use `color-name-list/bestof` (MIT license, ~4K curated names)
+- [x] Show CSS named color tooltip if within threshold (~0.02 Oklab distance)
 
-**Implementation:** Import color name database, convert to OKLCH, find nearest match by deltaE. Pure client-side. **No Pantone** — their color codes/names are proprietary and aggressively enforced (they forced Adobe to strip Pantone libraries from Creative Cloud in 2022). Use open-source naming databases only.
+**Implementation:** `colorNaming.ts` helper converts hex → Oklab (Bjorn Ottosson 2020) via sRGB linearization → LMS → cube root → Oklab matrices. Pre-computes ~4K color entries at module load (~5ms). Brute-force nearest neighbor using squared Euclidean distance in Oklab. CSS named colors (~148) checked separately with tighter threshold. Displayed in `PaletteItem.tsx` with `useMemo`, truncated with ellipsis, tooltip shows CSS color name when applicable. **No Pantone** — proprietary and aggressively enforced.
 
 ---
 
@@ -276,7 +276,7 @@ Replace the edit color modal with inline editing directly on the hex label below
 5. ~~**Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts~~ ✅ Done!
 6. **Full Keyboard Coverage** - Every action reachable, zero mouse, power user dream
 7. **Quick Palette Presets** - Lowers barrier to entry
-8. **Color Naming** - Instant perceived value, low effort
+8. ~~**Color Naming** - Instant perceived value, low effort~~ ✅ Done!
 9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
 10. **Color Variations Panel** - Commonly paywalled, moderate effort
 11. **Gradient Generator** - Nice companion feature, low effort
