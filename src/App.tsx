@@ -33,6 +33,7 @@ function App() {
     const stored = localStorage.getItem('color-palette:show-contrast')
     return stored === 'true'
   })
+  const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const cycleCVDRef = useRef<(() => void) | null>(null)
   const {
@@ -91,9 +92,17 @@ function App() {
     setShowContrast(prev => {
       const next = !prev
       localStorage.setItem('color-palette:show-contrast', String(next))
+      if (next && showHints) {
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+        }, 350)
+      }
+      if (!next && window.scrollY > 0) {
+        window.scrollTo({ top: 0 })
+      }
       return next
     })
-  }, [])
+  }, [showHints])
 
   const addColor = useCallback(() => {
     const base = current ?? []
@@ -343,7 +352,9 @@ function App() {
           onGlobalReroll={rerollAll}
         />
 
-        <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
+        <div ref={contrastRef}>
+          <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
+        </div>
 
         {isOpenDialog ? (
           <OpenDialog
@@ -418,12 +429,12 @@ function App() {
         )}
 
         {/* Spacer to clear fixed keyboard hints overlay */}
-        <div className="h-24" aria-hidden="true" />
+        <div className="h-52" aria-hidden="true" />
       </div>
 
       {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
       <div
-        className="fixed bottom-0 left-0 right-0 h-28 bg-background pointer-events-none z-40 transition-colors duration-300"
+        className="fixed bottom-0 left-0 right-0 h-56 bg-background pointer-events-none z-40 transition-colors duration-300"
         style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
         aria-hidden="true"
       />
