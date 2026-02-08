@@ -110,28 +110,12 @@ export default function PaletteItem({ color, isLocked, onEdit, onReroll, onDelet
           </Tooltip>
         </div>
 
-        {colorName.cssName ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span
-                className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center cursor-default"
-                title={colorName.name}
-              >
-                {colorName.name}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="font-mono text-xs lowercase">css: {colorName.cssName}</p>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <span
-            className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center"
-            title={colorName.name}
-          >
-            {colorName.name}
-          </span>
-        )}
+        <span
+          className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center"
+          title={colorName.name}
+        >
+          {colorName.name}
+        </span>
 
         <ColorFormatMenu color={color} />
       </div>
