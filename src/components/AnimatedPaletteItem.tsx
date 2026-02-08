@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PaletteItem from './PaletteItem'
 
 type AnimatedPaletteItemProps = {
@@ -21,13 +21,15 @@ export default function AnimatedPaletteItem({ color, isLocked, onEdit, onReroll,
   }, [])
 
   const [isDeleting, setIsDeleting] = useState(false)
+  const onDeleteRef = useRef(onDelete)
+  onDeleteRef.current = onDelete
 
   const handleDelete = () => {
     if (isDeleting) return // Already deleting - ignore click
     setIsDeleting(true)
     setIsVisible(false)
     setTimeout(() => {
-      onDelete()
+      onDeleteRef.current()
     }, 250)
   }
 
