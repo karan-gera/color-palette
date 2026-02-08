@@ -166,6 +166,30 @@ Redesign the preset selector to feel like a synth VST preset browser.
 
 ---
 
+## IndexedDB Migration (Low Priority)
+
+Evaluate moving from localStorage to IndexedDB for future-proofing storage.
+
+**Current state:** localStorage usage is ~150 bytes per saved palette + a handful of preference flags. At ~5MB ceiling, we can store ~30,000 palettes — nowhere near the limit today.
+
+### Research
+- [ ] Audit current localStorage keys and projected growth per feature (extract from image caching? undo history persistence? palette collections/tags?)
+- [ ] Compare IndexedDB API ergonomics: raw API vs. lightweight wrappers (idb, Dexie, localForage)
+- [ ] Evaluate bundle size cost of each wrapper
+- [ ] Research IndexedDB browser support and quota limits (especially Safari/iOS gotchas, storage eviction in private browsing)
+- [ ] Determine migration path: can we read existing localStorage data and migrate on first load?
+- [ ] Assess whether a unified storage abstraction (`storage.ts` interface that swaps backend) is worth the indirection
+
+### When to pull the trigger
+- Storing binary blobs (extracted images, generated palette thumbnails)
+- Persisting undo history across sessions
+- Adding palette collections, tags, or searchable metadata
+- Any feature where localStorage's synchronous, string-only API becomes painful
+
+**Until then:** localStorage is fine. Don't over-engineer.
+
+---
+
 ## Extract from Image
 
 Drag-and-drop an image to extract dominant colors.
@@ -235,6 +259,40 @@ Generate CSS gradients from palette colors.
 - [ ] Visual preview of gradient
 
 **Implementation:** Build gradient CSS strings from palette hex values. Simple UI with angle picker and type selector. Coolors Pro and Colorffy Pro paywall this.
+
+---
+
+## Onboarding Flow
+
+First-time user experience that teaches core interactions without being annoying.
+
+### Research
+- [ ] Audit competitor onboarding: Coolors, Realtime Colors, Colorffy, Adobe Color, Khroma — what do they do (or not do)?
+- [ ] Survey onboarding patterns in creative tools: coach marks, guided tours, progressive disclosure, empty states, sample-first, video walkthroughs
+- [ ] Identify the "aha moment" — what's the shortest path from landing to feeling productive? (e.g. first reroll? first lock+reroll? first copy?)
+- [ ] Catalog every discoverable feature that a new user wouldn't find on their own (keyboard shortcuts, shift+click behaviors, leader chords, format menu, variations panel, presets, CVD mode, contrast checker, export formats)
+- [ ] Decide trigger: first visit only vs. every visit until dismissed vs. opt-in from help menu
+- [ ] Research localStorage vs. cookie vs. URL param for "has seen onboarding" persistence
+- [ ] Accessibility audit: onboarding must work with screen readers and keyboard-only navigation
+- [ ] Mobile considerations: which interactions are touch-incompatible and need alternate guidance?
+
+### Design decisions
+- [ ] Choose pattern: tooltip sequence / coach marks / interactive walkthrough / empty state hints / hybrid
+- [ ] Define steps and ordering — what does the user learn first, second, third?
+- [ ] Decide if onboarding is skippable mid-flow (skip button? escape?)
+- [ ] Decide if onboarding is re-triggerable (e.g. "?" menu → "show tour again")
+- [ ] Dismissal behavior: per-step dismiss vs. dismiss-all
+- [ ] Visual style: should it feel like part of the UI or an overlay? match the monospace/lowercase aesthetic
+
+### Implementation
+- [ ] "Has seen onboarding" flag in localStorage
+- [ ] Step state machine (current step, completed steps, skipped)
+- [ ] Highlight/spotlight effect on target elements
+- [ ] Tooltip positioning (above/below/side, responsive to viewport)
+- [ ] Smooth transitions between steps
+- [ ] No external dependencies — keep it client-side and lightweight
+- [ ] Don't block interaction — user can still click around during onboarding
+- [ ] Graceful degradation if target element isn't visible (e.g. no colors yet)
 
 ---
 
