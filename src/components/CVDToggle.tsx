@@ -66,13 +66,14 @@ export default function CVDToggle() {
       <CircleWipeOverlay
         isActive={transition !== null}
         origin={transition?.origin ?? null}
-        config={{ 
+        config={{
           filter: transition ? getCVDFilterUrl(transition.to) : '',
           oldFilter: transition ? getCVDFilterUrl(transition.from) : '',
           animationType: 'horizontal',
         }}
         onApplyState={applyTransitionTarget}
         onAnimationEnd={completeTransition}
+        targetElementId="palette-container"
       />
     </TooltipProvider>
   )

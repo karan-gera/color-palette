@@ -23,6 +23,8 @@ interface CircleWipeOverlayProps {
   onApplyState: () => void
   /** Called when animation completes (to clean up transition state) */
   onAnimationEnd: () => void
+  /** Scope the overlay to a specific element instead of full viewport */
+  targetElementId?: string
 }
 
 // Exported so it can be adjusted universally
@@ -47,18 +49,21 @@ const THEME_BACKGROUNDS: Record<string, string> = {
  * This ensures ALL content (including text) updates properly because the
  * real DOM has the new state - the overlay just reveals it gradually.
  */
-export default function CircleWipeOverlay({ 
-  isActive, 
-  origin, 
+export default function CircleWipeOverlay({
+  isActive,
+  origin,
   config,
   onApplyState,
-  onAnimationEnd 
+  onAnimationEnd,
+  targetElementId,
 }: CircleWipeOverlayProps) {
   const [phase, setPhase] = useState<'idle' | 'ready' | 'animating' | 'done'>('idle')
   const [clonedContent, setClonedContent] = useState<string>('')
   const maxRadiusRef = useRef(0)
   const originRef = useRef({ x: 0, y: 0 })
   const configRef = useRef(config)
+  const targetRectRef = useRef<{ top: number; left: number; width: number; height: number } | null>(null)
+  const targetClassRef = useRef('')
   
   // Keep callbacks in refs to avoid effect deps issues
   const onApplyStateRef = useRef(onApplyState)
@@ -93,10 +98,20 @@ export default function CircleWipeOverlay({
     originRef.current = origin
     configRef.current = config
     
-    // Clone the wrapper content BEFORE applying new state
-    const wrapper = document.getElementById('cvd-wrapper')
-    if (wrapper) {
-      setClonedContent(wrapper.innerHTML)
+    // Clone content BEFORE applying new state
+    const cloneSource = targetElementId
+      ? document.getElementById(targetElementId)
+      : document.getElementById('cvd-wrapper')
+
+    if (cloneSource) {
+      setClonedContent(cloneSource.innerHTML)
+      if (targetElementId) {
+        const rect = cloneSource.getBoundingClientRect()
+        targetRectRef.current = { top: rect.top, left: rect.left, width: rect.width, height: rect.height }
+        targetClassRef.current = cloneSource.className
+      } else {
+        targetRectRef.current = null
+      }
     }
     
     // Phase 1: Ready - overlay visible at full coverage with OLD content
@@ -133,15 +148,16 @@ export default function CircleWipeOverlay({
   const maxRadius = maxRadiusRef.current
   const activeConfig = configRef.current
   const animationType = activeConfig.animationType || 'circle'
-  
+  const targetRect = targetRectRef.current
+
   // Get OLD theme background (what we're transitioning FROM)
-  const oldBackground = activeConfig.oldTheme 
-    ? THEME_BACKGROUNDS[activeConfig.oldTheme] 
+  const oldBackground = activeConfig.oldTheme
+    ? THEME_BACKGROUNDS[activeConfig.oldTheme]
     : 'var(--background)'
-  
+
   // Calculate clip-path based on animation type
   let clipPath: string
-  
+
   if (animationType === 'horizontal') {
     // Horizontal wipe: left-to-right reveal
     // inset(top right bottom left) - animate left edge moving right
@@ -154,28 +170,40 @@ export default function CircleWipeOverlay({
       ? `circle(${maxRadius}px at ${x}px ${y}px)`
       : `circle(0px at ${x}px ${y}px)`
   }
-  
+
+  // Position: scoped to target element or full viewport
+  const overlayStyle: React.CSSProperties = {
+    position: 'fixed',
+    zIndex: 9998,
+    pointerEvents: 'none',
+    clipPath,
+    transition: phase === 'animating'
+      ? `clip-path ${CIRCLE_WIPE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`
+      : 'none',
+    filter: activeConfig.oldFilter || undefined,
+    overflow: 'hidden',
+  }
+
+  if (targetRect) {
+    overlayStyle.top = targetRect.top
+    overlayStyle.left = targetRect.left
+    overlayStyle.width = targetRect.width
+    overlayStyle.height = targetRect.height
+    overlayStyle.backgroundColor = 'var(--background)'
+  } else {
+    overlayStyle.inset = 0
+    overlayStyle.backgroundColor = oldBackground
+  }
+
   const overlay = (
     <div
-      data-theme={activeConfig.oldTheme || undefined}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9998,
-        pointerEvents: 'none',
-        clipPath,
-        transition: phase === 'animating' 
-          ? `clip-path ${CIRCLE_WIPE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)` 
-          : 'none',
-        filter: activeConfig.oldFilter || undefined,
-        backgroundColor: oldBackground,
-        overflow: 'hidden',
-      }}
+      data-theme={targetRect ? undefined : (activeConfig.oldTheme || undefined)}
+      style={overlayStyle}
       aria-hidden="true"
     >
       {/* OLD content clone - shrinks/wipes away to reveal new content */}
       <div
-        className="min-h-screen p-8 flex flex-col items-center gap-6"
+        className={targetRect ? targetClassRef.current : "min-h-screen p-8 flex flex-col items-center gap-6"}
         dangerouslySetInnerHTML={{ __html: clonedContent }}
       />
     </div>

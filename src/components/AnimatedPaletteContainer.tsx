@@ -23,7 +23,7 @@ export default function AnimatedPaletteContainer({
   const showAddButton = colors.length < 5
 
   return (
-    <div className="flex flex-wrap gap-5 items-start justify-center">
+    <div id="palette-container" className="flex flex-wrap gap-5 items-start justify-center">
       {colors.map((color, index) => (
         <AnimatedPaletteItem
           key={`${index}-${color}`}
