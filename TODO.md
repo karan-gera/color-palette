@@ -4,6 +4,22 @@ Features we're making free that competitors paywall.
 
 ---
 
+## CRITICAL BUGS
+
+### Double-delete crash
+
+**Severity:** Critical — requires page reload to recover.
+
+**Repro:** Click the delete button on a color, then click delete again while the exit animation is still playing (~250ms window).
+
+**Behavior:** The app enters an unusable state — all colors disappear, and you can no longer add colors or interact with the palette. Requires a full page reload to recover.
+
+**Root cause (likely):** The delete callback fires twice for the same index. The first delete removes the color and triggers the exit animation. The second delete operates on stale state (the color is already gone), corrupting the palette array or history state.
+
+**Fix direction:** Guard against double-delete — either disable the delete button during the exit animation, or debounce/deduplicate the delete callback so subsequent calls for the same index within the animation window are ignored.
+
+---
+
 ## Copy in Multiple Formats ✅
 
 Let users click a color and copy in various formats:
@@ -88,16 +104,24 @@ Toggle to simulate how the palette appears to people with color vision deficienc
 
 ---
 
-## Contrast Checker
+## Contrast Checker ✅
 
 Show WCAG contrast ratios between colors for accessibility compliance.
 
-- [ ] Calculate contrast ratio between any two colors
-- [ ] Show AA (4.5:1) and AAA (7:1) compliance badges
-- [ ] Matrix view showing all color pair contrasts
-- [ ] Highlight pairs that fail accessibility thresholds
+- [x] Calculate contrast ratio between any two colors
+- [x] Show AA (4.5:1), AAA (7:1), and AA18 (3:1) compliance levels
+- [x] Matrix view showing all color pair contrasts
+- [x] Per-color cards showing contrast vs theme backgrounds (light/gray/dark)
+- [x] Human-readable contrast descriptions per color
+- [x] Tabbed UI (line variant) — "vs backgrounds" and "vs each other"
+- [x] Crossfade animation between tabs (150ms, forceMount + grid stack)
+- [x] Tab bar fades in/out when crossing the 2-color threshold
+- [x] Auto-reset to "vs backgrounds" tab when colors drop below 2
+- [x] Keyboard shortcut: `K` toggles panel, `Shift+K` cycles tabs (disabled when < 2 colors)
+- [x] Keyboard hints reflect disabled state (dimmed at 30% opacity)
+- [x] Expandable/collapsible with smooth max-height + opacity transition
 
-**Implementation:** Use relative luminance formula from WCAG 2.1 spec. Pure client-side calculation.
+**Implementation:** Uses relative luminance formula from WCAG 2.1 spec. Pure client-side calculation. Radix Tabs with forceMount for CSS-driven crossfade transitions.
 
 ---
 
@@ -185,19 +209,34 @@ Generate CSS gradients from palette colors.
 
 ---
 
+## Keyboard Shortcut Dialog Overhaul
+
+The keyboard hints overlay is getting cluttered as we add more features and shortcuts. Redesign it to scale gracefully.
+
+- [ ] Group shortcuts by category (palette, file, view, etc.)
+- [ ] Cleaner layout that accommodates growing shortcut list without feeling overwhelming
+- [ ] Consider a modal/dialog instead of the fixed bottom overlay
+- [ ] Visual hierarchy — primary shortcuts prominent, secondary shortcuts discoverable
+- [ ] Disabled/contextual shortcuts should be clearly communicated
+
+**Why now:** With contrast checker tabs (`Shift+K`), conditional shortcuts, and more features incoming, the flat list of hints is hitting its limits. This should be addressed before adding more shortcuts.
+
+---
+
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
 2. ~~**Share via URL** - Highest impact, lowest effort~~ ✅ Done!
 3. ~~**Export Palette** - Natural companion to share, completes the save/export flow~~ ✅ Done!
 4. ~~**Color Blindness Preview** - Accessibility focus, rarely free~~ ✅ Phase 1 Done!
-5. **Quick Palette Presets** - Lowers barrier to entry
-6. **Color Naming** - Instant perceived value, low effort
-7. **Contrast Checker** - Accessibility focus, differentiator
-8. **Color Variations Panel** - Commonly paywalled, moderate effort
-9. **Gradient Generator** - Nice companion feature, low effort
-10. **Palette Visualization** - High wow factor, moderate effort
-11. **Extract from Image** - Big feature, most complex
+5. **Keyboard Shortcut Dialog Overhaul** - Scaling pain, do before adding more shortcuts
+6. **Quick Palette Presets** - Lowers barrier to entry
+7. **Color Naming** - Instant perceived value, low effort
+8. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
+9. **Color Variations Panel** - Commonly paywalled, moderate effort
+10. **Gradient Generator** - Nice companion feature, low effort
+11. **Palette Visualization** - High wow factor, moderate effort
+12. **Extract from Image** - Big feature, most complex
 
 ---
 

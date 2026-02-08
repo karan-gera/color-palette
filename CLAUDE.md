@@ -45,6 +45,7 @@ src/
 │   │   ├── input.tsx
 │   │   ├── toggle.tsx
 │   │   ├── toggle-group.tsx
+│   │   ├── tabs.tsx
 │   │   └── tooltip.tsx
 │   ├── Header.tsx
 │   ├── Controls.tsx
@@ -55,6 +56,7 @@ src/
 │   ├── AnimatedPaletteItem.tsx
 │   ├── AnimatedPaletteContainer.tsx
 │   ├── GlobalColorRelationshipSelector.tsx
+│   ├── ContrastChecker.tsx
 │   ├── EditColorDialog.tsx
 │   ├── SaveDialog.tsx
 │   ├── OpenDialog.tsx
@@ -62,9 +64,11 @@ src/
 │   └── LockIcon.tsx
 ├── hooks/
 │   ├── useHistory.ts    # Undo/redo state management
-│   └── useTheme.ts      # 3-way theme management
+│   ├── useTheme.ts      # 3-way theme management
+│   └── useKeyboardShortcuts.ts  # Global keyboard shortcut handler
 ├── helpers/
 │   ├── colorTheory.ts   # HSL/hex conversion, color relationships
+│   ├── contrast.ts      # WCAG contrast ratio calculations
 │   └── storage.ts       # localStorage utilities
 ├── lib/
 │   └── utils.ts         # shadcn cn() utility
