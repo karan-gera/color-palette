@@ -248,6 +248,105 @@ Preview palette colors applied to a sample UI layout (card, button, nav bar, tex
 
 ---
 
+## Drag to Reorder
+
+Drag palette colors to rearrange their order. Color order matters in design (primary, secondary, accent…) but currently colors are fixed in the position they were added.
+
+- [ ] Drag-and-drop reordering of palette items
+- [ ] Visual feedback during drag: lifted appearance, drop target indicator
+- [ ] Smooth animated reflow when items shift position
+- [ ] Touch support for mobile (long-press to initiate drag)
+- [ ] Keyboard equivalent: `Shift+Arrow` to move the focused color left/right
+- [ ] Locked state and all per-color metadata travel with the dragged item
+- [ ] Reorder pushes to undo history (reorderable via undo/redo)
+
+**Implementation:** Use pointer events for cross-device support (mouse + touch). Track drag state in `App.tsx`, render a ghost/clone during drag. Animate displaced items with `transform` transitions. No external drag library — keep it lightweight. Add `Shift+Left/Right` to `useKeyboardShortcuts.ts`.
+
+---
+
+## EyeDropper (Pick Color from Screen)
+
+Use the browser's native EyeDropper API to pick a color from anywhere on screen — any website, image, or app visible behind the browser.
+
+- [ ] Eyedropper button in controls area (Pipette icon from Lucide)
+- [ ] Keyboard shortcut: `I` (for eyedropper / ink dropper)
+- [ ] Opens native OS color picker overlay
+- [ ] Picked color added to palette (or replaces focused color — TBD)
+- [ ] Graceful degradation: hide button entirely on unsupported browsers (Firefox, Safari)
+- [ ] Feature detection via `'EyeDropper' in window`
+
+**Implementation:** Single `await new EyeDropper().open()` call returns `{ sRGBHex }`. Wrap in try/catch for user cancellation (`AbortError`). Chrome/Edge 95+ only — no polyfill exists, so feature-detect and hide. Zero dependencies.
+
+**Browser support:** Chrome 95+, Edge 95+, Opera 81+. Not supported in Firefox or Safari (as of 2026).
+
+---
+
+## Color Harmony Score
+
+A live readout showing how harmonious the current palette is, based on color theory fundamentals.
+
+### Metrics
+- [ ] Hue distribution — are hues well-spaced or clustered? (entropy of hue angles)
+- [ ] Saturation balance — consistent saturation or chaotic?
+- [ ] Lightness spread — good contrast range or everything mid-tone?
+- [ ] Relationship detection — does the palette approximate a known harmony (complementary, triadic, etc.)?
+
+### Display
+- [ ] Compact badge or gauge near the palette (not a full panel)
+- [ ] Human-readable label: e.g. "balanced", "high contrast", "clustered hues", "monochromatic"
+- [ ] Optional numeric score (0-100) with tooltip breakdown
+- [ ] Updates live as colors change
+- [ ] Keyboard shortcut: `H` to toggle visibility
+
+### Edge cases
+- [ ] Single color: hide or show "add more colors"
+- [ ] Two colors: limited analysis (contrast only)
+- [ ] All identical colors: "no variation"
+
+**Implementation:** Score function in `colorTheory.ts` operating on HSL arrays. Hue distribution via circular variance, saturation/lightness via standard deviation. Relationship detection by comparing pairwise hue angles to known patterns (±10° tolerance). Lightweight — no heavy math, just stats on 2-5 values.
+
+---
+
+## Palette Collections and Tags
+
+Organize saved palettes into collections and tag them for easy retrieval.
+
+- [ ] Add tags when saving a palette (comma-separated or pill input)
+- [ ] Suggested tags: project names, moods (warm, calm, bold), seasons, use cases (UI, illustration, branding)
+- [ ] Filter saved palettes by tag in the Open dialog
+- [ ] Search saved palettes by name or tag
+- [ ] Create/rename/delete collections (optional grouping layer above tags)
+- [ ] Bulk actions: delete multiple, add tag to multiple
+- [ ] Migrate existing saved palettes (add empty tags array, backward compatible)
+
+**Implementation:** Extend `SavedPalette` type with `tags: string[]` field. Tag input component with autocomplete from existing tags. Filter UI in `OpenDialog.tsx` — pill-based tag filter bar above the palette list. All stored in localStorage (or IndexedDB when migrated). No breaking changes to existing data — migration adds defaults on first load.
+
+---
+
+## Session Palette History
+
+A visual timeline of every palette state generated during the current session. Solves the "that palette from 15 rerolls ago looked great" problem.
+
+- [ ] Thumbnail strip showing recent palette states as small color bars
+- [ ] Appears as a collapsible row above or below the main palette
+- [ ] Click any thumbnail to restore that palette state
+- [ ] Restoring from history pushes to undo stack (non-destructive)
+- [ ] Auto-captures on: reroll, preset apply, add/delete color, edit color, reorder
+- [ ] Deduplication: don't store consecutive identical states
+- [ ] Cap at ~50 entries to keep memory bounded
+- [ ] Session-only — not persisted to localStorage (intentional: keeps it lightweight)
+- [ ] Keyboard shortcut: `G` to toggle history strip visibility
+
+### Display
+- [ ] Each thumbnail: 4-5 thin vertical color bars, ~40px wide
+- [ ] Hover preview: tooltip with hex codes
+- [ ] Current state highlighted with border/ring
+- [ ] Smooth horizontal scroll with overflow
+
+**Implementation:** Store palette snapshots (hex arrays) in a `useRef` array in `App.tsx`. Render as a horizontal scrollable strip with `overflow-x: auto`. Each thumbnail is a flex row of colored `div`s. Clicking dispatches to `useHistory.replace()`. No persistence, no dependencies.
+
+---
+
 ## Gradient Generator
 
 Generate CSS gradients from palette colors.
@@ -259,40 +358,6 @@ Generate CSS gradients from palette colors.
 - [ ] Visual preview of gradient
 
 **Implementation:** Build gradient CSS strings from palette hex values. Simple UI with angle picker and type selector. Coolors Pro and Colorffy Pro paywall this.
-
----
-
-## Onboarding Flow
-
-First-time user experience that teaches core interactions without being annoying.
-
-### Research
-- [ ] Audit competitor onboarding: Coolors, Realtime Colors, Colorffy, Adobe Color, Khroma — what do they do (or not do)?
-- [ ] Survey onboarding patterns in creative tools: coach marks, guided tours, progressive disclosure, empty states, sample-first, video walkthroughs
-- [ ] Identify the "aha moment" — what's the shortest path from landing to feeling productive? (e.g. first reroll? first lock+reroll? first copy?)
-- [ ] Catalog every discoverable feature that a new user wouldn't find on their own (keyboard shortcuts, shift+click behaviors, leader chords, format menu, variations panel, presets, CVD mode, contrast checker, export formats)
-- [ ] Decide trigger: first visit only vs. every visit until dismissed vs. opt-in from help menu
-- [ ] Research localStorage vs. cookie vs. URL param for "has seen onboarding" persistence
-- [ ] Accessibility audit: onboarding must work with screen readers and keyboard-only navigation
-- [ ] Mobile considerations: which interactions are touch-incompatible and need alternate guidance?
-
-### Design decisions
-- [ ] Choose pattern: tooltip sequence / coach marks / interactive walkthrough / empty state hints / hybrid
-- [ ] Define steps and ordering — what does the user learn first, second, third?
-- [ ] Decide if onboarding is skippable mid-flow (skip button? escape?)
-- [ ] Decide if onboarding is re-triggerable (e.g. "?" menu → "show tour again")
-- [ ] Dismissal behavior: per-step dismiss vs. dismiss-all
-- [ ] Visual style: should it feel like part of the UI or an overlay? match the monospace/lowercase aesthetic
-
-### Implementation
-- [ ] "Has seen onboarding" flag in localStorage
-- [ ] Step state machine (current step, completed steps, skipped)
-- [ ] Highlight/spotlight effect on target elements
-- [ ] Tooltip positioning (above/below/side, responsive to viewport)
-- [ ] Smooth transitions between steps
-- [ ] No external dependencies — keep it client-side and lightweight
-- [ ] Don't block interaction — user can still click around during onboarding
-- [ ] Graceful degradation if target element isn't visible (e.g. no colors yet)
 
 ---
 
@@ -347,6 +412,297 @@ Replace the edit color modal with inline editing directly on the hex label below
 
 ---
 
+## PalettePort (Paid Feature — Kick the Can)
+
+The only paid feature. A lightweight social palette gallery where users can browse, share, and discover palettes published by other people. Think "community presets" — not a full social network, just a curated feed of color palettes behind a paywall.
+
+**Core philosophy:** PalettePort exists so we have something to offer in exchange for financial support. It does NOT paywall any features. Every tool, every export format, every accessibility feature — free, forever. PalettePort is purely additive. If users organically create a subreddit, Discord, or forum to trade shareable links, that's great — we will not compete with that or take action against it. PalettePort is a thank-you, not a tollbooth.
+
+### Competitor Pricing (What We're Undercutting)
+
+| Tool | Price | What they paywall |
+|------|-------|-------------------|
+| **Coolors Pro** | ~$3.49/mo | Contrast checker, palette variations, >5 colors, unlimited saves, palette visualizer layouts, dark mode, advanced exports, AI, ad removal |
+| **Colorffy Pro** | $5/mo ($3.33/mo annual) | AI tools, unlimited collections, branding kit PDF, code exports (CSS/SCSS/Tailwind/Swift/Flutter), wallpapers, ad-free |
+| **Adobe Color** | "Free" w/ Creative Cloud ($23-70/mo) | Effectively paywalled behind CC subscription for any real workflow |
+| **Khroma** | Free | Limited feature set, AI-only generation |
+| **Realtime Colors** | Free | Limited feature set, no export, no save |
+| **Paletton** | Free | Dated UI, no export formats, no accessibility tools |
+| **Color Hunt** | Free | Browse-only, no generation tools |
+
+**What we give away free that Coolors charges $3.49/mo for:**
+- Contrast checker ✅
+- Palette variations (tints/shades/tones) ✅
+- Advanced exports (CSS, JSON, Tailwind, SCSS, ASE, ACO, GPL, Procreate, Paint.NET) ✅
+- Dark mode (and gray mode) ✅
+- Unlimited saves ✅
+- Color blindness simulation ✅
+- Color naming ✅
+- Full keyboard coverage ✅
+
+The competitive position is absurd: our free tier already beats their paid tier. PalettePort pricing should make this unmistakable.
+
+### Pricing
+- **$6.99 one-time** — lifetime access, no recurring, best value
+- **$0.99/month** — subscription for those who prefer it
+- Positioned as: "everything is free — this is how you support continued development"
+- No free tier for PalettePort itself — but the entire standalone app remains 100% free forever
+- No feature gating on the free tool — PalettePort is purely additive, purely optional
+
+For context: Coolors charges $3.49/mo for features we ship free. We charge $0.99/mo (or $6.99 forever) for a community gallery that users don't even need. The comparison should make competitors look ridiculous.
+
+### Messaging
+The paywall should feel like supporting a project you believe in, not getting squeezed. Communicate clearly:
+
+- "your support keeps this tool free for everyone"
+- "100% of the core tool is free, forever — PalettePort funds continued development"
+- "other tools charge $3-5/mo for features we give you for free — if you want to support us, here's how"
+- Tone: grateful, honest, zero guilt-tripping — never "you owe us", always "here's what your support makes possible"
+- Show what's been shipped for free (the feature list is the proof — contrast checker, export formats, CVD simulation, etc.)
+- Consider a "supporters" or "thank you" acknowledgment somewhere visible (footer? about dialog?) — not names, just a count or a warm message
+- No dark patterns: no fake urgency, no "limited time pricing", no nagging modals on the free tool
+- If someone finds a free alternative to the community aspect (subreddit, Discord, forum), that's fine — we celebrate it, not fight it
+
+### AI Commitment
+
+**No generative AI features in the product. Ever. For as long as it exists.**
+
+- No AI color suggestions, no AI palette generation, no AI chatbot, no "powered by" anything
+- Every feature is deterministic: color theory math, algorithms, user input — no black boxes
+- Competitors are bolting on AI to justify subscription pricing (Coolors AI, Colorffy AI). We go the other direction
+- This is a competitive advantage, not a limitation — users who want predictable, transparent tools will seek this out
+
+**Transparency on development:** This project was built with some use of generative AI for programming assistance (code generation, debugging, planning). That should be disclosed honestly. The distinction is clear: AI helped write the code, but no AI runs in the product. The user never interacts with a model. Every color, every calculation, every result is algorithmic and reproducible.
+
+**Where to communicate this:**
+- About page / footer: brief statement ("no AI features, ever — just math and color theory")
+- If competitors lean harder into AI marketing, this becomes a stronger differentiator
+- Don't be preachy about it — state it plainly and move on
+
+### Monetization Phases
+
+**Phase 0: Donations (do this first, do this NOW)**
+- Add a Ko-fi / Buy Me a Coffee / GitHub Sponsors link
+- Zero engineering cost, zero server cost, pure upside
+- Validates willingness to pay before building anything
+- Use the same messaging: "keep this tool free for everyone"
+- Can launch today with a button and a sentence
+
+**Phase 1: PalettePort (only when ready)**
+- Build the community gallery behind the $6.99 / $0.99 paywall
+- Only after the free tool is feature-complete AND there's meaningful traffic (5K+ MAU)
+- Only if users are actively requesting community features
+
+**Phase 2: Enterprise (explore if Phase 1 succeeds)**
+
+Use WorkOS as the unified auth layer across all paid tiers. Their free tier (1M MAU) covers both PalettePort consumer auth and basic enterprise org auth — zero cost until an enterprise customer needs SAML/SCIM.
+
+#### Auth: WorkOS
+
+| Feature | Cost | Notes |
+|---------|------|-------|
+| AuthKit (email, social, MFA, RBAC, orgs) | **Free** up to 1M MAU | Covers all PalettePort + basic enterprise auth |
+| SSO (SAML/OIDC) | $125/mo per connection | Pass through to enterprise customer with margin |
+| Directory Sync (SCIM) | $125/mo per connection | Auto-provision/deprovision users from Okta, Azure AD, etc. |
+| Audit log streaming | $125/mo per SIEM connection | Enterprise compliance requirement |
+| Custom domain | $99/mo | `auth.companyname.com` white-labeling |
+
+WorkOS AuthKit is open-source, built on Radix (same as our shadcn/ui components), integrates in <10 minutes via hosted flow. This eliminates auth as a rabbit hole — no rolling our own, no Clerk/Lucia/Auth.js evaluation needed.
+
+#### What enterprise customers would get
+
+**Brand palette management:**
+- Org-wide shared palette library (the canonical brand colors)
+- "Approved" palette status — mark palettes as official, prevent drift
+- Palette versioning: track changes to brand colors over time, with diff view
+- Role-based access: admin (set/edit brand palettes), editor (create palettes using brand), viewer (read-only)
+
+**Design token pipeline:**
+- Auto-generate design tokens from brand palettes (CSS variables, Tailwind config, SCSS, JSON)
+- Webhook or API: push updated tokens to repos on palette change
+- CI/CD validation: lint step that checks committed colors against approved brand palette
+- Figma plugin sync (stretch goal — huge value, also huge effort)
+
+**Collaboration:**
+- Share palettes within org (private by default, not public to PalettePort gallery)
+- Request/approve workflows: designer proposes palette → lead reviews → approved or rejected
+- Comments on palettes (lightweight, not a full discussion system)
+
+**Compliance and governance:**
+- WCAG contrast requirements enforced at org level (e.g., "all brand palettes must pass AA")
+- Audit log: who changed which brand color, when, with before/after
+- Export compliance reports for accessibility audits
+- CVD simulation applied to brand palettes in bulk
+
+**Integration / API:**
+- REST API to fetch org palettes programmatically
+- API keys with scoped permissions (read-only for CI, read-write for admins)
+- Rate-limited, versioned, documented
+
+#### Enterprise pricing model
+
+| Tier | Price | Includes |
+|------|-------|----------|
+| Team (up to 10 seats) | $49/mo flat | Shared libraries, RBAC, design token export, API access |
+| Business (up to 50 seats) | $149/mo flat | + approval workflows, audit log, WCAG enforcement |
+| Enterprise (50+ seats) | Custom | + SSO (SAML/SCIM), directory sync, SLA, priority support |
+
+SSO pass-through: WorkOS charges $125/mo per SAML connection. Enterprise tier pricing should absorb this (e.g., $249/mo includes 1 SSO connection, additional connections at $100/mo).
+
+**Why flat-rate tiers, not per-seat:**
+- Per-seat discourages adoption within orgs ("do we really need to add the intern?")
+- Flat rate with seat caps encourages full-team usage
+- Easier to understand, easier to sell
+- Upgrade trigger is organic: team outgrows cap, bumps to next tier
+
+#### Enterprise research needed
+
+- [ ] Is there actual demand from design system teams for this? Talk to designers at companies
+- [ ] What do design teams currently use for brand color management? (Figma libraries, Notion docs, custom tools, nothing?)
+- [ ] Would teams use a standalone palette tool, or does it need to plug into Figma/Sketch/Adobe?
+- [ ] Competitive landscape: Specify, Zeroheight, Supernova — do they cover this? At what price?
+- [ ] What's the minimum viable enterprise feature set? (Probably: shared library + RBAC + API + SSO)
+- [ ] Can enterprise be built incrementally on top of PalettePort's backend, or does it need separate infrastructure?
+
+**Warning:** Enterprise is still a big lift. But WorkOS eliminates the single scariest part (auth/SSO). The remaining work is org data modeling, RBAC enforcement, and API — meaty, but not unknowable. Don't start until Phase 1 proves the backend works and there's inbound enterprise interest.
+
+### What it is
+- Browse palettes shared by other users
+- Curated "home page" with editor's picks, trending, and new
+- Filter/search by tags, color, mood, preset type
+- One-click import: pull any community palette into your local tool
+- "Publish" button in the existing save flow — opt-in sharing to the gallery
+- Like/favorite palettes (lightweight interaction, not full social)
+- User profiles are minimal: display name + published palettes (no bios, no followers, no DMs)
+
+### What it is NOT
+- Not a social network — no feeds, no comments, no followers graph
+- Not a marketplace — no selling palettes, no premium creators
+- Not a collaboration tool — no shared editing, no real-time co-creation
+- Not required — the tool works 100% without it, forever
+
+### Architecture (the hard part)
+
+This is a full rearchitecture. The current app is entirely client-side with zero backend. PalettePort requires:
+
+- [ ] **Backend API** — REST or tRPC service for palette CRUD, browse, search, curation
+- [ ] **Database** — palette storage, user accounts, likes, tags, curation metadata
+- [ ] **Authentication** — account creation, login, session management (OAuth? email/password? magic link?)
+- [ ] **Payment processing** — Stripe integration for one-time and subscription billing
+- [ ] **Entitlement system** — verify paid status, gate PalettePort features client-side and server-side
+- [ ] **Content moderation** — palette names/tags could contain slurs; need basic filtering at minimum
+- [ ] **CDN / hosting** — the free app is static; PalettePort needs a running server
+- [ ] **CI/CD pipeline** — deployment for backend, database migrations, monitoring
+- [ ] **Rate limiting / abuse prevention** — prevent spam publishing, scraping, etc.
+
+### Research (before writing a single line of code)
+
+#### Business viability
+- [ ] Is there actual demand? Survey existing users / post in design communities
+- [ ] Competitive landscape: who else does community palettes? (Coolors explore is free, Color Hunt is free, Colour Lovers is dead) — what's the moat?
+- [ ] Pricing validation: is $6.99 one-time sustainable? Model server costs vs. expected conversion rate
+- [ ] Will anyone pay $1/month for this when free alternatives exist? What's the unique value prop?
+
+#### Technical stack
+- [ ] Backend framework: Node/Express, Hono, Next.js API routes, Go, Rust — what fits a solo/small team?
+- [ ] Database: Postgres (Supabase? Neon?), SQLite (Turso?), or something managed?
+- [ ] Auth provider: Clerk, Auth.js, Supabase Auth, Lucia, roll-your-own?
+- [ ] Payment: Stripe (obvious choice) — one-time + subscription in same product, webhook handling
+- [ ] Hosting: Vercel, Railway, Fly.io, self-hosted VPS — cost at low scale?
+- [ ] How to keep the free app fully static while adding a backend for PalettePort only?
+- [ ] Can PalettePort be a separate deployment/subdomain that the main app calls into? (e.g. `port.colorpalette.app`)
+
+#### Data model
+- [ ] Palette schema: colors, name, tags, author, created_at, likes_count, curated flag
+- [ ] User schema: id, display_name, email, payment_status, created_at
+- [ ] How to handle palette versioning (user edits a published palette)?
+- [ ] How to handle deleted accounts (orphan palettes? anonymize? delete?)
+
+#### UX integration
+- [ ] Where does PalettePort live in the existing UI? Separate tab? Separate route? Dialog?
+- [ ] How does the free → paid boundary feel? Soft gate (preview + blur) or hard gate (button → paywall)?
+- [ ] What does "publish" look like in the save flow? Extra toggle? Separate action?
+- [ ] Offline behavior: what happens when the backend is down? Free features must work regardless
+
+#### Legal / compliance
+- [ ] Terms of service for user-generated content
+- [ ] Privacy policy (storing emails, payment data)
+- [ ] GDPR / data deletion requests
+- [ ] Tax implications of selling digital goods (VAT, sales tax per jurisdiction)
+
+### Financial Model (Revisit With Real User Numbers)
+
+**Stripe fee reality:**
+- $0.99/mo subscription → **$0.66 net/mo** (Stripe takes 33% — brutal on micro-transactions)
+- $6.99 one-time → **$6.49 net** (Stripe takes 7.2% — much more efficient)
+
+**Blended revenue per paying user:**
+Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 months average product lifetime.
+- One-time amortized: $6.49 / 18 = ~$0.36/mo
+- Monthly sub: $0.66/mo
+- **Blended: ~$0.48/mo per paying user**
+
+**Estimated monthly infrastructure costs:**
+
+| MAU | Hosting | DB | Auth | Misc | Total |
+|-----|---------|-----|------|------|-------|
+| 1K | $7 | $0* | $0* | $3 | **~$10** |
+| 5K | $15 | $0* | $0* | $5 | **~$20** |
+| 10K | $25 | $25 | $15 | $10 | **~$75** |
+| 25K | $40 | $25 | $50 | $15 | **~$130** |
+| 50K | $75 | $50 | $75 | $25 | **~$225** |
+| 100K | $150 | $100 | $150 | $40 | **~$440** |
+
+*Free tiers cover small scale (Supabase/Neon DB, Supabase/Clerk Auth, Vercel/Fly hosting)
+
+**Break-even conversion rates:**
+
+| MAU | Monthly Cost | Users to Break Even | Conv. Rate |
+|-----|-------------|---------------------|------------|
+| 1K | ~$10 | 21 | 2.1% |
+| 5K | ~$20 | 42 | 0.8% |
+| 10K | ~$75 | 156 | 1.6% |
+| 25K | ~$130 | 271 | 1.1% |
+| 50K | ~$225 | 469 | 0.9% |
+| 100K | ~$440 | 917 | 0.9% |
+
+**Monthly profit at various conversion rates:**
+
+| MAU | Cost | 1% conv. | 2% conv. | 3% conv. |
+|-----|------|----------|----------|----------|
+| 1K | $10 | -$5 | +$0 | +$4 |
+| 5K | $20 | +$4 | +$28 | +$52 |
+| 10K | $75 | -$27 | +$21 | +$69 |
+| 25K | $130 | -$10 | +$110 | +$230 |
+| 50K | $225 | +$15 | +$255 | +$495 |
+| 100K | $440 | +$40 | +$520 | +$1,000 |
+
+**Benchmarks:** Industry freemium conversion is 2-5% (Spotify ~3%, Dropbox ~4%). Creative tools trend lower at 1-3%.
+
+**Takeaways:**
+- Below 5K MAU, infrastructure costs eat most or all revenue — not worth it
+- At 2% conversion (realistic for creative tools), break-even is comfortable at 5K+ MAU
+- At 3% conversion, genuinely profitable starting around 10K MAU
+- One-time purchases are ~5x more margin-efficient than $0.99/mo subs after Stripe fees
+- Consider adding **$9.99/year** annual billing later — much better margin than monthly micro-transactions
+- The $0.99/mo price is more of an accessibility option than a revenue driver
+
+**Don't launch until:** 5K+ MAU minimum, and ideally users are actively requesting community features.
+
+### Why we're kicking this can
+
+1. **Effort-to-value ratio is terrible right now** — months of backend work for a feature that might convert 2% of users
+2. **The free tool isn't done** — every hour on PalettePort is an hour not spent on features that help everyone
+3. **Server costs are nonzero** — the current app costs $0 to run; PalettePort introduces ongoing expenses
+4. **Moderation is a job** — even a "simple" community feature creates content moderation obligations
+5. **Auth is a rabbit hole** — account systems are never simple, and they bring security liability
+6. **The moat isn't clear yet** — free community palette sites already exist; need a compelling reason to pay
+7. **Donations first** — if people won't tip $3 on Ko-fi, they won't pay $6.99 for a community feature
+
+**Revisit when:** The free feature set is complete, the app has meaningful traffic (5K+ MAU), donations are flowing (proving willingness to pay), and users are actively asking for community features. Not before. Phase 0 (donations) can ship today.
+
+---
+
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
@@ -359,14 +715,19 @@ Replace the edit color modal with inline editing directly on the hex label below
 8. ~~**Color Naming** - Instant perceived value, low effort~~ ✅ Done!
 9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
 10. ~~**Color Variations Panel** - Commonly paywalled, moderate effort~~ ✅ Done!
-11. **Preset Browser Overhaul** - VST-style navigation, active label with drift detection
-12. **Gradient Generator** - Nice companion feature, low effort
-13. **Palette Visualization** - High wow factor, moderate effort
-14. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
-15. **Extract from Image** - Big feature, most complex
-16. **Onboarding Flow** - First-time UX, research-heavy
-17. **IndexedDB Migration** - Low priority, not needed yet
+11. ~~**Preset Browser Overhaul** - VST-style navigation, active label with drift detection~~
+12. **Drag to Reorder** - Missing table-stakes interaction, low-medium effort
+13. **EyeDropper** - Native browser API, near-zero effort, killer UX
+14. **Gradient Generator** - Nice companion feature, low effort
+15. **Palette Visualization** - High wow factor, moderate effort
+16. **Color Harmony Score** - Unique differentiator, medium effort
+17. **Session Palette History** - Solves real reroll regret, low-medium effort
+18. **Palette Collections and Tags** - Natural save/open evolution, medium effort
+19. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
+20. **Extract from Image** - Big feature, most complex
+21. **IndexedDB Migration** - Low priority, not needed yet
+22. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
 
 ---
 
-*All features are client-side only. No backend, no accounts, no paywalls.*
+*All features are client-side only. No backend, no accounts, no paywalls — except PalettePort.*
