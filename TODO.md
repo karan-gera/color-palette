@@ -10,6 +10,14 @@ Features we're making free that competitors paywall.
 
 **Fix:** Added `isDeleting` state guard in `AnimatedPaletteItem.tsx` — same early-return pattern used by theme/CVD transition guards (`if (isDeleting) return`). Subsequent clicks during the 250ms exit animation are ignored.
 
+### Preset rerolls don't persist in history
+
+Rerolling within a preset (cycling/regenerating preset colors) does not push the new state to the undo/redo history. The generated palette is lost if the user undoes or navigates away.
+
+### Contrast checker causes browser scrollbar jank
+
+Expanding the contrast checker makes the browser-wide scrollbar appear, which shifts the entire UI left. The scrollbar is unnecessary — the app already auto-scrolls to the panel and other scroll mechanisms exist. Hide the overflow to prevent the layout shift.
+
 ---
 
 ## Copy in Multiple Formats ✅
