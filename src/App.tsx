@@ -188,10 +188,10 @@ function App() {
     const preset = PALETTE_PRESETS.find(p => p.id === presetId)
     if (!preset) return
     const colors = generatePresetPalette(preset)
-    replace([colors], 0)
+    push(colors)
     setLockedStates(new Array(colors.length).fill(false))
     setActivePresetId(presetId)
-  }, [replace])
+  }, [push])
 
   const handlePresetSelect = useCallback((presetId: string) => {
     const hasLocked = lockedStates.some(Boolean)
