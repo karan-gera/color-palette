@@ -710,6 +710,40 @@ Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 mo
 
 ---
 
+## Documentation Pages ✅
+
+Full-screen overlay with About, Help, and Changelog tabs. Accessible from CircleHelp icon in header and `?` (Shift+/) keyboard shortcut.
+
+### About / Landing Page
+- [x] What the tool is: free, open-source, no AI, no accounts, no paywalls
+- [x] Feature highlights with icons and descriptions (10 shipped features)
+- [x] Competitor comparison table (what we give free vs. what others paywall)
+- [x] AI commitment statement ("no AI features in the product, ever")
+- [x] Development transparency ("built with AI assistance, no AI in the product")
+- [x] Ko-fi / donation link placeholder (Phase 0 monetization)
+
+### User Guide / Help
+- [x] Getting started: add colors, reroll, lock, save
+- [x] Keyboard shortcuts reference (rendered from `SHORTCUT_GROUPS` data, OS-aware)
+- [x] Feature walkthroughs: presets, export, color blindness preview, contrast checker, variations, eyedropper
+- [x] Tips and workflows integrated into feature descriptions
+
+### Changelog
+- [x] Version history with dates and feature summaries (v0.1–v0.10)
+- [x] Manually maintained, most recent first
+- [x] Accessible from docs overlay Changelog tab
+
+### Implementation
+- [x] Full-screen overlay component (`DocsOverlay.tsx`) — `fixed inset-0 z-[9997]`, fade+slide animation
+- [x] Tabbed navigation within the overlay (About / Help / Changelog) — custom buttons, not Radix Tabs
+- [x] Accessible from CircleHelp icon in header + `?` keyboard shortcut
+- [x] Full design freedom — custom layouts per tab (feature grid, competitor table, changelog entries)
+- [x] Consistent foundation: font-mono, lowercase labels, existing theme system (light/gray/dark)
+- [x] Deploys to GitHub Pages as part of the existing Vite SPA build — no routing, no server
+- [x] Keyboard shortcuts split: `/` → keyboard hints, `?` → docs overlay
+
+---
+
 ## Priority Order (Suggested)
 
 1. ~~**Copy in Multiple Formats** - High utility, low effort~~ ✅ Done!
@@ -732,8 +766,9 @@ Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 mo
 18. **Palette Collections and Tags** - Natural save/open evolution, medium effort
 19. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
 20. **Extract from Image** - Big feature, most complex
-21. **IndexedDB Migration** - Low priority, not needed yet
-22. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
+21. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
+22. **IndexedDB Migration** - Low priority, not needed yet
+23. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
 
 ---
 

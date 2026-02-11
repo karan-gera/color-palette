@@ -11,6 +11,7 @@ import ExportDialog from '@/components/ExportDialog'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import KeyboardHints from '@/components/KeyboardHints'
+import DocsOverlay from '@/components/DocsOverlay'
 import CVDFilters from '@/components/CVDFilters'
 import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
@@ -34,6 +35,7 @@ function App() {
     const stored = localStorage.getItem('color-palette:show-contrast')
     return stored === 'true'
   })
+  const [showDocs, setShowDocs] = useState(false)
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const cycleCVDRef = useRef<(() => void) | null>(null)
@@ -88,6 +90,10 @@ function App() {
       localStorage.setItem('color-palette:show-hints', String(next))
       return next
     })
+  }, [])
+
+  const toggleDocs = useCallback(() => {
+    setShowDocs(prev => !prev)
   }, [])
 
   const toggleContrast = useCallback(() => {
@@ -288,9 +294,10 @@ function App() {
     setPendingPreset(null)
     setEditIndex(null)
     setVariationsIndex(null)
+    setShowDocs(false)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -313,7 +320,9 @@ function App() {
     onCycleRelationship: cycleRelationship,
     onPickColor: handlePickColor,
     onCyclePreset: cyclePreset,
+    onPresetReroll: rerollPreset,
     onViewVariations: setVariationsIndex,
+    onToggleDocs: toggleDocs,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -327,7 +336,7 @@ function App() {
       {/* Wrapper for CVD filter application (Firefox workaround) */}
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-          <Header title="color palette" onCycleCVD={cycleCVDRef} />
+          <Header title="color palette" onCycleCVD={cycleCVDRef} onToggleDocs={toggleDocs} />
           <Controls
             onOpen={handleOpen}
             onSave={handleSave}
@@ -482,6 +491,7 @@ function App() {
 
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
+      <DocsOverlay visible={showDocs} onClose={() => setShowDocs(false)} />
 
       {/* Hidden color input fallback for non-Chromium browsers */}
       <input

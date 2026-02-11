@@ -21,7 +21,9 @@ type KeyboardShortcutsConfig = {
   onCycleRelationship: () => void
   onPickColor: () => void
   onCyclePreset: () => void
+  onPresetReroll: () => void
   onViewVariations: (index: number) => void
+  onToggleDocs: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -48,7 +50,9 @@ export function useKeyboardShortcuts({
   onCycleRelationship,
   onPickColor,
   onCyclePreset,
+  onPresetReroll,
   onViewVariations,
+  onToggleDocs,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -169,7 +173,11 @@ export function useKeyboardShortcuts({
         break
       case 'p':
         event.preventDefault()
-        onCyclePreset()
+        if (event.shiftKey) {
+          onPresetReroll()
+        } else {
+          onCyclePreset()
+        }
         break
       case 'k':
         event.preventDefault()
@@ -179,10 +187,14 @@ export function useKeyboardShortcuts({
           onToggleContrast()
         }
         break
-      case '?':
       case '/':
+      case '?':
         event.preventDefault()
-        onToggleHints()
+        if (event.shiftKey || key === '?') {
+          onToggleDocs()
+        } else {
+          onToggleHints()
+        }
         break
       case '1':
       case '2':
@@ -220,7 +232,9 @@ export function useKeyboardShortcuts({
     onCycleRelationship,
     onPickColor,
     onCyclePreset,
+    onPresetReroll,
     onViewVariations,
+    onToggleDocs,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -254,6 +268,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'R', description: 'reroll all' },
       { key: 'Q', description: 'cycle relationship' },
       { key: 'P', description: 'cycle preset' },
+      { modifiers: ['shift'], key: 'P', description: 'reroll preset' },
       { key: 'I', description: 'pick color' },
     ],
   },
@@ -292,6 +307,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { modifiers: ['shift'], key: 'Z', description: 'redo' },
       { key: 'Esc', description: 'close dialog' },
       { key: '/', description: 'shortcuts' },
+      { modifiers: ['shift'], key: '/', description: 'docs / about' },
     ],
   },
 ]

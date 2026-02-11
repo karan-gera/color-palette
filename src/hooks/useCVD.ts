@@ -4,8 +4,8 @@ export type CVDType = 'normal' | 'deuteranopia' | 'protanopia' | 'tritanopia' | 
 
 export const CVD_LABELS: Record<CVDType, string> = {
   normal: 'Normal vision',
-  deuteranopia: 'Deuteranopia (red-green)',
-  protanopia: 'Protanopia (red-green)',
+  deuteranopia: 'Deuteranopia (green-blind)',
+  protanopia: 'Protanopia (red-blind)',
   tritanopia: 'Tritanopia (blue-yellow)',
   achromatopsia: 'Achromatopsia (monochrome)',
 }
