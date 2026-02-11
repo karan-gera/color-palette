@@ -19,6 +19,7 @@ type KeyboardShortcutsConfig = {
   onEditColor: (index: number) => void
   onCycleCVD: () => void
   onCycleRelationship: () => void
+  onPickColor: () => void
   onCyclePreset: () => void
   onViewVariations: (index: number) => void
   onEscape: () => void
@@ -45,6 +46,7 @@ export function useKeyboardShortcuts({
   onEditColor,
   onCycleCVD,
   onCycleRelationship,
+  onPickColor,
   onCyclePreset,
   onViewVariations,
   onEscape,
@@ -161,6 +163,10 @@ export function useKeyboardShortcuts({
         event.preventDefault()
         onCycleRelationship()
         break
+      case 'i':
+        event.preventDefault()
+        onPickColor()
+        break
       case 'p':
         event.preventDefault()
         onCyclePreset()
@@ -212,6 +218,7 @@ export function useKeyboardShortcuts({
     onEditColor,
     onCycleCVD,
     onCycleRelationship,
+    onPickColor,
     onCyclePreset,
     onViewVariations,
     onEscape,
@@ -247,6 +254,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'R', description: 'reroll all' },
       { key: 'Q', description: 'cycle relationship' },
       { key: 'P', description: 'cycle preset' },
+      { key: 'I', description: 'pick color' },
     ],
   },
   {

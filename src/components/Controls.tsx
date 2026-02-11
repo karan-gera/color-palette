@@ -1,4 +1,4 @@
-import { Undo2, Redo2, FolderOpen, Save, Link, Download } from 'lucide-react'
+import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import PresetBrowser from './PresetBrowser'
@@ -17,6 +17,8 @@ type ControlsProps = {
   canRedo: boolean
   canShare: boolean
   canExport: boolean
+  onPickColor: () => void
+  canPickColor: boolean
 }
 
 export default function Controls({
@@ -33,6 +35,8 @@ export default function Controls({
   canRedo,
   canShare,
   canExport,
+  onPickColor,
+  canPickColor,
 }: ControlsProps) {
   return (
     <TooltipProvider>
@@ -94,6 +98,24 @@ export default function Controls({
           </TooltipTrigger>
           <TooltipContent>
             <p className="font-mono text-xs lowercase">export palette</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPickColor}
+              disabled={!canPickColor}
+              className="lowercase font-mono"
+            >
+              <Pipette className="size-4" />
+              pick
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">pick color from screen</p>
           </TooltipContent>
         </Tooltip>
 

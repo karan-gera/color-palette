@@ -18,6 +18,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
 import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
+import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
@@ -36,6 +37,7 @@ function App() {
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const cycleCVDRef = useRef<(() => void) | null>(null)
+  const colorInputRef = useRef<HTMLInputElement>(null)
   const {
     history,
     current,
@@ -182,6 +184,23 @@ function App() {
     setIsExportDialog(true)
   }, [])
 
+  const addPickedColor = useCallback((hex: string) => {
+    const base = current ?? []
+    if (base.length >= 5) return
+    push([...base, hex])
+    setLockedStates(prev => [...prev, false])
+  }, [current, push])
+
+  const handlePickColor = useCallback(async () => {
+    if ((current ?? []).length >= 5) return
+    if (hasEyeDropper) {
+      const hex = await pickColorNative()
+      if (hex) addPickedColor(hex)
+    } else {
+      colorInputRef.current?.click()
+    }
+  }, [current, addPickedColor])
+
   const [activePresetId, setActivePresetId] = useState<string | null>(null)
 
   const applyPreset = useCallback((presetId: string) => {
@@ -292,6 +311,7 @@ function App() {
     onEditColor: setEditIndex,
     onCycleCVD: () => cycleCVDRef.current?.(),
     onCycleRelationship: cycleRelationship,
+    onPickColor: handlePickColor,
     onCyclePreset: cyclePreset,
     onViewVariations: setVariationsIndex,
     onEscape: closeAllDialogs,
@@ -322,6 +342,8 @@ function App() {
             canRedo={canRedo}
             canShare={(current ?? []).length > 0}
             canExport={(current ?? []).length > 0}
+            onPickColor={handlePickColor}
+            canPickColor={(current ?? []).length < 5}
           />
         </div>
 
@@ -460,6 +482,16 @@ function App() {
 
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
+
+      {/* Hidden color input fallback for non-Chromium browsers */}
+      <input
+        ref={colorInputRef}
+        type="color"
+        className="sr-only"
+        onChange={(e) => addPickedColor(e.target.value)}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
 
       {/* Notification toast */}
       {notification && (

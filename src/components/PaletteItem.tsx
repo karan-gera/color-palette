@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Blend, Check, Pencil, RefreshCw, Trash2, X } from 'lucide-react'
+import { Blend, Check, Pencil, Pipette, RefreshCw, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -7,6 +7,7 @@ import LockIcon from './LockIcon'
 import ColorFormatMenu from './ColorFormatMenu'
 import HslPicker from './HslPicker'
 import { getColorName } from '@/helpers/colorNaming'
+import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
 function hexLuminance(hex: string): number {
   const h = hex.replace('#', '')
@@ -168,7 +169,20 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
         <div className="relative flex items-center justify-center">
           {isEditing && (
-            <div className="absolute right-full mr-1.5">
+            <div className="absolute right-full mr-1.5 flex items-center gap-1">
+              {hasEyeDropper && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+                  onClick={async () => {
+                    const hex = await pickColorNative()
+                    if (hex) setEditValue(hex.replace('#', ''))
+                  }}
+                  className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                >
+                  <Pipette className="size-3" />
+                </button>
+              )}
               <Popover open={showHslPicker} onOpenChange={setShowHslPicker}>
                 <PopoverTrigger asChild>
                   <button

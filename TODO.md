@@ -272,20 +272,19 @@ Drag palette colors to rearrange their order. Color order matters in design (pri
 
 ---
 
-## EyeDropper (Pick Color from Screen)
+## EyeDropper / Color Picker ✅
 
-Use the browser's native EyeDropper API to pick a color from anywhere on screen — any website, image, or app visible behind the browser.
+Pick a color from screen (Chromium) or OS color picker (Firefox/Safari) and add it to the palette.
 
-- [ ] Eyedropper button in controls area (Pipette icon from Lucide)
-- [ ] Keyboard shortcut: `I` (for eyedropper / ink dropper)
-- [ ] Opens native OS color picker overlay
-- [ ] Picked color added to palette (or replaces focused color — TBD)
-- [ ] Graceful degradation: hide button entirely on unsupported browsers (Firefox, Safari)
-- [ ] Feature detection via `'EyeDropper' in window`
+- [x] Pipette button in controls area (Lucide Pipette icon)
+- [x] Keyboard shortcut: `I`
+- [x] Chromium: native EyeDropper API (`await new EyeDropper().open()`)
+- [x] Firefox/Safari fallback: hidden `<input type="color">` opens OS color picker
+- [x] Picked color added to palette (disabled at 5 colors)
+- [x] Per-color edit mode: Pipette icon next to `•` dot (Chromium only) — pick replaces edit value
+- [x] Feature detection via `'EyeDropper' in window`
 
-**Implementation:** Single `await new EyeDropper().open()` call returns `{ sRGBHex }`. Wrap in try/catch for user cancellation (`AbortError`). Chrome/Edge 95+ only — no polyfill exists, so feature-detect and hide. Zero dependencies.
-
-**Browser support:** Chrome 95+, Edge 95+, Opera 81+. Not supported in Firefox or Safari (as of 2026).
+**Implementation:** `eyeDropper.ts` helper exports `hasEyeDropper` boolean and `pickColorNative()` async function. Toolbar button in Controls triggers EyeDropper or falls back to hidden color input in App.tsx. In PaletteItem edit mode, Pipette icon appears left of HSL dot on Chromium — picked color fills the hex input live. Zero dependencies.
 
 ---
 
@@ -725,7 +724,7 @@ Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 mo
 10. ~~**Color Variations Panel** - Commonly paywalled, moderate effort~~ ✅ Done!
 11. ~~**Preset Browser Overhaul** - VST-style navigation, active label with drift detection~~
 12. **Drag to Reorder** - Missing table-stakes interaction, low-medium effort
-13. **EyeDropper** - Native browser API, near-zero effort, killer UX
+13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
 14. **Gradient Generator** - Nice companion feature, low effort
 15. **Palette Visualization** - High wow factor, moderate effort
 16. **Color Harmony Score** - Unique differentiator, medium effort
