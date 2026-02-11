@@ -234,83 +234,123 @@ function AboutTab() {
   )
 }
 
-function HelpTab() {
+/* Help / documentation structure */
+type DocNavSection = { type: 'section'; label: string }
+type DocNavPage = { type: 'page'; id: string; label: string }
+type DocNavItem = DocNavSection | DocNavPage
+
+const DOC_NAV: DocNavItem[] = [
+  { type: 'section', label: 'basics' },
+  { type: 'page', id: 'getting-started', label: 'getting started' },
+  { type: 'page', id: 'palette', label: 'palette' },
+  { type: 'page', id: 'relationships', label: 'color relationships' },
+  { type: 'page', id: 'presets', label: 'presets' },
+  { type: 'section', label: 'copy & share' },
+  { type: 'page', id: 'copy-formats', label: 'copy formats' },
+  { type: 'page', id: 'share', label: 'share via url' },
+  { type: 'section', label: 'export' },
+  { type: 'page', id: 'export', label: 'export' },
+  { type: 'section', label: 'color tools' },
+  { type: 'page', id: 'color-picker', label: 'color picker' },
+  { type: 'page', id: 'color-naming', label: 'color naming' },
+  { type: 'page', id: 'variations', label: 'variations' },
+  { type: 'section', label: 'accessibility' },
+  { type: 'page', id: 'color-blindness', label: 'color blindness' },
+  { type: 'page', id: 'contrast', label: 'contrast checker' },
+  { type: 'section', label: 'reference' },
+  { type: 'page', id: 'keyboard', label: 'keyboard shortcuts' },
+]
+
+const DOC_PAGE_IDS = DOC_NAV
+  .filter((item): item is DocNavPage => item.type === 'page')
+  .map((p) => p.id)
+
+type DocPageId = (typeof DOC_PAGE_IDS)[number]
+
+function DocPageContent({ pageId }: { pageId: DocPageId }) {
+  const navItem = DOC_NAV.find((i) => i.type === 'page' && i.id === pageId)
+  const title = navItem?.type === 'page' ? navItem.label : pageId.replace(/-/g, ' ')
   return (
-    <div className="space-y-10">
-      {/* getting started */}
-      <div>
-        <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4 text-center">getting started</h3>
-        <div className="max-w-lg mx-auto space-y-2 text-sm text-muted-foreground leading-relaxed">
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">shift+/</kbd> open docs</p>
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">space</kbd> or <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">a</kbd> add a random color to the palette (up to 5)</p>
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">r</kbd> reroll all unlocked colors</p>
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">1</kbd>-<kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">5</kbd> toggle lock on individual colors</p>
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">z</kbd> undo, <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">shift+z</kbd> redo</p>
-          <p><kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">s</kbd> save palette, <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">o</kbd> open saved</p>
-          <p>click any hex code below a color to copy in different formats.</p>
-        </div>
+    <article className="space-y-6">
+      <h2 className="text-lg font-medium tracking-tight lowercase">{title}</h2>
+      <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+        <p>Add your documentation copy for this page.</p>
       </div>
+    </article>
+  )
+}
 
-      {/* feature walkthroughs */}
-      <div>
-        <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4 text-center">features</h3>
-        <div className="max-w-lg mx-auto space-y-4 text-sm text-muted-foreground leading-relaxed">
-          <div>
-            <p className="text-foreground font-medium mb-1">color relationships</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">q</kbd> to cycle through modes: random, complementary, analogous, triadic, tetradic, split-complementary, monochromatic. new colors will follow the selected harmony.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">presets</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">p</kbd> to cycle through palette presets (pastel, neon, earth, jewel, etc.). <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">shift+p</kbd> rerolls the current preset. use the preset browser in the toolbar for direct selection.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">export</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">e</kbd> to export. code tab: css variables, json, tailwind, scss. art apps tab: photoshop (ase/aco), procreate, gimp/krita, paint.net, with import instructions for each.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">color blindness preview</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">shift+t</kbd> to cycle through cvd simulations. the entire ui is filtered so you can see exactly how your palette appears to people with color vision deficiencies.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">contrast checker</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">k</kbd> to toggle. shows wcag contrast ratios for your colors against theme backgrounds, and against each other. press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">shift+k</kbd> to cycle tabs.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">variations</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">v</kbd> then <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">1-5</kbd> to view tints, shades, and tones for a color. click a swatch to copy, shift+click to replace the palette color.</p>
-          </div>
-          <div>
-            <p className="text-foreground font-medium mb-1">color picker</p>
-            <p>press <kbd className="bg-card border rounded px-1.5 py-0.5 text-xs">i</kbd> to pick a color from screen (chromium: eyedropper, firefox/safari: os color picker). also available in per-color edit mode next to the hsl slider toggle.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* keyboard shortcuts */}
-      <div>
-        <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4 text-center">all keyboard shortcuts</h3>
-        <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          {SHORTCUT_GROUPS.map((group) => (
-            <div key={group.label}>
-              <h4 className="text-xs text-muted-foreground mb-2 font-medium">{group.label}</h4>
-              <div className="space-y-1">
-                {group.shortcuts.map((shortcut) => (
-                  <div key={shortcut.key + shortcut.description} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{shortcut.description}</span>
-                    <span className="flex items-center gap-0.5">
-                      {shortcut.modifiers?.map((mod) => (
-                        <kbd key={mod} className="bg-card border rounded px-1.5 py-0.5 text-[10px]">
-                          {getModifierLabel(mod)}
-                        </kbd>
-                      ))}
-                      <kbd className="bg-card border rounded px-1.5 py-0.5 text-[10px]">{shortcut.key}</kbd>
-                    </span>
-                  </div>
-                ))}
-              </div>
+function DocPageKeyboard() {
+  return (
+    <article className="space-y-6">
+      <h2 className="text-lg font-medium tracking-tight lowercase">keyboard shortcuts</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+        {SHORTCUT_GROUPS.map((group) => (
+          <div key={group.label}>
+            <h3 className="text-muted-foreground mb-2 font-medium">{group.label}</h3>
+            <div className="space-y-1">
+              {group.shortcuts.map((shortcut) => (
+                <div key={shortcut.key + shortcut.description} className="flex items-center justify-between">
+                  <span className="text-muted-foreground">{shortcut.description}</span>
+                  <span className="flex items-center gap-0.5 shrink-0 ml-2">
+                    {shortcut.modifiers?.map((mod) => (
+                      <kbd key={mod} className="bg-card border rounded px-1.5 py-0.5 text-[10px]">
+                        {getModifierLabel(mod)}
+                      </kbd>
+                    ))}
+                    <kbd className="bg-card border rounded px-1.5 py-0.5 text-[10px]">{shortcut.key}</kbd>
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function HelpTab() {
+  const [activePage, setActivePage] = useState<DocPageId>('getting-started')
+
+  return (
+    <div className="flex flex-1 min-h-0 w-full">
+      {/* sidebar */}
+      <nav className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto">
+        <ul className="space-y-0.5 py-1">
+          {DOC_NAV.map((item, i) =>
+            item.type === 'section' ? (
+              <li key={i} className="pt-3 pb-1 first:pt-0">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                  {item.label}
+                </span>
+              </li>
+            ) : (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => setActivePage(item.id)}
+                  className={`block w-full text-left py-1.5 px-2 rounded text-xs font-mono lowercase transition-colors ${
+                    activePage === item.id
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              </li>
+            )
+          )}
+        </ul>
+      </nav>
+
+      {/* content */}
+      <div className="flex-1 min-w-0 overflow-y-auto pl-6">
+        {activePage === 'keyboard' ? (
+          <DocPageKeyboard />
+        ) : (
+          <DocPageContent pageId={activePage} />
+        )}
       </div>
     </div>
   )
@@ -376,21 +416,24 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
       </div>
 
       {/* scrollable content */}
-      <div className="overflow-y-auto h-[calc(100vh-57px)] px-6 py-8">
-        <div className="max-w-3xl mx-auto">
-        <div className={activeTab === 'about' ? '' : 'hidden'}>
-          <AboutTab />
-        </div>
-        <div className={activeTab === 'help' ? '' : 'hidden'}>
-          <HelpTab />
-        </div>
-        <div className={activeTab === 'changelog' ? '' : 'hidden'}>
-          <ChangelogTab />
-        </div>
-        </div>
-
-        {/* bottom spacer */}
-        <div className="h-16" aria-hidden="true" />
+      <div className="flex flex-col h-[calc(100vh-57px)] min-h-0">
+        {activeTab === 'help' ? (
+          <div className="flex-1 flex min-h-0 px-6 py-6">
+            <HelpTab />
+          </div>
+        ) : (
+          <div className="overflow-y-auto flex-1 px-6 py-8">
+            <div className="max-w-3xl mx-auto">
+              <div className={activeTab === 'about' ? '' : 'hidden'}>
+                <AboutTab />
+              </div>
+              <div className={activeTab === 'changelog' ? '' : 'hidden'}>
+                <ChangelogTab />
+              </div>
+            </div>
+            <div className="h-16" aria-hidden="true" />
+          </div>
+        )}
       </div>
     </div>
   )
