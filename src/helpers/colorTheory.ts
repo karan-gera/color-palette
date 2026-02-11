@@ -101,7 +101,7 @@ export function hexToHsl(hex: string): HSL {
 }
 
 export function hslToHex({ h, s, l }: HSL): string {
-  const hNorm = h / 360
+  const hNorm = (((h % 360) + 360) % 360) / 360
   const sNorm = s / 100
   const lNorm = l / 100
 
