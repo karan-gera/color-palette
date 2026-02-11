@@ -166,6 +166,21 @@ function App() {
     })
   }, [])
 
+  const reorderColors = useCallback((fromIndex: number, toIndex: number) => {
+    const base = current ?? []
+    if (fromIndex === toIndex) return
+    const newColors = [...base]
+    const [moved] = newColors.splice(fromIndex, 1)
+    newColors.splice(toIndex, 0, moved)
+    push(newColors)
+    setLockedStates(prev => {
+      const next = [...prev]
+      const [movedLock] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, movedLock)
+      return next
+    })
+  }, [current, push])
+
   const handleOpen = useCallback(() => {
     setIsOpenDialog(true)
   }, [])
@@ -373,6 +388,7 @@ function App() {
               onDelete={deleteAt}
               onToggleLock={toggleLockAt}
               onViewVariations={setVariationsIndex}
+              onReorder={reorderColors}
               onAdd={addColor}
             />
           </div>

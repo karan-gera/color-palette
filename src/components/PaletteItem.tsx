@@ -21,6 +21,8 @@ type PaletteItemProps = {
   color: string
   isLocked: boolean
   isEditing: boolean
+  isDragging?: boolean
+  onDragPointerDown?: (e: React.PointerEvent) => void
   onEditStart: () => void
   onEditSave: (newHex: string) => void
   onEditCancel: () => void
@@ -30,7 +32,7 @@ type PaletteItemProps = {
   onViewVariations: () => void
 }
 
-export default function PaletteItem({ color, isLocked, isEditing, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: PaletteItemProps) {
+export default function PaletteItem({ color, isLocked, isEditing, isDragging, onDragPointerDown, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: PaletteItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [editInvalid, setEditInvalid] = useState(false)
@@ -87,14 +89,16 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
       <div className="flex flex-col items-center gap-2">
         <button
           type="button"
-          className={`size-[200px] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer relative ${isEditing ? '' : 'transition-all duration-500 ease-in-out'}`}
+          className={`size-[200px] rounded-full border-2 border-dashed flex items-center justify-center relative ${isEditing ? '' : 'transition-all duration-500 ease-in-out'} ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={{
             backgroundColor: previewColor,
             borderColor: textColor,
             color: textColor,
+            touchAction: 'none',
           }}
           aria-label={`${isLocked ? 'Unlock' : 'Lock'} color ${color}`}
           onClick={onToggleLock}
+          onPointerDown={onDragPointerDown}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >

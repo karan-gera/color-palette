@@ -18,6 +18,12 @@ Features we're making free that competitors paywall.
 
 **Fix:** Hidden the browser scrollbar on `html` via `scrollbar-width: none` (Firefox) and `::-webkit-scrollbar { display: none }` (Chrome/Safari) in `index.css`. Page remains scrollable via trackpad/mouse wheel/keyboard — the scrollbar is just not rendered, so no layout shift occurs when the contrast checker expands.
 
+### ~~hslToHex boundary bug at h=360 produces gray~~ ✅ Fixed
+
+**Bug:** `Math.round()` on hue floats near 359.5+ produced h=360, which mapped to `hNorm=1.0` in `hslToHex`. All branching conditions checked `< 1`, so none matched — `rPrime=gPrime=bPrime` stayed 0, producing pure gray regardless of saturation. Affected 5/8 presets (pastel, neon, jewel, warm, muted) whose hue ranges include the 0/360 boundary. Broke preset drift detection since the gray's s=0 fell outside every preset's saturation range.
+
+**Fix:** Normalized hue input in `hslToHex`: `const hNorm = (((h % 360) + 360) % 360) / 360` — maps 360→0 and handles negative hues.
+
 ---
 
 ## Copy in Multiple Formats ✅
@@ -142,35 +148,35 @@ One-click generation of popular palette styles for users who don't know color th
 
 ---
 
-## Preset Browser Overhaul
+## Preset Browser Overhaul ✅
 
 Redesign the preset selector to feel like a synth VST preset browser.
 
 ### Icon
-- [ ] Replace Sparkles icon — it's been co-opted by gen AI and sends the wrong signal
-- [ ] Pick a neutral icon (e.g. Palette, Layers, SwatchBook, or similar)
+- [x] Replace Sparkles icon — it's been co-opted by gen AI and sends the wrong signal
+- [x] Pick a neutral icon (e.g. Palette, Layers, SwatchBook, or similar)
 
 ### Navigation
-- [ ] Left/right arrow buttons flanking the preset name, visually attached
-- [ ] Arrows cycle through presets and auto-apply on click (no extra confirm step)
-- [ ] Lock warning modal still triggers when locked colors exist
+- [x] Left/right arrow buttons flanking the preset name, visually attached
+- [x] Arrows cycle through presets and auto-apply on click (no extra confirm step)
+- [x] Lock warning modal still triggers when locked colors exist
 
 ### Hover interaction
-- [ ] On hover, preset name text becomes two icon-only buttons: expand dropdown + reroll
-- [ ] Both buttons are purely symbol-based (no text labels)
-- [ ] Dropdown opens full preset list for direct selection
-- [ ] Reroll regenerates the current preset
+- [x] On hover, preset name text becomes two icon-only buttons: expand dropdown + reroll
+- [x] Both buttons are purely symbol-based (no text labels)
+- [x] Dropdown opens full preset list for direct selection
+- [x] Reroll regenerates the current preset
 
 ### Active preset label
-- [ ] When a preset is selected, show its name in the text label (e.g. "pastel")
-- [ ] Default text when no preset is active (e.g. "presets")
-- [ ] Detect "broken" preset state: if one or more colors fall outside the preset's stated HSL bounds, the preset is no longer active
-- [ ] Broken state triggers: user edits a color, rerolls, adds/removes colors, or any color drifts out of the preset's H/S/L ranges
-- [ ] Transition from preset name back to default text with a fade animation
+- [x] When a preset is selected, show its name in the text label (e.g. "pastel")
+- [x] Default text when no preset is active (e.g. "presets")
+- [x] Detect "broken" preset state: if one or more colors fall outside the preset's stated HSL bounds, the preset is no longer active
+- [x] Broken state triggers: user edits a color, rerolls, adds/removes colors, or any color drifts out of the preset's H/S/L ranges
+- [x] Transition from preset name back to default text with a fade animation
 
 ### Keyboard
-- [ ] `P` continues to cycle presets (existing)
-- [ ] Consider left/right arrow support when preset selector is focused
+- [x] `P` continues to cycle presets (existing)
+- [x] Consider left/right arrow support when preset selector is focused
 
 ---
 
@@ -256,19 +262,21 @@ Preview palette colors applied to a sample UI layout (card, button, nav bar, tex
 
 ---
 
-## Drag to Reorder
+## Drag to Reorder ✅
 
 Drag palette colors to rearrange their order. Color order matters in design (primary, secondary, accent…) but currently colors are fixed in the position they were added.
 
-- [ ] Drag-and-drop reordering of palette items
-- [ ] Visual feedback during drag: lifted appearance, drop target indicator
-- [ ] Smooth animated reflow when items shift position
-- [ ] Touch support for mobile (long-press to initiate drag)
-- [ ] Keyboard equivalent: `Shift+Arrow` to move the focused color left/right
-- [ ] Locked state and all per-color metadata travel with the dragged item
-- [ ] Reorder pushes to undo history (reorderable via undo/redo)
+- [x] Drag-and-drop reordering of palette items
+- [x] Visual feedback during drag: lifted appearance, drop target indicator
+- [x] Smooth animated reflow when items shift position
+- [x] Touch support for mobile (pointer events handle touch natively, `touch-action: none` on circles)
+- [ ] Keyboard equivalent: `Shift+Arrow` to move the focused color left/right (deferred — needs focus model)
+- [x] Locked state and all per-color metadata travel with the dragged item
+- [x] Reorder pushes to undo history (reorderable via undo/redo)
 
-**Implementation:** Use pointer events for cross-device support (mouse + touch). Track drag state in `App.tsx`, render a ghost/clone during drag. Animate displaced items with `transform` transitions. No external drag library — keep it lightweight. Add `Shift+Left/Right` to `useKeyboardShortcuts.ts`.
+**Implementation:** `usePaletteDrag` hook in `src/hooks/usePaletteDrag.ts` manages pointer events and drag state. Pointer capture on the circle element; 8px movement threshold distinguishes drag from click-to-lock. Dragged item follows pointer via `transform: translate()` with scale-up and drop-shadow. Displaced items slide with `transition: transform 200ms`. Drag disabled during edit mode. Both `colors` and `lockedStates` arrays reordered in sync via `reorderColors` callback in `App.tsx` (calls `push()` for undo support).
+
+**Keyboard reorder (future):** Needs a "focused color" concept before `Shift+Arrow` can work. Options: leader-key chord (press 1-5 then arrow), implicit focus tracking, or explicit selection state. Deferred until a focus model is designed.
 
 ---
 
@@ -727,6 +735,12 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 - [x] Keyboard shortcuts reference (rendered from `SHORTCUT_GROUPS` data, OS-aware)
 - [x] Feature walkthroughs: presets, export, color blindness preview, contrast checker, variations, eyedropper
 - [x] Tips and workflows integrated into feature descriptions
+- [x] Sidebar nav with 7 sections, 16 pages — inline component demos as visual references
+- [x] Undo & redo page (what's tracked, session-only, future-clearing behavior)
+- [x] Save & open + import/export palettes pages (localStorage, backup/restore, file format)
+- [x] Theme page (3-way toggle, resolution order, contrast checker impact)
+- [x] HSL picker documented on palette page
+- [x] CVD toggle clickable D/P/T/A buttons documented on color blindness page
 
 ### Changelog
 - [x] Version history with dates and feature summaries (v0.1–v0.10)
@@ -756,8 +770,8 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 8. ~~**Color Naming** - Instant perceived value, low effort~~ ✅ Done!
 9. ~~**Contrast Checker** - Accessibility focus, differentiator~~ ✅ Done!
 10. ~~**Color Variations Panel** - Commonly paywalled, moderate effort~~ ✅ Done!
-11. ~~**Preset Browser Overhaul** - VST-style navigation, active label with drift detection~~
-12. **Drag to Reorder** - Missing table-stakes interaction, low-medium effort
+11. ~~**Preset Browser Overhaul** - VST-style navigation, active label with drift detection~~ ✅ Done!
+12. ~~**Drag to Reorder** - Missing table-stakes interaction, low-medium effort~~ ✅ Done!
 13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
 14. **Gradient Generator** - Nice companion feature, low effort
 15. **Palette Visualization** - High wow factor, moderate effort

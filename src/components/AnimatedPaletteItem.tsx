@@ -6,6 +6,13 @@ type AnimatedPaletteItemProps = {
   index: number
   isLocked: boolean
   isEditing: boolean
+  isDragging: boolean
+  dragActive: boolean
+  itemStyle: React.CSSProperties
+  setRef: (el: HTMLDivElement | null) => void
+  onDragPointerDown: (e: React.PointerEvent) => void
+  onDragPointerMove: (e: React.PointerEvent) => void
+  onDragPointerUp: (e: React.PointerEvent) => void
   onEditStart: () => void
   onEditSave: (hex: string) => void
   onEditCancel: () => void
@@ -15,7 +22,7 @@ type AnimatedPaletteItemProps = {
   onViewVariations: () => void
 }
 
-export default function AnimatedPaletteItem({ color, isLocked, isEditing, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
+export default function AnimatedPaletteItem({ color, isLocked, isEditing, isDragging, dragActive, itemStyle, setRef, onDragPointerDown, onDragPointerMove, onDragPointerUp, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -37,23 +44,40 @@ export default function AnimatedPaletteItem({ color, isLocked, isEditing, onEdit
   }
 
   return (
-    <div 
-      className={`flex flex-col items-center transition-all duration-250 ease-out ${
+    <div
+      ref={setRef}
+      style={isDragging ? undefined : itemStyle}
+      className={`flex flex-col items-center ${
+        isDragging
+          ? 'z-50'
+          : dragActive
+            ? 'transition-transform duration-200 ease-out'
+            : 'transition-all duration-250 ease-out'
+      } ${
         isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
       }`}
     >
-      <PaletteItem
-        color={color}
-        isLocked={isLocked}
-        isEditing={isEditing}
-        onEditStart={onEditStart}
-        onEditSave={onEditSave}
-        onEditCancel={onEditCancel}
-        onReroll={onReroll}
-        onDelete={handleDelete}
-        onToggleLock={onToggleLock}
-        onViewVariations={onViewVariations}
-      />
+      <div
+        style={isDragging ? itemStyle : undefined}
+        className={isDragging ? 'cursor-grabbing' : ''}
+        onPointerMove={onDragPointerMove}
+        onPointerUp={onDragPointerUp}
+      >
+        <PaletteItem
+          color={color}
+          isLocked={isLocked}
+          isEditing={isEditing}
+          isDragging={isDragging}
+          onDragPointerDown={onDragPointerDown}
+          onEditStart={onEditStart}
+          onEditSave={onEditSave}
+          onEditCancel={onEditCancel}
+          onReroll={onReroll}
+          onDelete={handleDelete}
+          onToggleLock={onToggleLock}
+          onViewVariations={onViewVariations}
+        />
+      </div>
     </div>
   )
 }
