@@ -262,6 +262,7 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'section', label: 'export' },
   { type: 'page', id: 'export', label: 'export' },
   { type: 'section', label: 'color tools' },
+  { type: 'page', id: 'edit-mode', label: 'edit mode' },
   { type: 'page', id: 'color-picker', label: 'color picker' },
   { type: 'page', id: 'color-naming', label: 'color naming' },
   { type: 'page', id: 'variations', label: 'variations' },
@@ -1181,6 +1182,107 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">persistence</h3>
             <p>
               your theme preference is stored in <code className="text-xs bg-muted px-1 rounded">localStorage</code> under <code className="text-xs bg-muted px-1 rounded">color-palette:theme</code> and persists across sessions.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'edit-mode':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              edit mode lets you change any color's exact value — with live preview, hsl sliders, and per-color screen picking. it's the most precise way to control a specific color in your palette.
+            </p>
+          </div>
+
+          <Demo label="color in edit mode">
+            <PaletteItem
+              color="#e74c3c"
+              isLocked={false}
+              isEditing={true}
+              onEditStart={noop}
+              onEditSave={noop}
+              onEditCancel={noop}
+              onReroll={noop}
+              onDelete={noop}
+              onToggleLock={noop}
+              onViewVariations={noop}
+            />
+          </Demo>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">entering edit mode</h3>
+            <p>two ways to open edit mode for a color:</p>
+            <ul className="space-y-1.5 list-none">
+              <li className="flex items-center gap-2">
+                <Pencil className="size-3 shrink-0" />
+                <span>click the pencil icon below any color circle</span>
+              </li>
+              <li className="flex items-center gap-2 flex-wrap gap-y-1">
+                <span className="flex items-center"><Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>5</Kbd></span>
+                <span className="text-muted-foreground">keyboard shortcut (number = color position)</span>
+              </li>
+            </ul>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">hex input</h3>
+            <p>
+              type a 3- or 6-character hex code (with or without <code className="text-xs bg-muted px-1 rounded">#</code>). the color circle updates live as you type. only a confirmed edit is saved — the original color is kept in memory until you press <Kbd>enter</Kbd>.
+            </p>
+            <p>
+              if your input is not a valid hex color, the input flashes red and edit mode stays open. nothing is committed. press <Kbd>esc</Kbd> or click away to discard.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">hsl picker</h3>
+            <p>
+              click the small colored dot to the right of the hex input to open the hsl picker popover. three gradient sliders let you adjust:
+            </p>
+            <div className="border rounded-lg overflow-hidden my-2">
+              <div className="divide-y divide-border">
+                {[
+                  { label: 'hue', desc: '0–360° along the color wheel — changes the base color family' },
+                  { label: 'saturation', desc: '0% (gray) to 100% (fully vivid)' },
+                  { label: 'lightness', desc: '0% (black) to 100% (white)' },
+                ].map(({ label, desc }) => (
+                  <div key={label} className="px-4 py-2.5">
+                    <span className="text-xs font-mono font-medium">{label}</span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p>
+              sliders and the hex input stay in sync — drag a slider and the hex updates instantly; type a hex and the sliders follow. close the picker by clicking the dot again or clicking away.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">pipette (chromium only)</h3>
+            <p>
+              on chromium browsers (chrome, edge, arc, brave), a <Pipette className="size-3 inline" /> pipette icon appears to the left of the dot. click it to launch the native eyedropper — then click anywhere on your screen to sample a color. the sampled hex fills the input and the circle updates immediately.
+            </p>
+            <p>
+              on firefox and safari this icon is hidden (the toolbar pick button uses the os color picker instead).
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">confirming and cancelling</span>
+            <div className="space-y-2 text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <Kbd>enter</Kbd>
+                <span className="text-muted-foreground">confirm — apply the color and push to undo history</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Kbd>esc</Kbd>
+                <span className="text-muted-foreground">cancel — discard changes and restore the original</span>
+              </div>
+              <div className="text-[10px] text-muted-foreground/70 pt-1">clicking outside the editor also cancels without committing</div>
+            </div>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">undo behavior</h3>
+            <p>
+              typing and slider adjustments are not tracked individually. only a confirmed edit (<Kbd>enter</Kbd>) is pushed onto the undo stack — so you can explore freely and then either commit or discard. cancelling never creates an undo entry.
             </p>
           </div>
         </DocArticle>
