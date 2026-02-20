@@ -17,7 +17,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
-import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, type ColorRelationship } from '@/helpers/colorTheory'
+import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -61,6 +61,7 @@ function App() {
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
   const [lockedStates, setLockedStates] = useState<boolean[]>([])
+  const [colorIds, setColorIds] = useState<string[]>([])
   const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
 
   // Load palette from URL on mount
@@ -71,6 +72,7 @@ function App() {
     if (shared && shared.colors.length > 0) {
       replace([shared.colors], 0)
       setLockedStates(shared.lockedStates)
+      setColorIds(shared.colors.map(() => crypto.randomUUID()))
       clearUrlParams()
     }
     setUrlLoaded(true)
@@ -114,8 +116,8 @@ function App() {
 
   const addColor = useCallback(() => {
     const base = current ?? []
-    if (base.length >= 5) return
-    
+    if (base.length >= MAX_COLORS) return
+
     let nextColor: string
     if (globalRelationship === 'random') {
       nextColor = generateRandomColor()
@@ -123,9 +125,10 @@ function App() {
       const lockedColors = base.filter((_, i) => lockedStates[i])
       nextColor = generateRelatedColor(lockedColors, globalRelationship, base[base.length - 1])
     }
-    
+
     push([...base, nextColor])
     setLockedStates(prev => [...prev, false])
+    setColorIds(prev => [...prev, crypto.randomUUID()])
   }, [current, globalRelationship, lockedStates, generateRandomColor, push])
 
   const rerollAt = useCallback((index: number) => {
@@ -156,6 +159,7 @@ function App() {
     const next = base.filter((_, i) => i !== index)
     push(next)
     setLockedStates(prev => prev.filter((_, i) => i !== index))
+    setColorIds(prev => prev.filter((_, i) => i !== index))
   }, [current, push])
 
   const toggleLockAt = useCallback((index: number) => {
@@ -177,6 +181,12 @@ function App() {
       const next = [...prev]
       const [movedLock] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, movedLock)
+      return next
+    })
+    setColorIds(prev => {
+      const next = [...prev]
+      const [movedId] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, movedId)
       return next
     })
   }, [current, push])
@@ -207,13 +217,14 @@ function App() {
 
   const addPickedColor = useCallback((hex: string) => {
     const base = current ?? []
-    if (base.length >= 5) return
+    if (base.length >= MAX_COLORS) return
     push([...base, hex])
     setLockedStates(prev => [...prev, false])
+    setColorIds(prev => [...prev, crypto.randomUUID()])
   }, [current, push])
 
   const handlePickColor = useCallback(async () => {
-    if ((current ?? []).length >= 5) return
+    if ((current ?? []).length >= MAX_COLORS) return
     if (hasEyeDropper) {
       const hex = await pickColorNative()
       if (hex) addPickedColor(hex)
@@ -230,6 +241,7 @@ function App() {
     const colors = generatePresetPalette(preset)
     push(colors)
     setLockedStates(new Array(colors.length).fill(false))
+    setColorIds(colors.map(() => crypto.randomUUID()))
     setActivePresetId(presetId)
   }, [push])
 
@@ -367,7 +379,7 @@ function App() {
             canShare={(current ?? []).length > 0}
             canExport={(current ?? []).length > 0}
             onPickColor={handlePickColor}
-            canPickColor={(current ?? []).length < 5}
+            canPickColor={(current ?? []).length < MAX_COLORS}
           />
         </div>
 
@@ -379,6 +391,7 @@ function App() {
           }`}>
             <AnimatedPaletteContainer
               colors={current ?? []}
+              colorIds={colorIds}
               lockedStates={lockedStates}
               editIndex={variationsIndex !== null ? null : editIndex}
               onEditStart={setEditIndex}
@@ -431,6 +444,7 @@ function App() {
               if (p) {
                 replace([p.colors], p.colors.length - 1)
                 setLockedStates(new Array(p.colors.length).fill(true))
+                setColorIds(p.colors.map(() => crypto.randomUUID()))
               }
               setIsOpenDialog(false)
             }}

@@ -96,9 +96,9 @@ export function useKeyboardShortcuts({
     }
 
     // Modifier+number combos (shift+1 = '!' on US keyboards, so use event.code)
-    const digitMatch = event.code.match(/^Digit([1-5])$/)
+    const digitMatch = event.code.match(/^Digit([0-9])$/)
     if (digitMatch) {
-      const index = parseInt(digitMatch[1]) - 1
+      const index = digitMatch[1] === '0' ? 9 : parseInt(digitMatch[1]) - 1
       if (index < colorCount) {
         if (event.shiftKey && event.altKey) {
           event.preventDefault()
@@ -196,12 +196,17 @@ export function useKeyboardShortcuts({
           onToggleHints()
         }
         break
+      case '0':
       case '1':
       case '2':
       case '3':
       case '4':
-      case '5': {
-        const index = parseInt(key) - 1
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9': {
+        const index = key === '0' ? 9 : parseInt(key) - 1
         if (index < colorCount) {
           event.preventDefault()
           onToggleLock(index)
@@ -273,13 +278,13 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
-    label: 'per-color (1-5)',
+    label: 'per-color (1-9, 0)',
     shortcuts: [
-      { key: '1-5', description: 'toggle lock' },
-      { modifiers: ['shift'], key: '1-5', description: 'delete color' },
-      { modifiers: ['alt'], key: '1-5', description: 'reroll color' },
-      { modifiers: ['shift', 'alt'], key: '1-5', description: 'edit color' },
-      { key: 'V 1-5', description: 'variations' },
+      { key: '1-9, 0', description: 'toggle lock' },
+      { modifiers: ['shift'], key: '1-9, 0', description: 'delete color' },
+      { modifiers: ['alt'], key: '1-9, 0', description: 'reroll color' },
+      { modifiers: ['shift', 'alt'], key: '1-9, 0', description: 'edit color' },
+      { key: 'V 1-9, 0', description: 'variations' },
     ],
   },
   {

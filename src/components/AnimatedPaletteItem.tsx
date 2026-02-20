@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import PaletteItem from './PaletteItem'
 
 type AnimatedPaletteItemProps = {
+  layoutId: string
   color: string
   index: number
   isLocked: boolean
@@ -22,29 +23,38 @@ type AnimatedPaletteItemProps = {
   onViewVariations: () => void
 }
 
-export default function AnimatedPaletteItem({ color, isLocked, isEditing, isDragging, dragActive, itemStyle, setRef, onDragPointerDown, onDragPointerMove, onDragPointerUp, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations }: AnimatedPaletteItemProps) {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 10)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const [isDeleting, setIsDeleting] = useState(false)
-  const onDeleteRef = useRef(onDelete)
-  onDeleteRef.current = onDelete
-
-  const handleDelete = () => {
-    if (isDeleting) return // Already deleting - ignore click
-    setIsDeleting(true)
-    setIsVisible(false)
-    setTimeout(() => {
-      onDeleteRef.current()
-    }, 250)
-  }
-
+export default function AnimatedPaletteItem({
+  layoutId,
+  color,
+  isLocked,
+  isEditing,
+  isDragging,
+  dragActive,
+  itemStyle,
+  setRef,
+  onDragPointerDown,
+  onDragPointerMove,
+  onDragPointerUp,
+  onEditStart,
+  onEditSave,
+  onEditCancel,
+  onReroll,
+  onDelete,
+  onToggleLock,
+  onViewVariations,
+}: AnimatedPaletteItemProps) {
   return (
-    <div
+    <motion.div
+      layoutId={layoutId}
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{
+        layout: { type: 'spring', stiffness: 400, damping: 32 },
+        opacity: { duration: 0.15, ease: 'easeOut' },
+        scale: { duration: 0.15, ease: 'easeOut' },
+      }}
       ref={setRef}
       style={isDragging ? undefined : itemStyle}
       className={`flex flex-col items-center ${
@@ -52,9 +62,7 @@ export default function AnimatedPaletteItem({ color, isLocked, isEditing, isDrag
           ? 'z-50'
           : dragActive
             ? 'transition-transform duration-200 ease-out'
-            : 'transition-all duration-250 ease-out'
-      } ${
-        isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
+            : ''
       }`}
     >
       <div
@@ -73,11 +81,11 @@ export default function AnimatedPaletteItem({ color, isLocked, isEditing, isDrag
           onEditSave={onEditSave}
           onEditCancel={onEditCancel}
           onReroll={onReroll}
-          onDelete={handleDelete}
+          onDelete={onDelete}
           onToggleLock={onToggleLock}
           onViewVariations={onViewVariations}
         />
       </div>
-    </div>
+    </motion.div>
   )
 }

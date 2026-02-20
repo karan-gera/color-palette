@@ -37,6 +37,7 @@ const FEATURES = [
 ]
 
 const COMPETITOR_ROWS = [
+  { feature: 'up to 10 colors', us: true, coolors: 'pro ($3.49/mo)', colorffy: 'n/a (5 max)' },
   { feature: 'contrast checker', us: true, coolors: 'pro ($3.49/mo)', colorffy: 'pro ($5/mo)' },
   { feature: 'palette variations', us: true, coolors: 'pro', colorffy: 'free (limited)' },
   { feature: 'advanced exports', us: true, coolors: 'pro', colorffy: 'pro' },
@@ -50,6 +51,26 @@ const COMPETITOR_ROWS = [
 ]
 
 const CHANGELOG = [
+  {
+    version: '0.12',
+    title: 'expand to 10 colors',
+    items: [
+      'palette now supports up to 10 colors (was 5)',
+      'two-row layout: 3+3, 4+3, 4+4, 5+4, 5+5 split patterns',
+      'position-to-position animations via framer motion',
+      'drag-to-reorder extended to work across both rows',
+      'shortcuts 6–9 and 0 for positions 6–10',
+    ],
+  },
+  {
+    version: '0.11',
+    title: 'edit mode & workflow docs',
+    items: [
+      'dedicated edit mode help page',
+      'agents.md workflow style guide added',
+      'full vitest test suite with 206 tests',
+    ],
+  },
   {
     version: '0.10',
     title: 'eyedropper / color picker',
@@ -67,7 +88,7 @@ const CHANGELOG = [
       '9 tints, 9 shades, 9 tones per color',
       'distinct swatch shapes: rounded squares, diamonds, pentagons',
       'click to copy, shift+click to replace',
-      'V → 1-5 leader key chord',
+      'V → 1-9, 0 leader key chord',
     ],
   },
   {
@@ -340,7 +361,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              each click generates a random color and adds it to your palette. you can have up to 5 colors at a time. press <Kbd>A</Kbd> or <Kbd>space</Kbd> as a shortcut.
+              each click generates a random color and adds it to your palette. you can have up to 10 colors at a time. press <Kbd>A</Kbd> or <Kbd>space</Kbd> as a shortcut.
             </p>
             <p>
               once you have colors, you can interact with each one — lock it, reroll it, edit its hex value, delete it, or explore its variations. all actions are available via buttons below each color and via keyboard shortcuts.
@@ -359,7 +380,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
                 <span className="text-muted-foreground">reroll all unlocked</span>
               </div>
               <div className="flex items-center gap-2">
-                <Kbd>1</Kbd>–<Kbd>5</Kbd>
+                <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>
                 <span className="text-muted-foreground">lock / unlock color</span>
               </div>
               <div className="flex items-center gap-2">
@@ -390,7 +411,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              each color in your palette is a circle with controls below it. you can have up to 5 colors at a time.
+              each color in your palette is a circle with controls below it. you can have up to 10 colors at a time.
             </p>
           </div>
 
@@ -412,7 +433,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">locking</h3>
             <p>
-              click any color circle to toggle its lock. locked colors are preserved when you reroll — useful for keeping a base color while exploring complements. press <Kbd>1</Kbd>–<Kbd>5</Kbd> to lock/unlock by position.
+              click any color circle to toggle its lock. locked colors are preserved when you reroll — useful for keeping a base color while exploring complements. press <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> to lock/unlock by position.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">action buttons</h3>
@@ -438,7 +459,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">inline editing</h3>
             <p>
-              click the pencil or press <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>5</Kbd>. type a hex code — the circle updates live as you type. press <Kbd>enter</Kbd> to confirm or <Kbd>esc</Kbd> to cancel. on chromium browsers, a <Pipette className="size-3 inline" /> pipette icon lets you pick a color from anywhere on screen.
+              click the pencil or press <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>. type a hex code — the circle updates live as you type. press <Kbd>enter</Kbd> to confirm or <Kbd>esc</Kbd> to cancel. on chromium browsers, a <Pipette className="size-3 inline" /> pipette icon lets you pick a color from anywhere on screen.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">hsl picker</h3>
@@ -775,10 +796,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">per-color picking</h3>
             <p>
-              when editing a color (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>5</Kbd>), a <Pipette className="size-3 inline" /> pipette icon appears next to the hex input on chromium browsers. click it to replace the edited color with a screen pick.
+              when editing a color (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>), a <Pipette className="size-3 inline" /> pipette icon appears next to the hex input on chromium browsers. click it to replace the edited color with a screen pick.
             </p>
             <p>
-              the toolbar pick button is disabled when the palette is full (5 colors).
+              the toolbar pick button is disabled when the palette is full (10 colors).
             </p>
           </div>
         </DocArticle>
@@ -840,7 +861,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               <>
                 <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
                   <p>
-                    explore lighter, darker, and desaturated versions of any color. click the <Blend className="size-3 inline" /> blend icon below a color, or use the <Kbd>V</Kbd> then <Kbd>1</Kbd>–<Kbd>5</Kbd> leader key chord (press V, then the color number within 500ms).
+                    explore lighter, darker, and desaturated versions of any color. click the <Blend className="size-3 inline" /> blend icon below a color, or use the <Kbd>V</Kbd> then <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> leader key chord (press V, then the color number within 500ms).
                   </p>
                 </div>
 
@@ -1032,7 +1053,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               you can also double-click any entry to load it, or use the "load" and delete buttons on each row.
             </p>
             <p>
-              when you load a palette, all its colors start locked. this prevents an accidental <Kbd>R</Kbd> or preset change from overwriting a palette you intentionally saved. unlock individual colors (<Kbd>1</Kbd>–<Kbd>5</Kbd>) when you're ready to modify them.
+              when you load a palette, all its colors start locked. this prevents an accidental <Kbd>R</Kbd> or preset change from overwriting a palette you intentionally saved. unlock individual colors (<Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>) when you're ready to modify them.
             </p>
           </div>
 
@@ -1220,7 +1241,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
                 <span>click the pencil icon below any color circle</span>
               </li>
               <li className="flex items-center gap-2 flex-wrap gap-y-1">
-                <span className="flex items-center"><Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>5</Kbd></span>
+                <span className="flex items-center"><Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd></span>
                 <span className="text-muted-foreground">keyboard shortcut (number = color position)</span>
               </li>
             </ul>

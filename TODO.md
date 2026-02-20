@@ -288,11 +288,29 @@ Pick a color from screen (Chromium) or OS color picker (Firefox/Safari) and add 
 - [x] Keyboard shortcut: `I`
 - [x] Chromium: native EyeDropper API (`await new EyeDropper().open()`)
 - [x] Firefox/Safari fallback: hidden `<input type="color">` opens OS color picker
-- [x] Picked color added to palette (disabled at 5 colors)
+- [x] Picked color added to palette (disabled at MAX_COLORS = 10)
 - [x] Per-color edit mode: Pipette icon next to `•` dot (Chromium only) — pick replaces edit value
 - [x] Feature detection via `'EyeDropper' in window`
 
 **Implementation:** `eyeDropper.ts` helper exports `hasEyeDropper` boolean and `pickColorNative()` async function. Toolbar button in Controls triggers EyeDropper or falls back to hidden color input in App.tsx. In PaletteItem edit mode, Pipette icon appears left of HSL dot on Chromium — picked color fills the hex input live. Zero dependencies.
+
+---
+
+## Expand to 10 Colors ✅
+
+Raise the palette limit from 5 to 10 colors with a two-row layout and position-to-position animations. Palette limit of 5 was the industry floor shared by every free competitor (Coolors charges $3.49/mo for 6+).
+
+- [x] `MAX_COLORS = 10` exported constant in `colorTheory.ts` (replaces all hardcoded `5` guards)
+- [x] `getRowSplit(count)` pure function: 1–5 → single row; 6→3+3, 7→4+3, 8→4+4, 9→5+4, 10→5+5
+- [x] Stable `colorIds: string[]` parallel state (UUIDs per color, threaded through all mutations like `lockedStates`)
+- [x] Install Framer Motion — `layoutId` + `layout` props for position-to-position animations when row split changes
+- [x] `AnimatedPaletteItem.tsx` — replaced manual CSS `setTimeout`/`isDeleting` pattern with Framer `motion.div`
+- [x] `AnimatedPaletteContainer.tsx` — two-row layout with `LayoutGroup` + `AnimatePresence`; `AddColor` button follows last active row
+- [x] `usePaletteDrag.ts` — 2D rewrite: Euclidean nearest-center drop target, row-aware slide transforms (Y-proximity threshold 50px)
+- [x] Keyboard shortcuts: regex `[1-5]→[0-9]`, `0` → position 10; all shortcut labels updated to `1-9, 0`
+- [x] Docs: 9 prose/Kbd references updated; v0.12 changelog entry; competitor table row added
+
+**Implementation:** `getRowSplit` in `colorTheory.ts` maps count → `[row1Count, row2Count]`. `colorIds` uses `crypto.randomUUID()` per color, synced in all 7 mutations (add, addPicked, delete, reorder, applyPreset, URL load, open saved). Framer `layoutId` matching lets circles animate physically across DOM parents (row 1 → row 2) when the split changes. Drag updated from X-axis-only slot offsets to 2D nearest-center with per-row translate shifts.
 
 ---
 
@@ -773,16 +791,17 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 11. ~~**Preset Browser Overhaul** - VST-style navigation, active label with drift detection~~ ✅ Done!
 12. ~~**Drag to Reorder** - Missing table-stakes interaction, low-medium effort~~ ✅ Done!
 13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
-14. **Gradient Generator** - Nice companion feature, low effort
-15. **Palette Visualization** - High wow factor, moderate effort
-16. **Color Harmony Score** - Unique differentiator, medium effort
-17. **Session Palette History** - Solves real reroll regret, low-medium effort
-18. **Palette Collections and Tags** - Natural save/open evolution, medium effort
-19. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
-20. **Extract from Image** - Big feature, most complex
-21. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
-22. **IndexedDB Migration** - Low priority, not needed yet
-23. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
+14. ~~**Expand to 10 Colors** - Two-row layout, Framer Motion animations, 2D drag, free what competitors paywall~~ ✅ Done!
+15. **Gradient Generator** - Nice companion feature, low effort
+16. **Palette Visualization** - High wow factor, moderate effort
+17. **Color Harmony Score** - Unique differentiator, medium effort
+18. **Session Palette History** - Solves real reroll regret, low-medium effort
+19. **Palette Collections and Tags** - Natural save/open evolution, medium effort
+20. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
+21. **Extract from Image** - Big feature, most complex
+22. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
+23. **IndexedDB Migration** - Low priority, not needed yet
+24. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
 
 ---
 

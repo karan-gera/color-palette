@@ -12,6 +12,8 @@ import {
   generateTones,
   isPresetActive,
   PALETTE_PRESETS,
+  MAX_COLORS,
+  getRowSplit,
 } from '@/helpers/colorTheory'
 
 describe('hexToRgb', () => {
@@ -417,5 +419,28 @@ describe('generateTones', () => {
     for (const tone of generateTones(source)) {
       expect(Math.abs(hexToHsl(tone).l - sourceL)).toBeLessThanOrEqual(1)
     }
+  })
+})
+
+describe('MAX_COLORS', () => {
+  it('is 10', () => {
+    expect(MAX_COLORS).toBe(10)
+  })
+})
+
+describe('getRowSplit', () => {
+  it.each([
+    [1, [1, 0]],
+    [2, [2, 0]],
+    [3, [3, 0]],
+    [4, [4, 0]],
+    [5, [5, 0]],
+    [6, [3, 3]],
+    [7, [4, 3]],
+    [8, [4, 4]],
+    [9, [5, 4]],
+    [10, [5, 5]],
+  ])('count %i → [%i, %i]', (count, expected) => {
+    expect(getRowSplit(count)).toEqual(expected)
   })
 })

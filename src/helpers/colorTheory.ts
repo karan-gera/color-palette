@@ -273,6 +273,16 @@ export type PalettePreset = {
   lightness: [number, number]
 }
 
+export const MAX_COLORS = 10
+
+export function getRowSplit(count: number): [number, number] {
+  if (count <= 5) return [count, 0]
+  const splits: Record<number, [number, number]> = {
+    6: [3, 3], 7: [4, 3], 8: [4, 4], 9: [5, 4], 10: [5, 5],
+  }
+  return splits[count] ?? [count, 0]
+}
+
 export const PALETTE_PRESETS: PalettePreset[] = [
   { id: 'pastel', label: 'Pastel', description: 'Soft, light tones', hue: [0, 360], saturation: [25, 45], lightness: [75, 88] },
   { id: 'neon', label: 'Neon', description: 'Vivid, electric colors', hue: [0, 360], saturation: [85, 100], lightness: [50, 60] },

@@ -7,7 +7,7 @@ type DragState = {
   offsetY: number
 }
 
-type ItemRect = { left: number; right: number; centerX: number }
+type ItemRect = { left: number; right: number; centerX: number; centerY: number }
 
 const DRAG_THRESHOLD = 8
 
@@ -22,7 +22,6 @@ export function usePaletteDrag(
   const itemRects = useRef<ItemRect[]>([])
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const activated = useRef(false)
-  // Track the element for pointer capture
   const captureTarget = useRef<HTMLElement | null>(null)
 
   const setItemRef = useCallback((index: number, el: HTMLDivElement | null) => {
@@ -33,31 +32,38 @@ export function usePaletteDrag(
     itemRects.current = itemRefs.current
       .slice(0, itemCount)
       .map((el) => {
-        if (!el) return { left: 0, right: 0, centerX: 0 }
+        if (!el) return { left: 0, right: 0, centerX: 0, centerY: 0 }
         const r = el.getBoundingClientRect()
-        return { left: r.left, right: r.right, centerX: r.left + r.width / 2 }
+        return {
+          left: r.left,
+          right: r.right,
+          centerX: r.left + r.width / 2,
+          centerY: r.top + r.height / 2,
+        }
       })
   }, [itemCount])
 
-  const computeOverIndex = useCallback((pointerX: number, dragIndex: number) => {
+  // 2D nearest-center: find which item center is closest to the pointer
+  const computeOverIndex = useCallback((pointerX: number, pointerY: number, dragIndex: number) => {
     const rects = itemRects.current
     if (rects.length === 0) return dragIndex
 
-    // Find the position the dragged item should be inserted at
-    // by comparing pointer X against midpoints of other items
+    let nearest = dragIndex
+    let minDist = Infinity
     for (let i = 0; i < rects.length; i++) {
-      if (i === dragIndex) continue
-      if (pointerX < rects[i].centerX) {
-        return i < dragIndex ? i : i
+      const dx = rects[i].centerX - pointerX
+      const dy = rects[i].centerY - pointerY
+      const dist = dx * dx + dy * dy
+      if (dist < minDist) {
+        minDist = dist
+        nearest = i
       }
     }
-    // Past all items — drop at end
-    return rects.length - 1
+    return nearest
   }, [])
 
   const onPointerDown = useCallback((index: number, e: React.PointerEvent) => {
     if (disabled || itemCount < 2) return
-    // Only handle primary button (left click / touch)
     if (e.button !== 0) return
 
     startPos.current = { x: e.clientX, y: e.clientY }
@@ -65,7 +71,6 @@ export function usePaletteDrag(
     activated.current = false
     captureTarget.current = e.currentTarget as HTMLElement
 
-    // Capture pointer events on the element
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }, [disabled, itemCount])
 
@@ -78,14 +83,12 @@ export function usePaletteDrag(
 
     if (!activated.current) {
       if (distance < DRAG_THRESHOLD) return
-      // Activate drag
       activated.current = true
       snapshotRects()
     }
 
     const dragIndex = pendingIndex.current
-    const pointerX = e.clientX
-    const overIndex = computeOverIndex(pointerX, dragIndex)
+    const overIndex = computeOverIndex(e.clientX, e.clientY, dragIndex)
 
     setDragState({
       dragIndex,
@@ -130,26 +133,31 @@ export function usePaletteDrag(
       }
     }
 
-    // Other items slide to make room
-    // Calculate the shift: items between dragIndex and overIndex need to move
+    // Slide items within the same row to make room during drag.
+    // Items in a different row don't shift.
     const rects = itemRects.current
     if (rects.length === 0) return {}
 
-    const slotWidth = rects.length > 1
-      ? rects[1].centerX - rects[0].centerX
+    const dragRect = rects[dragIndex]
+    const itemRect = rects[index]
+    if (!dragRect || !itemRect) return {}
+
+    // Determine row membership by Y proximity (items in same row have similar centerY)
+    const rowThreshold = 50 // px — if centerY differs by more than this, different row
+    const sameRowAsDrag = Math.abs(itemRect.centerY - dragRect.centerY) < rowThreshold
+    if (!sameRowAsDrag) return {}
+
+    // Compute slot width from adjacent same-row items
+    const sameRowRects = rects.filter(r => Math.abs(r.centerY - dragRect.centerY) < rowThreshold)
+    const slotWidth = sameRowRects.length > 1
+      ? sameRowRects[1].centerX - sameRowRects[0].centerX
       : 0
 
     let shift = 0
     if (dragIndex < overIndex) {
-      // Dragging right: items between (dragIndex, overIndex] shift left
-      if (index > dragIndex && index <= overIndex) {
-        shift = -slotWidth
-      }
+      if (index > dragIndex && index <= overIndex) shift = -slotWidth
     } else if (dragIndex > overIndex) {
-      // Dragging left: items between [overIndex, dragIndex) shift right
-      if (index >= overIndex && index < dragIndex) {
-        shift = slotWidth
-      }
+      if (index >= overIndex && index < dragIndex) shift = slotWidth
     }
 
     if (shift === 0) return {}
