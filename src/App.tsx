@@ -21,6 +21,7 @@ import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
 import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, getRowSplit, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
+import { shouldScrollOnExpand, SCROLL_DELAY_MS } from '@/helpers/scroll'
 
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
@@ -103,17 +104,16 @@ function App() {
     setShowContrast(prev => {
       const next = !prev
       localStorage.setItem('color-palette:show-contrast', String(next))
-      if (next && showHints) {
+      if (shouldScrollOnExpand(next)) {
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-        }, 350)
-      }
-      if (!next && window.scrollY > 0) {
-        window.scrollTo({ top: 0 })
+        }, SCROLL_DELAY_MS)
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
       return next
     })
-  }, [showHints])
+  }, [])
 
   const addColor = useCallback(() => {
     const base = current ?? []
