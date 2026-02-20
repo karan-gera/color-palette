@@ -283,6 +283,33 @@ export function getRowSplit(count: number): [number, number] {
   return splits[count] ?? [count, 0]
 }
 
+/**
+ * Returns true whenever there are existing colors that a preset would overwrite.
+ * Used to decide whether to show the confirmation dialog before applying a preset.
+ * The old (incorrect) condition checked lockedStates.some(Boolean), which silently
+ * replaced unlocked palettes without warning.
+ */
+export function shouldWarnBeforePreset(currentColors: string[]): boolean {
+  return currentColors.length > 0
+}
+
+/**
+ * Returns how many color IDs from the current palette to reuse when applying a preset.
+ * Reused IDs stay mounted in-place so only their background-color CSS-transitions.
+ * New IDs get enter animations (fade in). IDs beyond the returned count are dropped
+ * and their elements exit via AnimatePresence.
+ *
+ * Strategy: keep the IDs for items that were already in row 1 — they stay mounted and
+ * their background-color CSS-transitions smoothly. Items that were in row 2 (or positions
+ * that didn't exist yet) get new IDs and fade in at their new positions rather than
+ * flying across rows via layoutId animation. For palettes ≤5 all items are in row 1,
+ * so getRowSplit already does the right thing universally.
+ */
+export function getPresetColorIdKeepCount(currentCount: number, newCount: number): number {
+  const [oldRow1Count] = getRowSplit(currentCount)
+  return Math.min(oldRow1Count, newCount)
+}
+
 export const PALETTE_PRESETS: PalettePreset[] = [
   { id: 'pastel', label: 'Pastel', description: 'Soft, light tones', hue: [0, 360], saturation: [25, 45], lightness: [75, 88] },
   { id: 'neon', label: 'Neon', description: 'Vivid, electric colors', hue: [0, 360], saturation: [85, 100], lightness: [50, 60] },

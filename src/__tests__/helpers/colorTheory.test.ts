@@ -14,6 +14,8 @@ import {
   PALETTE_PRESETS,
   MAX_COLORS,
   getRowSplit,
+  shouldWarnBeforePreset,
+  getPresetColorIdKeepCount,
 } from '@/helpers/colorTheory'
 
 describe('hexToRgb', () => {
@@ -442,5 +444,64 @@ describe('getRowSplit', () => {
     [10, [5, 5]],
   ])('count %i → [%i, %i]', (count, expected) => {
     expect(getRowSplit(count)).toEqual(expected)
+  })
+})
+
+describe('shouldWarnBeforePreset', () => {
+  it('returns false for an empty palette — no warning needed', () => {
+    expect(shouldWarnBeforePreset([])).toBe(false)
+  })
+
+  it('returns true for a single color — any existing work should be confirmed', () => {
+    expect(shouldWarnBeforePreset(['#ff0000'])).toBe(true)
+  })
+
+  it('returns true for multiple unlocked colors (regression: old code checked lockedStates.some(Boolean) and silently replaced unlocked palettes)', () => {
+    expect(shouldWarnBeforePreset(['#ff0000', '#00ff00', '#0000ff'])).toBe(true)
+  })
+
+  it('returns true for a full 5-color palette', () => {
+    expect(shouldWarnBeforePreset(['#1', '#2', '#3', '#4', '#5'])).toBe(true)
+  })
+
+  it('returns true for a 10-color palette', () => {
+    expect(shouldWarnBeforePreset(new Array(10).fill('#ff0000'))).toBe(true)
+  })
+})
+
+describe('getPresetColorIdKeepCount', () => {
+  it('keeps 0 IDs when current count is 0 — nothing to keep', () => {
+    expect(getPresetColorIdKeepCount(0, 5)).toBe(0)
+  })
+
+  it.each([
+    [1, 5, 1],  // 1 existing item stays in row 1, 4 new ones fade in
+    [2, 5, 2],
+    [3, 5, 3],
+    [4, 5, 4],
+    [5, 5, 5],  // all 5 existing items stay in place and change color
+  ])(
+    'keeps all existing IDs when current count is %i (≤5, all in row 1)',
+    (currentCount, newCount, expected) => {
+      expect(getPresetColorIdKeepCount(currentCount, newCount)).toBe(expected)
+    }
+  )
+
+  it.each([
+    [6, 5, 3],  // split [3,3] → keep row-1 items 0-2
+    [7, 5, 4],  // split [4,3] → keep row-1 items 0-3
+    [8, 5, 4],  // split [4,4] → keep row-1 items 0-3
+    [9, 5, 5],  // split [5,4] → keep row-1 items 0-4 (capped by newCount=5)
+    [10, 5, 5], // split [5,5] → keep row-1 items 0-4 (capped by newCount=5)
+  ])(
+    'keeps row-1 IDs when current=%i, new=%i → keepCount=%i',
+    (currentCount, newCount, expected) => {
+      expect(getPresetColorIdKeepCount(currentCount, newCount)).toBe(expected)
+    }
+  )
+
+  it('never exceeds newCount even if row-1 has more items', () => {
+    // row-1 of 9 has 5 items, but if newCount were only 3, we keep at most 3
+    expect(getPresetColorIdKeepCount(9, 3)).toBe(3)
   })
 })

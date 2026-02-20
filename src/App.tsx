@@ -17,7 +17,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
-import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, type ColorRelationship } from '@/helpers/colorTheory'
+import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -238,26 +238,34 @@ function App() {
   const applyPreset = useCallback((presetId: string) => {
     const preset = PALETTE_PRESETS.find(p => p.id === presetId)
     if (!preset) return
-    const colors = generatePresetPalette(preset)
-    push(colors)
-    setLockedStates(new Array(colors.length).fill(false))
-    setColorIds(colors.map(() => crypto.randomUUID()))
+    const newColors = generatePresetPalette(preset)
+    const currentCount = (current ?? []).length
+
+    push(newColors)
+    setLockedStates(new Array(newColors.length).fill(false))
     setActivePresetId(presetId)
-  }, [push])
+
+    const keepCount = getPresetColorIdKeepCount(currentCount, newColors.length)
+    setColorIds(prev => {
+      const kept = prev.slice(0, keepCount)
+      while (kept.length < newColors.length) kept.push(crypto.randomUUID())
+      return kept
+    })
+  }, [current, push])
 
   const handlePresetSelect = useCallback((presetId: string) => {
-    const hasLocked = lockedStates.some(Boolean)
-    if (hasLocked) {
+    if (shouldWarnBeforePreset(current ?? [])) {
       setPendingPreset(presetId)
     } else {
       applyPreset(presetId)
     }
-  }, [lockedStates, applyPreset])
+  }, [current, applyPreset])
 
+  // Reroll bypasses the warning — user is already in a preset, reroll is expected
   const rerollPreset = useCallback(() => {
     if (!activePresetId) return
-    handlePresetSelect(activePresetId)
-  }, [activePresetId, handlePresetSelect])
+    applyPreset(activePresetId)
+  }, [activePresetId, applyPreset])
 
   const cyclePreset = useCallback(() => {
     const currentIndex = activePresetId
@@ -487,7 +495,7 @@ function App() {
             <DialogContent className="sm:max-w-sm" showCloseButton={false}>
               <div className="text-center py-2">
                 <p className="font-mono text-sm leading-relaxed">
-                  this will replace all colors, including locked ones. continue?
+                  this will replace your current palette. continue?
                 </p>
               </div>
               <DialogFooter className="sm:justify-center gap-2">
