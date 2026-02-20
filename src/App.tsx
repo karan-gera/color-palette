@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect, useRef } from 'react'
+import { LayoutGroup, motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Controls from '@/components/Controls'
 import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
@@ -17,7 +18,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
-import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
+import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, getRowSplit, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -159,7 +160,22 @@ function App() {
     const next = base.filter((_, i) => i !== index)
     push(next)
     setLockedStates(prev => prev.filter((_, i) => i !== index))
-    setColorIds(prev => prev.filter((_, i) => i !== index))
+    setColorIds(prev => {
+      const filtered = prev.filter((_, i) => i !== index)
+      const [oldRow1Count] = getRowSplit(base.length)
+      const [newRow1Count] = getRowSplit(next.length)
+      // When the row split changes, items that cross between rows would trigger a
+      // cross-parent layoutId flight animation. That keeps the source row populated
+      // (and thus tall) for the full spring duration, blocking the layout shift that
+      // lets GlobalColorRelationshipSelector animate upward. Break the layoutId
+      // connection by giving crossing items new IDs so they simply exit/enter in place.
+      if (oldRow1Count !== newRow1Count) {
+        const crossStart = Math.min(oldRow1Count, newRow1Count)
+        const crossEnd   = Math.max(oldRow1Count, newRow1Count)
+        return filtered.map((id, i) => (i >= crossStart && i < crossEnd ? crypto.randomUUID() : id))
+      }
+      return filtered
+    })
   }, [current, push])
 
   const toggleLockAt = useCallback((index: number) => {
@@ -391,53 +407,59 @@ function App() {
           />
         </div>
 
-        <div className="relative w-full flex justify-center">
-          <div className={`transition-all duration-300 ease-out ${
-            variationsIndex !== null
-              ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
-              : 'opacity-100 scale-100'
-          }`}>
-            <AnimatedPaletteContainer
-              colors={current ?? []}
-              colorIds={colorIds}
-              lockedStates={lockedStates}
-              editIndex={variationsIndex !== null ? null : editIndex}
-              onEditStart={setEditIndex}
-              onEditSave={handleEditSave}
-              onEditCancel={() => setEditIndex(null)}
-              onReroll={rerollAt}
-              onDelete={deleteAt}
-              onToggleLock={toggleLockAt}
-              onViewVariations={setVariationsIndex}
-              onReorder={reorderColors}
-              onAdd={addColor}
-            />
-          </div>
-          <div className={`transition-all duration-300 ease-out ${
-            variationsIndex !== null
-              ? 'opacity-100 scale-100'
-              : 'opacity-0 scale-[0.98] pointer-events-none absolute'
-          }`}>
-            {variationsIndex !== null && (current ?? [])[variationsIndex] && (
-              <ColorVariations
-                sourceColor={(current ?? [])[variationsIndex]!}
-                sourceIndex={variationsIndex}
-                onClose={() => setVariationsIndex(null)}
-                onCopyHex={(hex) => {
-                  navigator.clipboard.writeText(hex)
-                  setNotification(`copied ${hex}`)
-                }}
-                onReplaceColor={replaceColorFromVariation}
+        <LayoutGroup>
+          <motion.div
+            layout
+            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            className="relative w-full flex justify-center"
+          >
+            <div className={`transition-all duration-300 ease-out ${
+              variationsIndex !== null
+                ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
+                : 'opacity-100 scale-100'
+            }`}>
+              <AnimatedPaletteContainer
+                colors={current ?? []}
+                colorIds={colorIds}
+                lockedStates={lockedStates}
+                editIndex={variationsIndex !== null ? null : editIndex}
+                onEditStart={setEditIndex}
+                onEditSave={handleEditSave}
+                onEditCancel={() => setEditIndex(null)}
+                onReroll={rerollAt}
+                onDelete={deleteAt}
+                onToggleLock={toggleLockAt}
+                onViewVariations={setVariationsIndex}
+                onReorder={reorderColors}
+                onAdd={addColor}
               />
-            )}
-          </div>
-        </div>
+            </div>
+            <div className={`transition-all duration-300 ease-out ${
+              variationsIndex !== null
+                ? 'opacity-100 scale-100'
+                : 'opacity-0 scale-[0.98] pointer-events-none absolute'
+            }`}>
+              {variationsIndex !== null && (current ?? [])[variationsIndex] && (
+                <ColorVariations
+                  sourceColor={(current ?? [])[variationsIndex]!}
+                  sourceIndex={variationsIndex}
+                  onClose={() => setVariationsIndex(null)}
+                  onCopyHex={(hex) => {
+                    navigator.clipboard.writeText(hex)
+                    setNotification(`copied ${hex}`)
+                  }}
+                  onReplaceColor={replaceColorFromVariation}
+                />
+              )}
+            </div>
+          </motion.div>
 
-        <GlobalColorRelationshipSelector
-          currentRelationship={globalRelationship}
-          onRelationshipChange={handleRelationshipChange}
-          onGlobalReroll={rerollAll}
-        />
+          <GlobalColorRelationshipSelector
+            currentRelationship={globalRelationship}
+            onRelationshipChange={handleRelationshipChange}
+            onGlobalReroll={rerollAll}
+          />
+        </LayoutGroup>
 
         <div ref={contrastRef}>
           <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />

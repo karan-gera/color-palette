@@ -93,7 +93,7 @@ export default function AnimatedPaletteContainer({
       <div id="palette-container" className={`flex flex-col items-center${hasRow2 ? ' gap-8' : ''}`}>
         {/* Row 1 — always visible */}
         <div className="flex gap-5 items-start justify-center">
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {row1Colors.map((color, i) => renderItem(color, row1Ids[i], i))}
           </AnimatePresence>
           {!hasRow2 && showAddButton && (
@@ -107,7 +107,7 @@ export default function AnimatedPaletteContainer({
             Mounting it conditionally causes a one-frame delay where Framer must wait for the
             new parent to appear before it can start layout animations for the whole group. */}
         <div className="flex gap-5 items-start justify-center">
-          <AnimatePresence>
+          <AnimatePresence mode="popLayout">
             {row2Colors.map((color, i) => renderItem(color, row2Ids[i], row1Count + i))}
           </AnimatePresence>
           {hasRow2 && showAddButton && (

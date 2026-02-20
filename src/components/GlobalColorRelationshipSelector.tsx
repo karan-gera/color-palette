@@ -1,4 +1,5 @@
 import { ChevronDown, RefreshCw } from 'lucide-react'
+import { motion } from 'framer-motion'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +26,11 @@ export default function GlobalColorRelationshipSelector({
 
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2 mt-4">
+      <motion.div
+        layout
+        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+        className="flex items-center gap-2 mt-4"
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -79,7 +84,7 @@ export default function GlobalColorRelationshipSelector({
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </motion.div>
     </TooltipProvider>
   )
 }
