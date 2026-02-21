@@ -2,6 +2,10 @@ import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import PresetBrowser from './PresetBrowser'
+import { hasEyeDropper } from '@/helpers/eyeDropper'
+import { isMac } from '@/helpers/platform'
+
+const showPickButton = hasEyeDropper || isMac
 
 type ControlsProps = {
   onOpen: () => void
@@ -101,23 +105,25 @@ export default function Controls({
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPickColor}
-              disabled={!canPickColor}
-              className="lowercase font-mono"
-            >
-              <Pipette className="size-4" />
-              pick
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="font-mono text-xs lowercase">pick color from screen</p>
-          </TooltipContent>
-        </Tooltip>
+        {showPickButton && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPickColor}
+                disabled={!canPickColor}
+                className="lowercase font-mono"
+              >
+                <Pipette className="size-4" />
+                pick
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">pick color from screen</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <div className="w-px h-6 bg-border mx-1" />
 

@@ -797,6 +797,24 @@ Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 mo
 
 **Don't launch until:** 5K+ MAU minimum, and ideally users are actively requesting community features.
 
+### Social Embeds / OG Images (ships with PalettePort)
+
+When someone shares a palette URL on Discord, Slack, Twitter, or any Open Graph-aware platform, they should see a rich preview showing the actual palette — not a blank card.
+
+**Design:** Mosaic grid of color swatches. Grid layout adapts to color count (1–10). When the color count leaves an odd cell, that cell shows the app name/logo instead. Clean, no hex labels — just bold color blocks.
+
+**Why this can't ship on GitHub Pages:** Discord's crawler doesn't execute JavaScript, so OG meta tags in a static SPA's `index.html` are always the same regardless of the `?colors=` URL param. Palette-specific embeds require server-side meta tag injection (Edge Middleware) and a dynamic image generation endpoint (`/api/og`). Both require a server — the same server PalettePort needs anyway.
+
+**Implementation plan (when the time comes):**
+- Deploy to Vercel (or equivalent) instead of GitHub Pages
+- `middleware.ts` — intercepts requests with `?colors=` and injects palette-specific `og:image`, `og:title`, `og:description`, `twitter:card` tags
+- `api/og.ts` — Vercel Edge Function using `@vercel/og` (Satori) to render a mosaic JSX component to a 1200×630 PNG
+- Mosaic layout: calculate optimal grid (cols = `ceil(sqrt(n))`), fill cells with color blocks, last cell = app name/logo if n doesn't fill the grid evenly
+
+**Infeasible on static hosting. Ship when PalettePort ships.**
+
+---
+
 ### Why we're kicking this can
 
 1. **Effort-to-value ratio is terrible right now** — months of backend work for a feature that might convert 2% of users
