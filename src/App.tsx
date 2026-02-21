@@ -65,6 +65,8 @@ function App() {
   const [lockedStates, setLockedStates] = useState<boolean[]>([])
   const [colorIds, setColorIds] = useState<string[]>([])
   const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
+  const [swapMode, setSwapMode] = useState(false)
+  const [swapSelection, setSwapSelection] = useState<number | null>(null)
 
   // Load palette from URL on mount
   useEffect(() => {
@@ -207,6 +209,27 @@ function App() {
     })
   }, [current, push])
 
+  const toggleSwapMode = useCallback(() => {
+    setSwapMode(prev => {
+      if (!prev) {
+        setEditIndex(null)
+      }
+      setSwapSelection(null)
+      return !prev
+    })
+  }, [])
+
+  const handleSwapClick = useCallback((index: number) => {
+    if (swapSelection === null) {
+      setSwapSelection(index)
+    } else if (swapSelection === index) {
+      setSwapSelection(null)
+    } else {
+      reorderColors(swapSelection, index)
+      setSwapSelection(null)
+    }
+  }, [swapSelection, reorderColors])
+
   const handleOpen = useCallback(() => {
     setIsOpenDialog(true)
   }, [])
@@ -346,9 +369,11 @@ function App() {
     setEditIndex(null)
     setVariationsIndex(null)
     setShowDocs(false)
+    setSwapMode(false)
+    setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -374,6 +399,7 @@ function App() {
     onPresetReroll: rerollPreset,
     onViewVariations: setVariationsIndex,
     onToggleDocs: toggleDocs,
+    onToggleSwapMode: toggleSwapMode,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -404,6 +430,9 @@ function App() {
             canExport={(current ?? []).length > 0}
             onPickColor={handlePickColor}
             canPickColor={(current ?? []).length < MAX_COLORS}
+            onToggleSwapMode={toggleSwapMode}
+            swapMode={swapMode}
+            canSwap={(current ?? []).length >= 2}
           />
         </div>
 
@@ -430,8 +459,10 @@ function App() {
                 onDelete={deleteAt}
                 onToggleLock={toggleLockAt}
                 onViewVariations={setVariationsIndex}
-                onReorder={reorderColors}
                 onAdd={addColor}
+                swapMode={swapMode}
+                swapSelection={swapSelection}
+                onSwapClick={handleSwapClick}
               />
             </div>
             <div className={`transition-all duration-300 ease-out ${
@@ -459,11 +490,15 @@ function App() {
             onRelationshipChange={handleRelationshipChange}
             onGlobalReroll={rerollAll}
           />
-        </LayoutGroup>
 
-        <div ref={contrastRef}>
-          <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
-        </div>
+          <motion.div
+            layout
+            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            ref={contrastRef}
+          >
+            <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
+          </motion.div>
+        </LayoutGroup>
 
         {isOpenDialog ? (
           <OpenDialog

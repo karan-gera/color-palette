@@ -1,4 +1,4 @@
-import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette } from 'lucide-react'
+import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette, ArrowLeftRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import PresetBrowser from './PresetBrowser'
@@ -23,6 +23,9 @@ type ControlsProps = {
   canExport: boolean
   onPickColor: () => void
   canPickColor: boolean
+  onToggleSwapMode: () => void
+  swapMode: boolean
+  canSwap: boolean
 }
 
 export default function Controls({
@@ -41,6 +44,9 @@ export default function Controls({
   canExport,
   onPickColor,
   canPickColor,
+  onToggleSwapMode,
+  swapMode,
+  canSwap,
 }: ControlsProps) {
   return (
     <TooltipProvider>
@@ -124,6 +130,24 @@ export default function Controls({
             </TooltipContent>
           </Tooltip>
         )}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={swapMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={onToggleSwapMode}
+              disabled={!canSwap}
+              className="lowercase font-mono"
+            >
+              <ArrowLeftRight className="size-4" />
+              rearrange
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-mono text-xs lowercase">rearrange colors</p>
+          </TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-6 bg-border mx-1" />
 

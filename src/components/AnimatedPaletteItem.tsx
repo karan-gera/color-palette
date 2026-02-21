@@ -1,19 +1,14 @@
 import { motion } from 'framer-motion'
 import PaletteItem from './PaletteItem'
 
+const BLUEPRINT_COLOR = 'oklch(0.55 0.12 250)'
+
 type AnimatedPaletteItemProps = {
   layoutId: string
   color: string
   index: number
   isLocked: boolean
   isEditing: boolean
-  isDragging: boolean
-  dragActive: boolean
-  itemStyle: React.CSSProperties
-  setRef: (el: HTMLDivElement | null) => void
-  onDragPointerDown: (e: React.PointerEvent) => void
-  onDragPointerMove: (e: React.PointerEvent) => void
-  onDragPointerUp: (e: React.PointerEvent) => void
   onEditStart: () => void
   onEditSave: (hex: string) => void
   onEditCancel: () => void
@@ -21,20 +16,17 @@ type AnimatedPaletteItemProps = {
   onDelete: () => void
   onToggleLock: () => void
   onViewVariations: () => void
+  swapMode: boolean
+  isSwapSelected: boolean
+  onSwapClick: () => void
 }
 
 export default function AnimatedPaletteItem({
   layoutId,
   color,
+  index,
   isLocked,
   isEditing,
-  isDragging,
-  dragActive,
-  itemStyle,
-  setRef,
-  onDragPointerDown,
-  onDragPointerMove,
-  onDragPointerUp,
   onEditStart,
   onEditSave,
   onEditCancel,
@@ -42,50 +34,63 @@ export default function AnimatedPaletteItem({
   onDelete,
   onToggleLock,
   onViewVariations,
+  swapMode,
+  isSwapSelected,
+  onSwapClick,
 }: AnimatedPaletteItemProps) {
   return (
     <motion.div
       layoutId={layoutId}
       layout
       initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      animate={{ opacity: 1, scale: isSwapSelected ? 1.05 : 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{
         layout: { type: 'spring', stiffness: 400, damping: 32 },
         opacity: { duration: 0.15, ease: 'easeOut' },
         scale: { duration: 0.15, ease: 'easeOut' },
       }}
-      ref={setRef}
-      style={isDragging ? undefined : itemStyle}
-      className={`flex flex-col items-center ${
-        isDragging
-          ? 'z-50'
-          : dragActive
-            ? 'transition-transform duration-200 ease-out'
-            : ''
-      }`}
+      className="relative flex flex-col items-center"
     >
-      <div
-        style={isDragging ? itemStyle : undefined}
-        className={isDragging ? 'cursor-grabbing' : ''}
-        onPointerMove={onDragPointerMove}
-        onPointerUp={onDragPointerUp}
-      >
-        <PaletteItem
-          color={color}
-          isLocked={isLocked}
-          isEditing={isEditing}
-          isDragging={isDragging}
-          onDragPointerDown={onDragPointerDown}
-          onEditStart={onEditStart}
-          onEditSave={onEditSave}
-          onEditCancel={onEditCancel}
-          onReroll={onReroll}
-          onDelete={onDelete}
-          onToggleLock={onToggleLock}
-          onViewVariations={onViewVariations}
+      {swapMode && (
+        <div
+          className="absolute -top-2 -right-2 z-10 size-7 rounded-full flex items-center justify-center font-mono text-xs font-bold select-none"
+          style={{
+            backgroundColor: BLUEPRINT_COLOR,
+            color: 'white',
+          }}
+        >
+          {index + 1}
+        </div>
+      )}
+
+      {isSwapSelected && (
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            boxShadow: `0 0 0 3px ${BLUEPRINT_COLOR}`,
+            top: 0,
+            width: 200,
+            height: 200,
+          }}
         />
-      </div>
+      )}
+
+      <PaletteItem
+        color={color}
+        isLocked={isLocked}
+        isEditing={isEditing}
+        onEditStart={onEditStart}
+        onEditSave={onEditSave}
+        onEditCancel={onEditCancel}
+        onReroll={onReroll}
+        onDelete={onDelete}
+        onToggleLock={onToggleLock}
+        onViewVariations={onViewVariations}
+        swapMode={swapMode}
+        isSwapSelected={isSwapSelected}
+        onSwapClick={onSwapClick}
+      />
     </motion.div>
   )
 }

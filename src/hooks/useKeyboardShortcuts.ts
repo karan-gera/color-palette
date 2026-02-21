@@ -24,6 +24,7 @@ type KeyboardShortcutsConfig = {
   onPresetReroll: () => void
   onViewVariations: (index: number) => void
   onToggleDocs: () => void
+  onToggleSwapMode: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -53,6 +54,7 @@ export function useKeyboardShortcuts({
   onPresetReroll,
   onViewVariations,
   onToggleDocs,
+  onToggleSwapMode,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -72,6 +74,13 @@ export function useKeyboardShortcuts({
     // Escape always works
     if (event.key === 'Escape') {
       onEscape()
+      return
+    }
+
+    // M key toggles rearrange mode — works even when active (since it counts as a dialog)
+    if (event.key.toLowerCase() === 'm' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault()
+      onToggleSwapMode()
       return
     }
 
@@ -240,6 +249,7 @@ export function useKeyboardShortcuts({
     onPresetReroll,
     onViewVariations,
     onToggleDocs,
+    onToggleSwapMode,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -275,6 +285,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'P', description: 'cycle preset' },
       { modifiers: ['shift'], key: 'P', description: 'reroll preset' },
       { key: 'I', description: 'pick color' },
+      { key: 'M', description: 'rearrange mode' },
     ],
   },
   {
