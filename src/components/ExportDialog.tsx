@@ -165,13 +165,21 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
 
   // Scroll selected item into view
   const scrollToSelected = useCallback((index: number) => {
+    const container = scrollContainerRef.current
     const item = itemRefs.current[index]
-    if (item) {
-      // Use 'start' for first item, 'end' for last item, 'nearest' for middle items
-      const isFirst = index === 0
-      const isLast = index === EXPORT_FORMATS.length - 1
-      const block = isFirst ? 'start' : isLast ? 'end' : 'nearest'
-      item.scrollIntoView({ block, behavior: 'smooth' })
+    if (!item || !container) return
+
+    const isFirst = index === 0
+    const isLast = index === EXPORT_FORMATS.length - 1
+
+    if (isFirst) {
+      // Scroll all the way to top so the top fade clears correctly
+      container.scrollTo({ top: 0, behavior: 'smooth' })
+    } else if (isLast) {
+      // Scroll all the way to bottom so the bottom fade clears correctly
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+    } else {
+      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     }
   }, [])
 
