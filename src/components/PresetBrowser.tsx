@@ -52,63 +52,68 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
         <ChevronLeft className="size-3.5" />
       </Button>
 
-      <div
-        className="relative h-8 w-[13ch] flex items-center justify-center border border-border bg-background px-2"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {/* Label — visible when not hovered */}
-        <span
-          className={`font-mono text-sm lowercase select-none transition-opacity duration-150 ${
-            showHover ? 'opacity-0' : 'opacity-100'
-          }`}
-        >
-          {activePreset?.label ?? 'presets'}
-        </span>
-
-        {/* Hover controls — visible when hovered */}
+      <DropdownMenu open={isDropdownOpen} onOpenChange={(open) => { setIsDropdownOpen(open); if (!open) setIsHovered(false) }}>
         <div
-          className={`absolute inset-0 flex items-center justify-center gap-1 transition-opacity duration-150 ${
-            showHover ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+          className="relative h-8 w-[13ch] flex items-center justify-center border border-border bg-background px-2"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-          <DropdownMenu onOpenChange={setIsDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-sm hover:bg-accent"
-              >
-                <ChevronDown className="size-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="font-mono lowercase">
-              {PALETTE_PRESETS.map((preset) => (
-                <DropdownMenuItem
-                  key={preset.id}
-                  onClick={() => { onSelect(preset.id); setIsHovered(false) }}
-                  className="flex flex-col items-start gap-0.5 cursor-pointer"
-                >
-                  <span className="text-sm">{preset.label}</span>
-                  <span className="text-xs text-muted-foreground">{preset.description}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Invisible full-width trigger — anchors dropdown to widget center */}
+          <DropdownMenuTrigger asChild>
+            <div className="absolute inset-0 pointer-events-none" aria-hidden="true" />
+          </DropdownMenuTrigger>
 
-          <button
-            type="button"
-            onClick={onReroll}
-            disabled={!activePresetId}
-            className={`p-1 transition-colors cursor-pointer rounded-sm ${
-              activePresetId
-                ? 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                : 'text-muted-foreground/30 cursor-not-allowed'
+          {/* Label — visible when not hovered */}
+          <span
+            className={`font-mono text-sm lowercase select-none transition-opacity duration-150 ${
+              showHover ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            <RefreshCw className="size-3.5" />
-          </button>
+            {activePreset?.label ?? 'presets'}
+          </span>
+
+          {/* Hover controls — visible when hovered */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center gap-1 transition-opacity duration-150 ${
+              showHover ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(true)}
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-sm hover:bg-accent"
+            >
+              <ChevronDown className="size-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={onReroll}
+              disabled={!activePresetId}
+              className={`p-1 transition-colors cursor-pointer rounded-sm ${
+                activePresetId
+                  ? 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  : 'text-muted-foreground/30 cursor-not-allowed'
+              }`}
+            >
+              <RefreshCw className="size-3.5" />
+            </button>
+          </div>
         </div>
-      </div>
+
+        <DropdownMenuContent align="center" className="font-mono lowercase">
+          {PALETTE_PRESETS.map((preset) => (
+            <DropdownMenuItem
+              key={preset.id}
+              onClick={() => { onSelect(preset.id); setIsHovered(false) }}
+              className="flex flex-col items-start gap-0.5 cursor-pointer"
+            >
+              <span className="text-sm">{preset.label}</span>
+              <span className="text-xs text-muted-foreground">{preset.description}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Button
         variant="outline"
