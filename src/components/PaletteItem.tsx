@@ -134,12 +134,12 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.15, ease: 'easeOut' }}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1.5"
               >
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-xs" onClick={onEditStart}>
-                    <Pencil className="size-3.5" />
+                  <Button variant="ghost" size="icon-sm" onClick={onEditStart}>
+                    <Pencil className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -151,12 +151,12 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={onReroll}
                     disabled={isLocked}
                     className={isLocked ? 'opacity-40' : ''}
                   >
-                    <RefreshCw className="size-3.5" />
+                    <RefreshCw className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -166,8 +166,8 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-xs" onClick={onDelete} className="text-destructive hover:text-destructive">
-                    <Trash2 className="size-3.5" />
+                  <Button variant="ghost" size="icon-sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+                    <Trash2 className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -177,8 +177,8 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-xs" onClick={onViewVariations}>
-                    <Blend className="size-3.5" />
+                  <Button variant="ghost" size="icon-sm" onClick={onViewVariations}>
+                    <Blend className="size-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
