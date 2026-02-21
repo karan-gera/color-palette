@@ -27,6 +27,7 @@ function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
   const [isSaveDialog, setIsSaveDialog] = useState(false)
   const [isExportDialog, setIsExportDialog] = useState(false)
+  const [exportInitialView, setExportInitialView] = useState<'selecting' | 'image'>('selecting')
   const [pendingPreset, setPendingPreset] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
@@ -251,6 +252,12 @@ function App() {
   }, [current, lockedStates])
 
   const handleExport = useCallback(() => {
+    setExportInitialView('selecting')
+    setIsExportDialog(true)
+  }, [])
+
+  const handleImageExport = useCallback(() => {
+    setExportInitialView('image')
     setIsExportDialog(true)
   }, [])
 
@@ -383,6 +390,7 @@ function App() {
     onSave: handleSave,
     onShare: handleShare,
     onExport: handleExport,
+    onImageExport: handleImageExport,
     onRerollAll: rerollAll,
     onToggleLock: toggleLockAt,
     onCycleTheme: cycleTheme,
@@ -544,6 +552,7 @@ function App() {
             colors={current ?? []}
             onCancel={() => setIsExportDialog(false)}
             onCopied={setNotification}
+            initialView={exportInitialView}
           />
         ) : null}
 

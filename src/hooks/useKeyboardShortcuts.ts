@@ -8,6 +8,7 @@ type KeyboardShortcutsConfig = {
   onSave: () => void
   onShare: () => void
   onExport: () => void
+  onImageExport: () => void
   onRerollAll: () => void
   onToggleLock: (index: number) => void
   onCycleTheme: () => void
@@ -38,6 +39,7 @@ export function useKeyboardShortcuts({
   onSave,
   onShare,
   onExport,
+  onImageExport,
   onRerollAll,
   onToggleLock,
   onCycleTheme,
@@ -158,7 +160,11 @@ export function useKeyboardShortcuts({
         break
       case 'e':
         event.preventDefault()
-        onExport()
+        if (event.shiftKey && hasModifier) {
+          onImageExport()
+        } else {
+          onExport()
+        }
         break
       case 'r':
         event.preventDefault()
@@ -233,6 +239,7 @@ export function useKeyboardShortcuts({
     onSave,
     onShare,
     onExport,
+    onImageExport,
     onRerollAll,
     onToggleLock,
     onCycleTheme,
@@ -305,6 +312,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'S', description: 'save' },
       { key: 'C', description: 'copy link' },
       { key: 'E', description: 'export' },
+      { modifiers: ['shift'], key: '⌘E', description: 'export image' },
     ],
   },
   {

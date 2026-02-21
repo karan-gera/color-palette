@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Copy, Download, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { Copy, Download, Check, ChevronDown, ChevronUp, Image } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import DialogKeyboardHints from './DialogKeyboardHints'
 import { 
   EXPORT_FORMATS,
@@ -24,19 +26,44 @@ import {
   type ExportFormatInfo,
   type AppInfo,
 } from '@/helpers/exportFormats'
+import {
+  exportPng,
+  exportSvg,
+  downloadBlob,
+  downloadSvg,
+  SIZE_CONFIG,
+  type ImageLabels,
+  type ImageSize,
+} from '@/helpers/imageExport'
+import { getColorName } from '@/helpers/colorNaming'
 
 type ExportDialogProps = {
   colors: string[]
   onCancel: () => void
   onCopied?: (message: string) => void
+  initialView?: 'selecting' | 'image'
 }
 
 type DialogView = 
   | { type: 'selecting' }
   | { type: 'confirmation'; format: ExportFormatInfo; wasDownload: boolean }
   | { type: 'howToUse'; format: ExportFormatInfo }
+  | { type: 'image' }
+  | { type: 'imageConfirmation'; format: 'png' | 'svg' }
 
 type SelectedOption = AppInfo | 'other' | null
+
+const LABEL_OPTIONS: { value: ImageLabels; label: string }[] = [
+  { value: 'none', label: 'none' },
+  { value: 'hex', label: 'hex' },
+  { value: 'name', label: 'names' },
+]
+
+const SIZE_OPTIONS: { value: ImageSize; label: string }[] = [
+  { value: 'small', label: SIZE_CONFIG.small.label },
+  { value: 'medium', label: SIZE_CONFIG.medium.label },
+  { value: 'large', label: SIZE_CONFIG.large.label },
+]
 
 const HINTS = [
   { key: '↑↓', label: 'select' },
@@ -46,10 +73,21 @@ const HINTS = [
 
 const SCROLL_INDICATOR_DEBOUNCE = 500
 
-export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialogProps) {
-  const [view, setView] = useState<DialogView>({ type: 'selecting' })
+export default function ExportDialog({ colors, onCancel, onCopied, initialView = 'selecting' }: ExportDialogProps) {
+  const [view, setView] = useState<DialogView>({ type: initialView })
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [selectedApp, setSelectedApp] = useState<SelectedOption>(null)
+  
+  // Image export state
+  const [imageLabels, setImageLabels] = useState<ImageLabels>('hex')
+  const [imageSize, setImageSize] = useState<ImageSize>('medium')
+  const [imageFormat, setImageFormat] = useState<'png' | 'svg'>('png')
+  const [isExporting, setIsExporting] = useState(false)
+
+  const colorNames = useMemo(() => 
+    colors.map(c => getColorName(c).name),
+    [colors]
+  )
   
   // Scroll indicator state
   const [canScrollUp, setCanScrollUp] = useState(false)
@@ -163,6 +201,50 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
     }
   }, [view])
 
+  const handleImageExport = useCallback(() => {
+    setView({ type: 'image' })
+  }, [])
+
+  const handleExportPng = useCallback(async () => {
+    setIsExporting(true)
+    try {
+      const blob = await exportPng(colors, { 
+        layout: 'grid', 
+        labels: imageLabels, 
+        size: imageSize, 
+        colorNames 
+      })
+      downloadBlob(blob, 'palette.png')
+      setView({ type: 'imageConfirmation', format: imageFormat })
+    } finally {
+      setIsExporting(false)
+    }
+  }, [colors, imageLabels, imageSize, colorNames, imageFormat])
+
+  const handleExportSvg = useCallback(() => {
+    const svg = exportSvg(colors, { 
+      layout: 'grid', 
+      labels: imageLabels, 
+      size: imageSize, 
+      colorNames 
+    })
+    downloadSvg(svg, 'palette.svg')
+    setView({ type: 'imageConfirmation', format: imageFormat })
+  }, [colors, imageLabels, imageSize, colorNames, imageFormat])
+
+  const handleBackToSelecting = useCallback(() => {
+    setView({ type: 'selecting' })
+  }, [])
+
+  // Preview SVG for image export
+  const previewSvg = useMemo(() => {
+    if (view.type !== 'image') return ''
+    return exportSvg(colors, { layout: 'grid', labels: imageLabels, size: 'small', colorNames })
+  }, [colors, imageLabels, colorNames, view.type])
+
+  // Total items: 4 code formats + 1 image + 5 art formats = 10
+  const totalItems = EXPORT_FORMATS.length + 1
+
   // Scroll selected item into view
   const scrollToSelected = useCallback((index: number) => {
     const container = scrollContainerRef.current
@@ -170,7 +252,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
     if (!item || !container) return
 
     const isFirst = index === 0
-    const isLast = index === EXPORT_FORMATS.length - 1
+    const isLast = index === totalItems - 1
 
     if (isFirst) {
       // Scroll all the way to top so the top fade clears correctly
@@ -181,7 +263,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
     } else {
       item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
     }
-  }, [])
+  }, [totalItems])
 
   // Keyboard navigation (only in selecting state)
   useEffect(() => {
@@ -200,7 +282,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
         }
         case 'ArrowDown': {
           e.preventDefault()
-          if (selectedIndex < EXPORT_FORMATS.length - 1) {
+          if (selectedIndex < totalItems - 1) {
             const newIndex = selectedIndex + 1
             setSelectedIndex(newIndex)
             scrollToSelected(newIndex)
@@ -209,8 +291,15 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
         }
         case 'Enter':
           e.preventDefault()
-          if (EXPORT_FORMATS[selectedIndex]) {
+          if (selectedIndex === 4) {
+            // Image export option
+            handleImageExport()
+          } else if (selectedIndex < 4) {
+            // Code formats (0-3)
             handleExport(EXPORT_FORMATS[selectedIndex].value)
+          } else {
+            // Art formats (5-9 map to EXPORT_FORMATS indices 4-8)
+            handleExport(EXPORT_FORMATS[selectedIndex - 1].value)
           }
           break
       }
@@ -218,7 +307,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [view.type, selectedIndex, handleExport, scrollToSelected])
+  }, [view.type, selectedIndex, handleExport, handleImageExport, scrollToSelected, totalItems])
 
   // Get compatible apps for How To Use view
   const compatibleApps = view.type === 'howToUse' 
@@ -393,6 +482,131 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
       )
     }
 
+    // Image export confirmation view
+    if (view.type === 'imageConfirmation') {
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-mono lowercase">export complete</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="size-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                <Check className="size-6 text-green-500" />
+              </div>
+            </div>
+            <p className="font-mono text-sm">
+              Your palette image has been downloaded!
+            </p>
+            <p className="text-xs text-muted-foreground font-mono mt-1">
+              palette.{view.format}
+            </p>
+          </div>
+
+          <Button
+            className="w-full font-mono lowercase"
+            onClick={handleDone}
+          >
+            done
+          </Button>
+        </>
+      )
+    }
+
+    // Image export options view
+    if (view.type === 'image') {
+      return (
+        <>
+          <DialogHeader>
+            <DialogTitle className="font-mono lowercase">export as image</DialogTitle>
+          </DialogHeader>
+
+          {/* Preview */}
+          <div className="bg-muted/30 rounded-lg p-6 flex items-center justify-center">
+            <div 
+              className="[&>svg]:w-full [&>svg]:h-auto"
+              dangerouslySetInnerHTML={{ __html: previewSvg }}
+            />
+          </div>
+
+          {/* Options - horizontal layout */}
+          <div className="flex gap-6 py-2">
+            <div className="grid gap-1.5">
+              <label className="text-xs font-mono lowercase text-muted-foreground">labels</label>
+              <ToggleGroup
+                type="single"
+                value={imageLabels}
+                onValueChange={(v) => v && setImageLabels(v as ImageLabels)}
+                variant="outline"
+                size="sm"
+              >
+                {LABEL_OPTIONS.map((opt) => (
+                  <ToggleGroupItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="font-mono text-xs lowercase"
+                  >
+                    {opt.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+            <div className="grid gap-1.5">
+              <label className="text-xs font-mono lowercase text-muted-foreground">size</label>
+              <ToggleGroup
+                type="single"
+                value={imageSize}
+                onValueChange={(v) => v && setImageSize(v as ImageSize)}
+                variant="outline"
+                size="sm"
+              >
+                {SIZE_OPTIONS.map((opt) => (
+                  <ToggleGroupItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="font-mono text-xs lowercase"
+                  >
+                    {opt.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+            <div className="grid gap-1.5">
+              <label className="text-xs font-mono lowercase text-muted-foreground">format</label>
+              <ToggleGroup
+                type="single"
+                value={imageFormat}
+                onValueChange={(v) => v && setImageFormat(v as 'png' | 'svg')}
+                variant="outline"
+                size="sm"
+              >
+                <ToggleGroupItem value="png" className="font-mono text-xs lowercase">
+                  png
+                </ToggleGroupItem>
+                <ToggleGroupItem value="svg" className="font-mono text-xs lowercase">
+                  svg
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleBackToSelecting} className="font-mono lowercase">
+              back
+            </Button>
+            <Button
+              onClick={imageFormat === 'png' ? handleExportPng : handleExportSvg}
+              disabled={isExporting}
+              className="font-mono lowercase"
+            >
+              {isExporting ? 'exporting...' : 'download'}
+            </Button>
+          </DialogFooter>
+        </>
+      )
+    }
+
     // Selecting view (default)
     return (
       <>
@@ -415,7 +629,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
             onScroll={updateScrollIndicators}
             className="grid gap-0.5 py-1 px-1 max-h-[400px] overflow-y-auto scrollbar-none"
           >
-            {EXPORT_FORMATS.map((format, index) => (
+            {EXPORT_FORMATS.slice(0, 4).map((format, index) => (
               <Button
                 key={format.value}
                 ref={(el) => { itemRefs.current[index] = el }}
@@ -442,6 +656,55 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
                 )}
               </Button>
             ))}
+
+            {/* Image export option - after code formats */}
+            <Button
+              variant="ghost"
+              className={`w-full justify-between font-mono text-sm h-auto py-2.5 px-3 ${
+                selectedIndex === 4 ? 'ring-2 ring-ring bg-accent' : ''
+              }`}
+              onClick={handleImageExport}
+              onMouseEnter={() => setSelectedIndex(4)}
+            >
+              <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1 mr-2">
+                <span className="lowercase">image (png / svg)</span>
+                <span className="text-[10px] text-muted-foreground text-left">
+                  Download as image for sharing
+                </span>
+              </div>
+              <Image className="size-4 opacity-50 shrink-0" />
+            </Button>
+
+            {EXPORT_FORMATS.slice(4).map((format, index) => {
+              const actualIndex = index + 5 // 4 code formats + 1 image option
+              return (
+                <Button
+                  key={format.value}
+                  ref={(el) => { itemRefs.current[actualIndex] = el }}
+                  variant="ghost"
+                  className={`w-full justify-between font-mono text-sm h-auto py-2.5 px-3 ${
+                    selectedIndex === actualIndex ? 'ring-2 ring-ring bg-accent' : ''
+                  }`}
+                  onClick={() => handleExport(format.value)}
+                  onMouseEnter={() => setSelectedIndex(actualIndex)}
+                >
+                  <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1 mr-2">
+                    <span className="lowercase">{format.label}</span>
+                    <span className="text-[10px] text-muted-foreground text-left">
+                      {format.compatibleApps.length > 0 
+                        ? `Works with: ${getAppNames(format.compatibleApps)}`
+                        : format.description
+                      }
+                    </span>
+                  </div>
+                  {format.isDownload ? (
+                    <Download className="size-4 opacity-50 shrink-0" />
+                  ) : (
+                    <Copy className="size-4 opacity-50 shrink-0" />
+                  )}
+                </Button>
+              )
+            })}
           </div>
 
           {/* Scroll down indicator */}
@@ -465,7 +728,7 @@ export default function ExportDialog({ colors, onCancel, onCopied }: ExportDialo
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={view.type === 'image' || view.type === 'imageConfirmation' ? 'sm:max-w-xl' : 'sm:max-w-lg'}>
         {renderContent()}
       </DialogContent>
     </Dialog>

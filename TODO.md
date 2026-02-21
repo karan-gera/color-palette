@@ -86,6 +86,31 @@ Export the entire palette in standard formats for use in design tools and code.
 
 ---
 
+## PNG / Image Export ✅
+
+Export the palette as an image file for sharing on social media, mood boards, or design presentations.
+
+### Formats
+- [x] PNG (raster, universal)
+- [x] SVG (vector, smaller file, scalable)
+
+### Layout
+- [x] Grid layout (adaptive grid based on color count)
+
+### Label Options
+- [x] No labels (clean, minimal)
+- [x] Hex codes (default)
+- [x] Color names
+
+### Size Options
+- [x] Small (800px wide) — social media friendly
+- [x] Medium (1200px wide) — presentations
+- [x] Large (1920px wide) — high-res
+
+**Implementation:** Canvas API for PNG (`toDataURL`), manual SVG string generation for vector. Integrated into Export dialog (`E`) as first option. Live SVG preview updates as options change. Grid layout, three label modes (none, hex, names), three sizes.
+
+---
+
 ## Color Blindness Preview (Phase 1 ✅)
 
 Toggle to simulate how the palette appears to people with color vision deficiencies.
@@ -886,7 +911,8 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
 14. ~~**Expand to 10 Colors** - Two-row layout, Framer Motion animations, 2D drag, free what competitors paywall~~ ✅ Done!
 15. **Mobile / Responsive Design** - Prerequisite for growth; pointer-events softlock first, then layout audit
-16. **Gradient Generator** - Nice companion feature, low effort
+16. ~~**PNG / Image Export** - Social sharing, mood boards; Canvas API for raster, SVG for vector~~ ✅ Done!
+17. **Gradient Generator** - Nice companion feature, low effort
 17. **Palette Visualization** - High wow factor, moderate effort
 18. **Color Harmony Score** - Unique differentiator, medium effort
 19. **Session Palette History** - Solves real reroll regret, low-medium effort
