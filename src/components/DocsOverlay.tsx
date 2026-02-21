@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, FolderOpen, Save, Sun, Moon, Circle, Undo2, Redo2 } from 'lucide-react'
+import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2 } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import AddColor from './AddColor'
@@ -25,15 +25,15 @@ const TABS: { id: Tab; label: string }[] = [
 
 const FEATURES = [
   { icon: Copy, label: 'copy formats', desc: 'hex, rgb, hsl, css, tailwind, scss' },
-  { icon: Link, label: 'share via url', desc: 'encode palettes in shareable links' },
+  { icon: Link, label: 'share via url', desc: 'palettes encoded in shareable links' },
   { icon: Download, label: 'export', desc: 'css, json, tailwind, scss, ase, aco, gpl, procreate, paint.net' },
-  { icon: Eye, label: 'color blindness', desc: 'deuteranopia, protanopia, tritanopia, achromatopsia simulation' },
-  { icon: BarChart3, label: 'contrast checker', desc: 'wcag aa/aaa/aa18 compliance for all color pairs' },
+  { icon: Eye, label: 'color blindness', desc: 'deuteranopia, protanopia, tritanopia, achromatopsia' },
+  { icon: BarChart3, label: 'contrast checker', desc: 'wcag aa/aaa/aa18 for all color pairs' },
   { icon: Sparkles, label: 'presets', desc: 'pastel, neon, earth, jewel, monochrome, warm, cool, muted' },
-  { icon: Type, label: 'color naming', desc: '4,000+ names via oklab nearest-neighbor matching' },
-  { icon: Blend, label: 'variations', desc: 'tints, shades, and tones for any color' },
-  { icon: Pipette, label: 'color picker', desc: 'eyedropper (chromium) or os color picker (firefox/safari)' },
-  { icon: Keyboard, label: 'full keyboard', desc: 'every action reachable without a mouse' },
+  { icon: Type, label: 'color naming', desc: '4,000+ names matched by oklab distance' },
+  { icon: Blend, label: 'variations', desc: 'tints, shades, tones' },
+  { icon: Pipette, label: 'color picker', desc: 'eyedropper or os picker' },
+  { icon: Keyboard, label: 'keyboard', desc: 'every action has a shortcut' },
 ]
 
 const COMPETITOR_ROWS = [
@@ -358,7 +358,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              the first thing you see is an empty canvas with a single button. click the <Plus className="size-3 inline" /> to add your first color.
+              click the <Plus className="size-3 inline" /> to add your first color.
             </p>
           </div>
 
@@ -368,10 +368,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              each click generates a random color and adds it to your palette. you can have up to 10 colors at a time. press <Kbd>A</Kbd> or <Kbd>space</Kbd> as a shortcut.
+              each click adds a random color. max 10 colors. press <Kbd>A</Kbd> or <Kbd>space</Kbd> as a shortcut.
             </p>
             <p>
-              once you have colors, you can interact with each one — lock it, reroll it, edit its hex value, delete it, or explore its variations. all actions are available via buttons below each color and via keyboard shortcuts.
+              each color can be locked, rerolled, edited, deleted, or expanded into variations. buttons below each circle, or use keyboard shortcuts.
             </p>
           </div>
 
@@ -407,7 +407,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              your palette lives entirely in your browser. no accounts, no cloud sync, no server. save palettes to local storage, share them via url, or export to files. press <Kbd>/</Kbd> to see all keyboard shortcuts.
+              everything stays in your browser. save to local storage, share via url, or export to files. press <Kbd>/</Kbd> for all shortcuts.
             </p>
           </div>
         </DocArticle>
@@ -418,7 +418,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              each color in your palette is a circle with controls below it. you can have up to 10 colors at a time.
+              each color is a circle with controls below it. max 10 colors.
             </p>
           </div>
 
@@ -440,7 +440,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">locking</h3>
             <p>
-              click any color circle to toggle its lock. locked colors are preserved when you reroll — useful for keeping a base color while exploring complements. press <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> to lock/unlock by position.
+              click a circle to toggle its lock. locked colors stay put when you reroll. press <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> to lock/unlock by position.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">action buttons</h3>
@@ -487,7 +487,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              every change to your palette — adding, deleting, rerolling, editing, reordering, loading a preset — is tracked in an undo/redo history. if you make a mistake, step back instantly.
+              adding, deleting, rerolling, editing, reordering, and loading presets are all tracked. made a mistake? step back.
             </p>
           </div>
 
@@ -508,10 +508,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">how it works</h3>
             <p>
-              the history is a linear stack. every change pushes a new snapshot onto the stack. undo steps backward through the stack; redo steps forward.
+              linear stack. each change pushes a snapshot. undo goes back, redo goes forward.
             </p>
             <p>
-              if you undo a few steps and then make a new change, the "future" entries (the ones you undid past) are discarded and the new change becomes the latest entry. this is the standard undo model used in text editors.
+              if you undo and then make a new change, the undone entries are discarded. standard text editor behavior.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">what gets tracked</h3>
@@ -545,7 +545,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">session only</h3>
             <p>
-              undo/redo history lives in memory and resets when you reload the page. if you want to preserve a palette across sessions, save it (<Kbd>S</Kbd>).
+              history resets on page reload. save (<Kbd>S</Kbd>) to keep a palette.
             </p>
           </div>
         </DocArticle>
@@ -556,7 +556,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              color relationships control how new colors are generated. when you reroll, new colors follow the selected relationship relative to your locked colors (or the last color if none are locked).
+              relationships control how new colors are generated relative to your locked colors (or the last color if none are locked).
             </p>
           </div>
 
@@ -582,10 +582,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              press <Kbd>Q</Kbd> to cycle through modes. changing the mode immediately rerolls unlocked colors to match the new relationship.
+              press <Kbd>Q</Kbd> to cycle modes. changing mode rerolls unlocked colors.
             </p>
             <p>
-              the "reroll all" button regenerates all unlocked colors using the current relationship. locked colors act as anchor points — the algorithm generates new colors that are harmonious with your locked selections.
+              "reroll all" regenerates unlocked colors. locked colors act as anchors.
             </p>
           </div>
         </DocArticle>
@@ -596,7 +596,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              presets generate a full palette of colors within curated hsl ranges. use them when you want a specific mood or temperature without picking individual colors.
+              presets generate palettes within curated hsl ranges. pick a mood without choosing individual colors.
             </p>
           </div>
 
@@ -622,13 +622,13 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              use the arrow buttons to cycle presets, or press <Kbd>P</Kbd>. hover over the center label to reveal a dropdown for direct selection and a reroll button (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>P</Kbd>).
+              arrow buttons cycle presets, or press <Kbd>P</Kbd>. hover the label for a dropdown and reroll button (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>P</Kbd>).
             </p>
             <p>
-              if you have locked colors, a confirmation dialog appears before applying a preset, since presets replace all colors.
+              locked colors trigger a confirmation dialog since presets replace everything.
             </p>
             <p>
-              the preset label tracks drift — if you edit a color and it falls outside the preset's hsl ranges, the label fades back to "presets," indicating the palette no longer matches the original preset.
+              if you edit a color outside the preset's hsl ranges, the label fades back to "presets."
             </p>
           </div>
         </DocArticle>
@@ -639,7 +639,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              click any color's hex code to open a dropdown with multiple copy formats. click a format to copy it to your clipboard — a green checkmark confirms success.
+              click any hex code to open a dropdown. click a format to copy. green checkmark confirms.
             </p>
           </div>
 
@@ -668,7 +668,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">css named colors</h3>
             <p>
-              if your color is very close to one of the 148 css named colors (like <code className="text-xs bg-muted px-1 rounded">coral</code>, <code className="text-xs bg-muted px-1 rounded">tomato</code>, or <code className="text-xs bg-muted px-1 rounded">darkslategray</code>), an extra option appears at the bottom of the menu to copy the css name directly.
+              if your color is close to a css named color (<code className="text-xs bg-muted px-1 rounded">coral</code>, <code className="text-xs bg-muted px-1 rounded">tomato</code>, etc.), an extra option appears to copy the name.
             </p>
           </div>
         </DocArticle>
@@ -679,10 +679,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              share your palette by encoding it in a url. press <Kbd>C</Kbd> or click the share button in the toolbar to copy a link to your clipboard.
-            </p>
-            <p>
-              the url encodes both your colors and their lock states, so anyone who opens the link sees your exact palette.
+              press <Kbd>C</Kbd> or click share to copy a link. the url encodes colors and lock states.
             </p>
           </div>
 
@@ -699,7 +696,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              when someone opens a shared link, the palette loads automatically and the url params clear. all colors start locked to prevent accidental rerolls from immediately changing the palette the sender intended. unlock individual colors when you're ready to modify them.
+              shared links load automatically and clear the url. colors start locked so accidental rerolls don't change what the sender intended.
             </p>
           </div>
         </DocArticle>
@@ -710,7 +707,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              export your entire palette for use in code or creative applications. press <Kbd>E</Kbd> or click the export button to open the export dialog.
+              press <Kbd>E</Kbd> to export your palette for code or creative apps.
             </p>
           </div>
 
@@ -764,10 +761,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              after downloading an art app file, click "how to use" for step-by-step import instructions specific to your software.
+              art app files include "how to use" import instructions.
             </p>
             <p>
-              navigate the format list with <Kbd>↑</Kbd><Kbd>↓</Kbd> arrow keys and press <Kbd>enter</Kbd> to export. if your format isn't listed, you can always click any color's hex code to copy it individually.
+              <Kbd>↑</Kbd><Kbd>↓</Kbd> to navigate, <Kbd>enter</Kbd> to export. format not listed? click any hex code to copy individually.
             </p>
           </div>
         </DocArticle>
@@ -778,7 +775,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              pick a color from your screen and add it to the palette. press <Kbd>I</Kbd> or click the pick button in the toolbar.
+              press <Kbd>I</Kbd> to pick a color from your screen.
             </p>
           </div>
 
@@ -803,10 +800,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">per-color picking</h3>
             <p>
-              when editing a color (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>{getModifierLabel('alt')}</Kbd><Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>), a <Pipette className="size-3 inline" /> pipette icon appears next to the hex input on chromium browsers. click it to replace the edited color with a screen pick.
+              in edit mode, a <Pipette className="size-3 inline" /> pipette appears on chromium. click to replace the color with a screen pick.
             </p>
             <p>
-              the toolbar pick button is disabled when the palette is full (10 colors).
+              toolbar picker disabled at 10 colors.
             </p>
           </div>
         </DocArticle>
@@ -817,7 +814,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              every color in your palette shows its closest human-readable name — displayed between the action buttons and the hex code.
+              each color shows its closest name from a 4,000+ entry database.
             </p>
           </div>
 
@@ -839,17 +836,17 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">how it works</h3>
             <p>
-              names are matched from a curated list of 4,000+ entries using oklab color distance — a perceptually uniform color space designed so that equal numeric distances correspond to equal perceived differences. the closest match is found by brute-force nearest-neighbor search.
+              oklab distance matching. equal numeric distances = equal perceived differences.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">css named colors</h3>
             <p>
-              if your color is very close to one of the 148 css named colors (like <code className="text-xs bg-muted px-1 rounded">coral</code>, <code className="text-xs bg-muted px-1 rounded">tomato</code>, or <code className="text-xs bg-muted px-1 rounded">darkslategray</code>), a tooltip shows the css name when you hover the color name. you can also copy css names from the hex code copy menu.
+              if close to a css named color, a tooltip shows the name on hover. also available in the copy menu.
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">data source</h3>
             <p>
-              names come from <code className="text-xs bg-muted px-1 rounded">color-name-list/bestof</code> (mit license) — a curated subset of community-contributed color names. no pantone names — they're proprietary.
+              <code className="text-xs bg-muted px-1 rounded">color-name-list/bestof</code> (mit). no pantone — proprietary.
             </p>
           </div>
         </DocArticle>
@@ -868,7 +865,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               <>
                 <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
                   <p>
-                    explore lighter, darker, and desaturated versions of any color. click the <Blend className="size-3 inline" /> blend icon below a color, or use the <Kbd>V</Kbd> then <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> leader key chord (press V, then the color number within 500ms).
+                    click <Blend className="size-3 inline" /> or press <Kbd>V</Kbd> then <Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd> (within 500ms) to see tints, shades, and tones.
                   </p>
                 </div>
 
@@ -905,10 +902,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
                 <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
                   <p>
-                    click any swatch to replace the palette color with that variation. shift+click to copy the hex code instead. press <Kbd>esc</Kbd> or the back button to return to your palette.
+                    click a swatch to replace the palette color. shift+click to copy hex. <Kbd>esc</Kbd> to go back.
                   </p>
                   <p>
-                    each row shows your source color (highlighted with a thicker border) followed by 9 variations generated by interpolating in hsl space.
+                    source color has a thick border. 9 variations per row, interpolated in hsl.
                   </p>
                 </div>
               </>
@@ -922,7 +919,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              preview how your palette appears to people with color vision deficiencies. the simulation applies to the entire page — not just the palette — so you can see how your ui looks in context.
+              simulates how people with color vision deficiencies see your palette. applies to the entire page.
             </p>
           </div>
 
@@ -946,13 +943,10 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">switching modes</h3>
             <p>
-              press <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>T</Kbd> to cycle through simulation modes, or use the toggle in the header. the toggle has five buttons: <Eye className="size-3 inline" /> for normal vision and <span className="font-medium text-foreground">D</span>, <span className="font-medium text-foreground">P</span>, <span className="font-medium text-foreground">T</span>, <span className="font-medium text-foreground">A</span> for each deficiency type. click any letter to jump directly to that mode — hover for the full name. your selection persists across sessions.
+              <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>T</Kbd> cycles modes. header toggle: <Eye className="size-3 inline" /> normal, <span className="font-medium text-foreground">D</span>/<span className="font-medium text-foreground">P</span>/<span className="font-medium text-foreground">T</span>/<span className="font-medium text-foreground">A</span> for each type. persists across sessions.
             </p>
             <p>
-              simulations use svg color matrix filters based on viénot 1999 (deuteranopia, protanopia) and brettel 1997 (tritanopia) — the same algorithms used in academic research and professional accessibility tools.
-            </p>
-            <p>
-              use this alongside the contrast checker to ensure your palette works for the widest possible audience.
+              svg color matrix filters from viénot 1999 and brettel 1997.
             </p>
           </div>
         </DocArticle>
@@ -963,7 +957,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              check wcag contrast ratios to make sure your colors are accessible for text and ui elements. press <Kbd>K</Kbd> to expand the contrast panel below your palette.
+              press <Kbd>K</Kbd> to check wcag contrast ratios.
             </p>
           </div>
 
@@ -990,18 +984,18 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
-            <h3 className="text-sm font-medium text-foreground lowercase">vs backgrounds tab</h3>
+            <h3 className="text-sm font-medium text-foreground lowercase">vs backgrounds</h3>
             <p>
-              each palette color is tested against three theme backgrounds (light, gray, dark). each card shows an "Aa" text sample, the contrast ratio, and the wcag compliance level. a human-readable summary describes where the color is usable as text.
+              tests each color against light, gray, and dark backgrounds. shows contrast ratio and wcag level.
             </p>
 
-            <h3 className="text-sm font-medium text-foreground lowercase mt-4">vs each other tab</h3>
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">vs each other</h3>
             <p>
-              available with 2+ colors. a matrix view shows the contrast ratio between every pair of colors in your palette — useful for checking whether adjacent colors in a ui have enough distinction.
+              matrix of all color pairs. needs 2+ colors.
             </p>
 
             <p>
-              press <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>K</Kbd> to switch between tabs. the tab bar automatically appears when you have 2+ colors and hides otherwise.
+              <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>K</Kbd> switches tabs.
             </p>
           </div>
         </DocArticle>
@@ -1012,24 +1006,21 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              palettes are saved to your browser's local storage. no accounts, no server — everything stays on your device.
+              saved to browser local storage. no accounts, no server.
             </p>
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">saving</h3>
             <p>
-              press <Kbd>S</Kbd> or click <Save className="size-3 inline" /> save in the toolbar. a dialog lets you name the palette — leave it blank for an auto-generated timestamp name. press <Kbd>enter</Kbd> to confirm.
-            </p>
-            <p>
-              each save creates a new entry. saving the same palette twice creates two separate copies, so you can snapshot versions as you work.
+              <Kbd>S</Kbd> opens save dialog. name optional (defaults to timestamp). each save creates a new entry.
             </p>
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">opening</h3>
             <p>
-              press <Kbd>O</Kbd> or click <FolderOpen className="size-3 inline" /> open in the toolbar. the dialog shows all saved palettes with their names, timestamps, and color swatches.
+              <Kbd>O</Kbd> shows saved palettes with names, timestamps, and swatches.
             </p>
           </div>
 
@@ -1057,21 +1048,15 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              you can also double-click any entry to load it, or use the "load" and delete buttons on each row.
-            </p>
-            <p>
-              when you load a palette, all its colors start locked. this prevents an accidental <Kbd>R</Kbd> or preset change from overwriting a palette you intentionally saved. unlock individual colors (<Kbd>1</Kbd>–<Kbd>9</Kbd>, <Kbd>0</Kbd>) when you're ready to modify them.
+              double-click to load. loaded colors start locked to prevent accidental rerolls.
             </p>
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">where palettes are stored</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">storage</span>
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
-                all data lives in your browser's <code className="text-xs bg-muted px-1 rounded">localStorage</code> under the key <code className="text-xs bg-muted px-1 rounded">color-palette:saved</code>. each palette stores an id, name, color array, and timestamp.
-              </p>
-              <p>
-                local storage persists across browser sessions but is specific to the browser and domain. clearing your browser data or switching browsers will lose your saved palettes — use the import/export feature to back them up.
+                <code className="text-xs bg-muted px-1 rounded">localStorage</code> under <code className="text-xs bg-muted px-1 rounded">color-palette:saved</code>. persists across sessions but browser/domain specific. back up with import/export.
               </p>
             </div>
           </div>
@@ -1083,24 +1068,21 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              back up your entire palette collection to a json file, or restore it on another browser or device. both buttons are in the footer of the open dialog (<Kbd>O</Kbd>).
+              back up your collection to json or restore from another browser. buttons in the open dialog footer (<Kbd>O</Kbd>).
             </p>
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">exporting</h3>
             <p>
-              click <Download className="size-3 inline" /> export in the open dialog footer to download a <code className="text-xs bg-muted px-1 rounded">.json</code> file containing all your saved palettes. the filename includes today's date (e.g. <code className="text-xs bg-muted px-1 rounded">color-palettes-2025-01-15.json</code>).
+              <Download className="size-3 inline" /> downloads all saved palettes as <code className="text-xs bg-muted px-1 rounded">.json</code>.
             </p>
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <h3 className="text-sm font-medium text-foreground lowercase">importing</h3>
             <p>
-              click <Upload className="size-3 inline" /> import in the open dialog footer and select a previously exported <code className="text-xs bg-muted px-1 rounded">.json</code> file. palettes are merged with your existing collection — duplicates are detected by id and skipped automatically.
-            </p>
-            <p>
-              a notification confirms how many palettes were imported and how many duplicates were skipped.
+              <Upload className="size-3 inline" /> merges a <code className="text-xs bg-muted px-1 rounded">.json</code> file with your collection. duplicates skipped.
             </p>
           </div>
 
@@ -1121,26 +1103,8 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
-            <h3 className="text-sm font-medium text-foreground lowercase">use cases</h3>
-            <ul className="space-y-1.5 list-none">
-              <li className="flex items-start gap-2">
-                <span className="text-foreground shrink-0">backup</span>
-                <span>— save your collection before clearing browser data</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-foreground shrink-0">transfer</span>
-                <span>— move palettes between browsers or devices</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-foreground shrink-0">team sharing</span>
-                <span>— send the json file to a colleague to share a set of palettes</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              this is separate from the palette <span className="text-foreground">export</span> feature (<Kbd>E</Kbd>), which exports the <em>current</em> palette in code and art app formats. import/export palettes is about managing your <em>saved collection</em>.
+              different from <Kbd>E</Kbd> export (current palette to code/art formats). this is for your saved collection.
             </p>
           </div>
         </DocArticle>
@@ -1151,7 +1115,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
         <DocArticle title={title}>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
-              the app supports three themes. switch between them with the toggle in the top-right corner or press <Kbd>T</Kbd> to cycle.
+              three themes. <Kbd>T</Kbd> cycles, or use the toggle.
             </p>
           </div>
 
@@ -1192,24 +1156,14 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
-            <h3 className="text-sm font-medium text-foreground lowercase">how the theme is chosen</h3>
+            <h3 className="text-sm font-medium text-foreground lowercase">auto-detection</h3>
             <p>
-              on first visit, the app checks your os preference (<code className="text-xs bg-muted px-1 rounded">prefers-color-scheme</code>). if you switch themes manually, your choice is saved to local storage and takes priority over the os setting from then on.
+              first visit uses os <code className="text-xs bg-muted px-1 rounded">prefers-color-scheme</code>. manual switch saves to local storage.
             </p>
 
-            <h3 className="text-sm font-medium text-foreground lowercase mt-4">circle wipe transition</h3>
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">contrast checker</h3>
             <p>
-              switching themes plays a circle wipe animation that expands from the button you clicked. the transition is purely cosmetic and doesn't affect functionality.
-            </p>
-
-            <h3 className="text-sm font-medium text-foreground lowercase mt-4">impact on the contrast checker</h3>
-            <p>
-              the contrast checker's "vs backgrounds" tab tests your palette colors against all three theme backgrounds (light, gray, dark) regardless of which theme is active. this means you can check accessibility for all contexts without switching themes.
-            </p>
-
-            <h3 className="text-sm font-medium text-foreground lowercase mt-4">persistence</h3>
-            <p>
-              your theme preference is stored in <code className="text-xs bg-muted px-1 rounded">localStorage</code> under <code className="text-xs bg-muted px-1 rounded">color-palette:theme</code> and persists across sessions.
+              "vs backgrounds" tests all three themes regardless of which is active.
             </p>
           </div>
         </DocArticle>
