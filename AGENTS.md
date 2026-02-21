@@ -4,6 +4,12 @@ This file complements `CLAUDE.md` (project architecture, naming conventions, tec
 
 ---
 
+## Git Commits
+
+**Never commit unless explicitly asked.** If the user asks for a commit message, provide the message text only — do not run `git commit`. Wait for explicit instructions like "commit this" or "make the commit" before actually committing.
+
+---
+
 ## Feature Completion Checklist
 
 A feature is **done** when every box below is checked:
