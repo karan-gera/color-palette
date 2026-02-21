@@ -249,16 +249,40 @@ Click any color to see tints (lighter), shades (darker), and tones (desaturated)
 
 ---
 
-## Palette Visualization
+## Palette Visualization / Preview Mode
 
-Preview palette colors applied to a sample UI layout (card, button, nav bar, text).
+Full-screen preview mode to see your palette in context. Accessed via a preview button in the toolbar.
 
+### Preview Modes
+- [ ] **Dynamic mosaic** — full-screen abstract composition using palette colors (default)
+- [ ] **UI elements** — cards, buttons, nav bars, form inputs with palette applied
+- [ ] **Title design** — large typography compositions showcasing the palette
+
+### UI
+- [ ] Preview button in toolbar (Eye or Maximize icon)
+- [ ] Keyboard shortcut: `F` for fullscreen preview
+- [ ] Bottom bar with mode switcher (mosaic / ui / title)
+- [ ] Press `Esc` or click anywhere to exit
+- [ ] Smooth fade transition in/out
+
+### Mosaic Mode
+- [ ] Randomly generated geometric shapes (circles, rectangles, triangles)
+- [ ] Each shape uses a palette color
+- [ ] Regenerate layout on each open or with a refresh button
+- [ ] Optional: subtle animation (floating, pulsing)
+
+### UI Elements Mode
 - [ ] Sample mockup with primary, secondary, accent, background, text slots
 - [ ] Auto-assign palette colors to slots based on luminance
-- [ ] Toggle between mockup templates (dashboard, landing page, mobile app)
-- [ ] Copy the CSS variable assignments
+- [ ] Multiple templates: dashboard, landing page, mobile app
+- [ ] Copy CSS variable assignments
 
-**Implementation:** Pure CSS/HTML mockup components. No external assets. Realtime Colors does a version of this; most tools paywall it or don't offer it.
+### Title Design Mode
+- [ ] Large display typography with palette colors
+- [ ] Multiple layouts: stacked, side-by-side, overlapping
+- [ ] Editable placeholder text
+
+**Implementation:** Pure CSS/HTML components, no external assets. Canvas API for mosaic generation. Realtime Colors does a version of UI preview; most tools paywall it or don't offer it.
 
 ---
 

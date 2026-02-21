@@ -1,6 +1,6 @@
 /**
  * URL sharing utilities for palette encoding/decoding
- * Format: ?colors=ff5733,3498db,2ecc71&locked=1,0,1
+ * Format: ?colors=ff5733-3498db-2ecc71&locked=1-0-1
  */
 
 export type SharedPalette = {
@@ -16,13 +16,13 @@ export function encodePaletteToUrl(colors: string[], lockedStates: boolean[]): s
 
   const params = new URLSearchParams()
   
-  // Strip # from colors and join with commas
-  const colorString = colors.map(c => c.replace('#', '')).join(',')
+  // Strip # from colors and join with hyphens
+  const colorString = colors.map(c => c.replace('#', '')).join('-')
   params.set('colors', colorString)
-  
+
   // Only include locked states if any are locked
   if (lockedStates.some(Boolean)) {
-    const lockedString = lockedStates.map(l => l ? '1' : '0').join(',')
+    const lockedString = lockedStates.map(l => l ? '1' : '0').join('-')
     params.set('locked', lockedString)
   }
 
@@ -40,7 +40,7 @@ export function decodePaletteFromUrl(): SharedPalette | null {
   if (!colorString) return null
 
   // Parse colors (add # prefix back)
-  const colors = colorString.split(',')
+  const colors = colorString.split('-')
     .map(c => c.trim())
     .filter(c => /^[0-9a-fA-F]{6}$/.test(c))
     .map(c => `#${c.toLowerCase()}`)
@@ -50,9 +50,9 @@ export function decodePaletteFromUrl(): SharedPalette | null {
   // Parse locked states (default to all locked when loading from URL)
   const lockedString = params.get('locked')
   let lockedStates: boolean[]
-  
+
   if (lockedString) {
-    lockedStates = lockedString.split(',').map(l => l === '1')
+    lockedStates = lockedString.split('-').map(l => l === '1')
     // Pad or trim to match colors length
     while (lockedStates.length < colors.length) lockedStates.push(true)
     lockedStates = lockedStates.slice(0, colors.length)

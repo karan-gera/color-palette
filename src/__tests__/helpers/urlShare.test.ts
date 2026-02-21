@@ -69,7 +69,7 @@ describe('decodePaletteFromUrl', () => {
   })
 
   it('parses valid colors from URL and adds # prefix', async () => {
-    setupLocation('https://example.com/?colors=ff5733,3498db')
+    setupLocation('https://example.com/?colors=ff5733-3498db')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result).not.toBeNull()
@@ -84,34 +84,34 @@ describe('decodePaletteFromUrl', () => {
   })
 
   it('filters out invalid hex values', async () => {
-    setupLocation('https://example.com/?colors=ff5733,NOTVALID,3498db')
+    setupLocation('https://example.com/?colors=ff5733-NOTVALID-3498db')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result!.colors).toHaveLength(2)
   })
 
   it('returns null when all colors are invalid', async () => {
-    setupLocation('https://example.com/?colors=INVALID,ALSOBAD')
+    setupLocation('https://example.com/?colors=INVALID-ALSOBAD')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     expect(decodePaletteFromUrl()).toBeNull()
   })
 
   it('defaults all lockedStates to true when locked param absent', async () => {
-    setupLocation('https://example.com/?colors=ff5733,3498db')
+    setupLocation('https://example.com/?colors=ff5733-3498db')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result!.lockedStates).toEqual([true, true])
   })
 
   it('parses locked param as booleans (1=true, 0=false)', async () => {
-    setupLocation('https://example.com/?colors=ff5733,3498db&locked=1,0')
+    setupLocation('https://example.com/?colors=ff5733-3498db&locked=1-0')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result!.lockedStates).toEqual([true, false])
   })
 
   it('pads lockedStates with true when shorter than colors', async () => {
-    setupLocation('https://example.com/?colors=ff5733,3498db,00ff00&locked=0')
+    setupLocation('https://example.com/?colors=ff5733-3498db-00ff00&locked=0')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result!.lockedStates).toHaveLength(3)
@@ -120,7 +120,7 @@ describe('decodePaletteFromUrl', () => {
   })
 
   it('trims lockedStates when longer than colors', async () => {
-    setupLocation('https://example.com/?colors=ff5733&locked=1,0,1,0')
+    setupLocation('https://example.com/?colors=ff5733&locked=1-0-1-0')
     const { decodePaletteFromUrl } = await import('@/helpers/urlShare')
     const result = decodePaletteFromUrl()
     expect(result!.lockedStates).toHaveLength(1)
@@ -130,7 +130,7 @@ describe('decodePaletteFromUrl', () => {
 describe('clearUrlParams', () => {
   it('calls history.replaceState to remove color params', async () => {
     const mockReplaceState = vi.fn()
-    setupLocation('https://example.com/?colors=ff5733&locked=1')
+    setupLocation('https://example.com/?colors=ff5733&locked=1-0')
     vi.stubGlobal('history', { replaceState: mockReplaceState })
 
     const { clearUrlParams } = await import('@/helpers/urlShare')
