@@ -80,9 +80,12 @@ export function useKeyboardShortcuts({
     }
 
     // M key toggles rearrange mode — works even when active (since it counts as a dialog)
+    // Requires at least 2 colors to rearrange
     if (event.key.toLowerCase() === 'm' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      event.preventDefault()
-      onToggleSwapMode()
+      if (colorCount >= 2) {
+        event.preventDefault()
+        onToggleSwapMode()
+      }
       return
     }
 
@@ -151,24 +154,32 @@ export function useKeyboardShortcuts({
         onOpen()
         break
       case 's':
-        event.preventDefault()
-        onSave()
+        if (colorCount > 0) {
+          event.preventDefault()
+          onSave()
+        }
         break
       case 'c':
-        event.preventDefault()
-        onShare()
+        if (colorCount > 0) {
+          event.preventDefault()
+          onShare()
+        }
         break
       case 'e':
-        event.preventDefault()
-        if (event.shiftKey && hasModifier) {
-          onImageExport()
-        } else {
-          onExport()
+        if (colorCount > 0) {
+          event.preventDefault()
+          if (event.shiftKey && hasModifier) {
+            onImageExport()
+          } else {
+            onExport()
+          }
         }
         break
       case 'r':
-        event.preventDefault()
-        onRerollAll()
+        if (colorCount > 0) {
+          event.preventDefault()
+          onRerollAll()
+        }
         break
       case 't':
         event.preventDefault()
