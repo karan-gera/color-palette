@@ -53,9 +53,9 @@ function ShortcutGroupSection({ group, colorCount }: { group: ShortcutGroup; col
 
 export default function KeyboardHints({ visible, onToggle, colorCount }: KeyboardHintsProps) {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
       <div
-        className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out ${
+        className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out overflow-y-auto max-h-[calc(100vh-8rem)] pointer-events-auto ${
           visible
             ? 'opacity-100 translate-y-0'
             : 'opacity-0 translate-y-2 pointer-events-none'
@@ -70,7 +70,7 @@ export default function KeyboardHints({ visible, onToggle, colorCount }: Keyboar
         variant="ghost"
         size="sm"
         onClick={onToggle}
-        className="font-mono text-xs text-muted-foreground hover:text-foreground gap-1.5 h-7"
+        className="font-mono text-xs text-muted-foreground hover:text-foreground gap-1.5 h-7 pointer-events-auto"
       >
         {visible ? <EyeOff className="size-3" /> : <Keyboard className="size-3" />}
         <span className="transition-all duration-200">{visible ? 'hide' : 'shortcuts'}</span>

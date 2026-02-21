@@ -180,6 +180,57 @@ Redesign the preset selector to feel like a synth VST preset browser.
 
 ---
 
+## Mobile / Responsive Design
+
+The app is desktop-only today. Making it genuinely usable on phones and tablets is a prerequisite before any serious growth. This is a full layout pass — not a polish task.
+
+### Root causes (from BUGS.md)
+- Fixed widths (`w-[200px]`, `size-[200px]`, etc.) cause horizontal overflow at narrow viewports or high zoom levels
+- Bottom fade overlay has `pointer-events: auto` and blocks toolbar buttons at 150%+ browser zoom (softlock)
+- Touch targets are too small (action buttons below palette items, HSL dot, lock icon)
+- Keyboard hints bottom bar is not responsive — wraps badly, overlaps controls
+
+### Layout
+
+- [ ] Audit all fixed widths — replace with responsive equivalents (`clamp()`, `max-w`, `w-full`, responsive classes)
+- [ ] Add `overflow-x: hidden` to root container as a safety net while the audit runs
+- [ ] Test at 375px, 390px, 414px (common phones), 768px (tablet), and 1024px (small laptop)
+- [ ] Test at 100%, 125%, 150%, 200% browser zoom on desktop
+- [ ] Palette circles: shrink gracefully on narrow viewports using `clamp()` or responsive size classes
+- [ ] Two-row palette layout: verify grid/flex works at narrow widths without overflow
+- [ ] Header: responsive breakpoints — collapse or hide labels at narrow widths
+- [ ] Controls toolbar: consider a scrollable row or stacked layout on mobile
+- [ ] Contrast checker panel: verify it doesn't overflow on small screens
+- [ ] Keyboard hints bar: hide on mobile (touch devices) or collapse to a toggle
+
+### Touch / Interaction
+
+- [ ] Increase touch target size to ≥44px for all interactive elements (WCAG 2.5.5)
+  - [ ] Lock icon on palette items
+  - [ ] Action buttons (delete, edit, reroll, variations)
+  - [ ] HSL picker dot
+  - [ ] Preset browser arrows
+  - [ ] Close / back buttons in dialogs and panels
+- [ ] Verify drag-to-reorder works reliably on touch (pointer events + `touch-action: none` already in place — test on real devices)
+- [ ] Tap-to-lock vs tap-to-color — review gesture conflicts on mobile
+
+### Overlays / Z-index
+
+- [ ] Fix keyboard hints fade gradient: set `pointer-events: none` so it never blocks clicks
+- [ ] Only show bottom fade when hints are actually overflowing (check scroll height vs client height)
+- [ ] Audit all overlay `z-index` values — ensure header stays above all overlays on mobile
+- [ ] Dialogs (export, save, open, docs): verify they don't overflow viewport height on small screens; add internal scroll if needed
+
+### Mobile-specific layout (stretch)
+
+- [ ] Consider a single-column stacked layout for phones: palette → controls → panels (vs. side-by-side)
+- [ ] Evaluate whether the Hero section needs to be hidden or collapsed on mobile to save vertical space
+- [ ] Bottom sheet pattern for dialogs on mobile (slides up from bottom) instead of centered modals
+
+**Implementation notes:** Start with the pointer-events softlock (quick win, unblocks usage). Then do the fixed-width audit (biggest structural change). Touch target pass last (CSS only, low risk). Stretch goals only after layout is stable.
+
+---
+
 ## IndexedDB Migration (Low Priority)
 
 Evaluate moving from localStorage to IndexedDB for future-proofing storage.
@@ -816,16 +867,17 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 12. ~~**Drag to Reorder** - Missing table-stakes interaction, low-medium effort~~ ✅ Done!
 13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
 14. ~~**Expand to 10 Colors** - Two-row layout, Framer Motion animations, 2D drag, free what competitors paywall~~ ✅ Done!
-15. **Gradient Generator** - Nice companion feature, low effort
-16. **Palette Visualization** - High wow factor, moderate effort
-17. **Color Harmony Score** - Unique differentiator, medium effort
-18. **Session Palette History** - Solves real reroll regret, low-medium effort
-19. **Palette Collections and Tags** - Natural save/open evolution, medium effort
-20. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
-21. **Extract from Image** - Big feature, most complex
-22. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
-23. **IndexedDB Migration** - Low priority, not needed yet
-24. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
+15. **Mobile / Responsive Design** - Prerequisite for growth; pointer-events softlock first, then layout audit
+16. **Gradient Generator** - Nice companion feature, low effort
+17. **Palette Visualization** - High wow factor, moderate effort
+18. **Color Harmony Score** - Unique differentiator, medium effort
+19. **Session Palette History** - Solves real reroll regret, low-medium effort
+20. **Palette Collections and Tags** - Natural save/open evolution, medium effort
+21. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
+22. **Extract from Image** - Big feature, most complex
+23. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
+24. **IndexedDB Migration** - Low priority, not needed yet
+25. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
 
 ---
 
