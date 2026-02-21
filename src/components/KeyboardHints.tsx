@@ -1,7 +1,7 @@
 import { EyeOff, Keyboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SHORTCUT_GROUPS, type ShortcutDef, type ShortcutGroup } from '@/hooks/useKeyboardShortcuts'
-import { getModifierLabel } from '@/helpers/platform'
+import { getModifierLabel, isMac } from '@/helpers/platform'
 
 type KeyboardHintsProps = {
   visible: boolean
@@ -18,7 +18,9 @@ function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCou
         {shortcut.modifiers?.map((mod) => (
           <kbd
             key={mod}
-            className="px-1 bg-muted rounded text-sm leading-[18px] font-mono font-medium border border-border/50 min-w-[18px] text-center"
+            className={`px-1 bg-muted rounded font-mono font-medium border border-border/50 min-w-[18px] text-center ${
+              isMac ? 'text-sm leading-[18px]' : 'text-[10px] py-0.5'
+            }`}
           >
             {getModifierLabel(mod)}
           </kbd>
@@ -29,7 +31,7 @@ function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCou
           </kbd>
         ))}
       </span>
-      <span className="text-muted-foreground font-mono">{shortcut.description}</span>
+      <span className="text-muted-foreground font-mono whitespace-nowrap">{shortcut.description}</span>
     </div>
   )
 }

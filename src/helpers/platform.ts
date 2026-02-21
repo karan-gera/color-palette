@@ -16,6 +16,8 @@ const MODIFIER_SYMBOLS = {
   other: { shift: 'Shift', alt: 'Alt' },
 } as const
 
+export const isMac = PLATFORM === 'mac'
+
 export function getModifierLabel(modifier: string): string {
   return MODIFIER_SYMBOLS[PLATFORM][modifier as keyof typeof MODIFIER_SYMBOLS['mac']] ?? modifier
 }

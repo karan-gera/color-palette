@@ -1,4 +1,4 @@
-import { useCallback, type MouseEvent } from 'react'
+import { useCallback, type KeyboardEvent, type MouseEvent } from 'react'
 import { Sun, Moon, Circle } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -14,19 +14,23 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
 export default function ThemeToggle() {
   const { theme, setThemeWithTransition, transition, applyTransitionTarget, completeTransition } = useTheme()
 
-  // Handle click with coordinates for circle wipe animation
-  const handleOptionClick = useCallback((e: MouseEvent, value: Theme) => {
-    if (value === theme) return // No change needed
-    
-    // Get click coordinates for animation origin
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const origin = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    }
-    
+  // Shared transition trigger — derives animation origin from the element's center
+  const triggerTransition = useCallback((el: HTMLElement, value: Theme) => {
+    if (value === theme) return
+    const rect = el.getBoundingClientRect()
+    const origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
     setThemeWithTransition(value, origin)
   }, [theme, setThemeWithTransition])
+
+  const handleOptionClick = useCallback((e: MouseEvent<HTMLElement>, value: Theme) => {
+    triggerTransition(e.currentTarget, value)
+  }, [triggerTransition])
+
+  const handleOptionKeyDown = useCallback((e: KeyboardEvent<HTMLElement>, value: Theme) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    e.preventDefault()
+    triggerTransition(e.currentTarget, value)
+  }, [triggerTransition])
 
   return (
     <TooltipProvider>
@@ -47,6 +51,7 @@ export default function ThemeToggle() {
                   aria-label={`${option.label} theme`}
                   className={theme === option.value ? 'bg-accent text-accent-foreground' : ''}
                   onClick={(e) => handleOptionClick(e, option.value)}
+                  onKeyDown={(e) => handleOptionKeyDown(e, option.value)}
                 >
                   <Icon className="size-4" />
                 </ToggleGroupItem>
