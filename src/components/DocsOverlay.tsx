@@ -37,8 +37,8 @@ const FEATURES = [
 ]
 
 const COMPETITOR_ROWS = [
-  { feature: 'up to 10 colors', us: true, coolors: 'pro ($3.49/mo)', colorffy: 'n/a (5 max)' },
-  { feature: 'contrast checker', us: true, coolors: 'pro ($3.49/mo)', colorffy: 'pro ($5/mo)' },
+  { feature: 'max colors', us: '10', coolors: '5 free, ∞ pro ($3.49/mo)', colorffy: '5' },
+  { feature: 'contrast checker', us: true, coolors: 'pro', colorffy: 'pro ($5/mo)' },
   { feature: 'palette variations', us: true, coolors: 'pro', colorffy: 'free (limited)' },
   { feature: 'advanced exports', us: true, coolors: 'pro', colorffy: 'pro' },
   { feature: 'dark mode', us: true, coolors: 'pro', colorffy: 'free' },
@@ -173,10 +173,10 @@ function AboutTab() {
       <div className="text-center space-y-3">
         <h2 className="text-3xl font-medium tracking-tight lowercase">color palette generator</h2>
         <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
-          a free, open-source color palette tool with everything* competitors charge for.
-          no accounts, no ads, no paywalls, just color theory math and keyboard shortcuts.
+          free color palette tool. no accounts, no ads, no paywalls. everything runs in your browser
+          and stays on your device.
         </p>
-        <p className="text-muted-foreground/50 text-[10px]">* are we missing something? request it!</p>
+        <p className="text-muted-foreground/50 text-[10px]">missing something? request it.</p>
       </div>
 
       {/* feature grid */}
@@ -213,7 +213,7 @@ function AboutTab() {
                 <tr key={feature} className="border-b border-border/50">
                   <td className="py-2 pr-4">{feature}</td>
                   <td className="py-2 px-3 text-center">
-                    {us && <CheckCircle2 className="size-3.5 mx-auto text-green-500" />}
+                    {us === true ? <CheckCircle2 className="size-3.5 mx-auto text-green-500" /> : <span className="text-green-500 font-medium">{us}</span>}
                   </td>
                   <td className="py-2 px-3 text-center text-muted-foreground">
                     {coolors === 'n/a' ? <XCircle className="size-3.5 mx-auto text-red-500/70" /> : coolors === 'free' ? <CheckCircle2 className="size-3.5 mx-auto text-green-500" /> : coolors}
@@ -231,29 +231,36 @@ function AboutTab() {
       {/* philosophy */}
       <div className="space-y-6">
         <div>
-          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">philosophy</h3>
+          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">free forever</h3>
           <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
-              every feature is free, forever. no feature gates, no trial periods, no "upgrade to unlock."
-              the entire tool works offline, stores data locally, and costs nothing to use.
+              no feature gates. no trial periods. no "upgrade to unlock." the tool works offline and costs nothing.
             </p>
             <p>
-              if you find it useful, you can support development via donation, but you'll never be asked
-              to pay for a feature that already exists.
+              donations welcome if you find it useful, but you'll never hit a paywall.
             </p>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">on ai</h3>
+          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">your data stays yours</h3>
           <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
             <p>
-              no generative ai features in the product. ever. every color, every calculation, every result
-              is algorithmic and reproducible, color theory math, not black boxes.
+              everything is stored in your browser's local storage. we don't have servers, accounts, or analytics.
+              your palettes never leave your device unless you export them yourself.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">no ai</h3>
+          <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              every color and calculation is deterministic. color theory math, not black boxes.
             </p>
             <p className="text-xs opacity-70">
-              transparency: this project was built with ai programming assistance.
-              ai helped write the code, but no ai runs in the product. the user never interacts with a model.
+              (this project was built with ai programming assistance. ai helped write the code, but nothing
+              ai-powered runs in the product.)
             </p>
           </div>
         </div>
