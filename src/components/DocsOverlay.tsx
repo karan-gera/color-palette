@@ -52,6 +52,19 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.13',
+    title: 'image export, oklch picker, polish',
+    items: [
+      'png/svg image export with grid layout and hex labels (⇧⌘E)',
+      'oklch color picker mode — toggle between hsl and perceptually uniform oklch',
+      'rearrange mode (M key) replaces drag-to-reorder for cleaner ux',
+      'cvd filter no longer rasterizes ui — applies only to color circles with crossfade',
+      'smooth fade transition when loading saved palettes',
+      'cleaner share urls using hyphen separator',
+      'many bug fixes: keyboard accessibility, zoom overflow, platform-specific issues',
+    ],
+  },
+  {
     version: '0.12',
     title: 'expand to 10 colors',
     items: [
