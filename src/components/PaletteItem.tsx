@@ -9,16 +9,7 @@ import ColorFormatMenu from './ColorFormatMenu'
 import ColorPicker from './ColorPicker'
 import { getColorName } from '@/helpers/colorNaming'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
-
-function hexLuminance(hex: string): number {
-  const h = hex.replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16) || 0
-  const g = parseInt(h.substring(2, 4), 16) || 0
-  const b = parseInt(h.substring(4, 6), 16) || 0
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-
-const BLUEPRINT_COLOR = 'oklch(0.55 0.12 250)'
+import { BLUEPRINT_COLOR, hexLuminance } from '@/helpers/colorTheory'
 
 type PaletteItemProps = {
   color: string
@@ -107,7 +98,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
             style={{
               backgroundColor: previewColor,
               borderColor: textColor,
-              borderStyle: showSwapHoverRing ? 'dashed' : 'dashed',
+              borderStyle: 'dashed',
               color: textColor,
               boxShadow: showSwapHoverRing ? `0 0 0 3px ${BLUEPRINT_COLOR}40` : undefined,
             }}

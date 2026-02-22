@@ -29,10 +29,19 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
 
-// sRGB linearization
-function linearize(value: number): number {
+// sRGB linearization (channel value 0-255 → linear 0-1)
+export function linearize(value: number): number {
   const v = value / 255
   return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+}
+
+/**
+ * Fast approximate luminance in raw 0-255 space (not WCAG-linearized).
+ * Use for light/dark text heuristics; use relativeLuminance() for WCAG ratios.
+ */
+export function hexLuminance(hex: string): number {
+  const { r, g, b } = hexToRgb(hex)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 // sRGB gamma encoding
@@ -356,6 +365,7 @@ export type PalettePreset = {
 }
 
 export const MAX_COLORS = 10
+export const BLUEPRINT_COLOR = 'oklch(0.55 0.12 250)'
 
 export function getRowSplit(count: number): [number, number] {
   if (count <= 5) return [count, 0]

@@ -1,10 +1,9 @@
 import { LayoutGroup, AnimatePresence, motion } from 'framer-motion'
 import AnimatedPaletteItem from './AnimatedPaletteItem'
 import AddColor from './AddColor'
-import { getRowSplit, MAX_COLORS } from '@/helpers/colorTheory'
+import { getRowSplit, MAX_COLORS, BLUEPRINT_COLOR } from '@/helpers/colorTheory'
 
 const BLUEPRINT_GRID_SIZE = 20
-const BLUEPRINT_COLOR = 'oklch(0.55 0.12 250)'
 const BLUEPRINT_BG = `
   repeating-linear-gradient(
     0deg,

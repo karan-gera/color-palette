@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 import PaletteItem from './PaletteItem'
-
-const BLUEPRINT_COLOR = 'oklch(0.55 0.12 250)'
+import { BLUEPRINT_COLOR } from '@/helpers/colorTheory'
 
 type AnimatedPaletteItemProps = {
   layoutId: string

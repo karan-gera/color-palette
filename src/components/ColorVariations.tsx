@@ -2,7 +2,7 @@ import { useMemo, useEffect, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { generateTints, generateShades, generateTones } from '@/helpers/colorTheory'
+import { generateTints, generateShades, generateTones, hexLuminance } from '@/helpers/colorTheory'
 import { getColorName } from '@/helpers/colorNaming'
 
 type ColorVariationsProps = {
@@ -28,14 +28,7 @@ function VariationSwatch({ color, isSource, delay, onClick }: VariationSwatchPro
     return () => clearTimeout(timer)
   }, [delay])
 
-  const textColor = useMemo(() => {
-    const bg = color.replace('#', '')
-    const r = parseInt(bg.substring(0, 2), 16)
-    const g = parseInt(bg.substring(2, 4), 16)
-    const b = parseInt(bg.substring(4, 6), 16)
-    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
-    return luminance > 160 ? '#111111' : '#ffffff'
-  }, [color])
+  const textColor = useMemo(() => hexLuminance(color) > 160 ? '#111111' : '#ffffff', [color])
 
   return (
     <Tooltip>

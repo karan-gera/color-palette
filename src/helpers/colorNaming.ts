@@ -1,15 +1,7 @@
-import { hexToRgb } from '@/helpers/colorTheory'
+import { hexToRgb, linearize } from '@/helpers/colorTheory'
 import { colornames } from 'color-name-list/bestof'
 
 type Oklab = { L: number; a: number; b: number }
-
-/**
- * sRGB linearization (same formula as contrast.ts).
- */
-function linearize(c: number): number {
-  const srgb = c / 255
-  return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
-}
 
 /**
  * Convert hex color to Oklab perceptual color space.

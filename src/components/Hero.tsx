@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Plus } from 'lucide-react'
+import { hexLuminance } from '@/helpers/colorTheory'
 
 type HeroProps = {
   color: string | null
@@ -7,14 +8,7 @@ type HeroProps = {
 }
 
 export default function Hero({ color, onClick }: HeroProps) {
-  const textColor = useMemo(() => {
-    const bg = (color ?? '#ffffff').replace('#', '')
-    const r = parseInt(bg.substring(0, 2), 16)
-    const g = parseInt(bg.substring(2, 4), 16)
-    const b = parseInt(bg.substring(4, 6), 16)
-    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
-    return luminance > 160 ? '#111111' : '#ffffff'
-  }, [color])
+  const textColor = useMemo(() => hexLuminance(color ?? '#ffffff') > 160 ? '#111111' : '#ffffff', [color])
 
   return (
     <button

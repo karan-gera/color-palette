@@ -19,18 +19,12 @@ const SIZE_CONFIG: Record<ImageSize, { width: number; label: string }> = {
   large: { width: 1920, label: '1920px' },
 }
 
+import { hexLuminance } from '@/helpers/colorTheory'
+
 const PADDING = 40
 const LABEL_HEIGHT = 24
 const LABEL_FONT_SIZE = 14
 const CIRCLE_GAP = 20
-
-function hexLuminance(hex: string): number {
-  const h = hex.replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16) || 0
-  const g = parseInt(h.substring(2, 4), 16) || 0
-  const b = parseInt(h.substring(4, 6), 16) || 0
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
 
 function getTextColor(bgHex: string): string {
   return hexLuminance(bgHex) > 160 ? '#111111' : '#ffffff'

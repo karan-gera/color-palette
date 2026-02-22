@@ -1,20 +1,12 @@
-import { hexToRgb } from '@/helpers/colorTheory'
+import { hexToRgb, linearize } from '@/helpers/colorTheory'
 
 export type WCAGLevel = 'aaa' | 'aa' | 'aa18' | 'fail'
 
 /**
  * WCAG 2.1 relative luminance from hex color.
- * Uses sRGB linearization: if channel <= 0.04045, divide by 12.92;
- * else ((c + 0.055) / 1.055) ^ 2.4
  */
 export function relativeLuminance(hex: string): number {
   const { r, g, b } = hexToRgb(hex)
-
-  const linearize = (c: number): number => {
-    const srgb = c / 255
-    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
-  }
-
   return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
 }
 
