@@ -12,9 +12,7 @@ type GradientViewProps = {
   colorIds: string[]        // stable IDs for each palette color
   gradientState: UseGradientStopsReturn
   onOpenExport: () => void
-  gradientNeedsRefresh: boolean
   onRedrawGradient: () => void
-  onDismissRefresh: () => void
   previewRatio: number
   onPreviewRatioChange: (ratio: number) => void
 }
@@ -24,9 +22,7 @@ export default function GradientView({
   colorIds,
   gradientState,
   onOpenExport,
-  gradientNeedsRefresh,
   onRedrawGradient,
-  onDismissRefresh,
   previewRatio,
   onPreviewRatioChange,
 }: GradientViewProps) {
@@ -108,31 +104,6 @@ export default function GradientView({
 
   return (
     <div className="flex flex-col gap-4 w-full px-8 py-6">
-      {/* Palette-changed refresh banner */}
-      {gradientNeedsRefresh && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-          <span className="font-mono text-xs text-foreground/70 lowercase">
-            palette has changed — redraw the gradient?
-          </span>
-          <div className="flex items-center gap-3 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="font-mono lowercase text-xs h-7 px-2"
-              onClick={onRedrawGradient}
-            >
-              redraw
-            </Button>
-            <button
-              className="font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors lowercase"
-              onClick={onDismissRefresh}
-            >
-              dismiss
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Aspect ratio toggle */}
       <div className="flex items-center gap-3 justify-end">
         {ASPECT_RATIOS.map(({ label, ratio }) => (

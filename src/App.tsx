@@ -93,22 +93,11 @@ function App() {
   const [gradientPreviewRatio, setGradientPreviewRatio] = useState(16 / 9)
   const gradientState = useGradientStops(current ?? [], colorIds)
 
-  // Baseline palette signature: used to detect when the palette has changed
-  // since the gradient was last drawn, so we can prompt the user to redraw.
-  const gradientBaselineRef = useRef<string>((current ?? []).join(','))
-  const [gradientNeedsRefresh, setGradientNeedsRefresh] = useState(false)
-
-  // When palette changes: if we're in gradient view and it's a new sig, show
-  // the banner and leave the gradient untouched. Otherwise sync stop colors.
+  // Always keep palette-linked stops in sync with the current palette colors
   useEffect(() => {
-    const sig = (current ?? []).join(',')
-    if (activeView === 'gradient' && sig !== gradientBaselineRef.current) {
-      setGradientNeedsRefresh(true)
-    } else {
-      const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
-      gradientState.syncPaletteColors(palette)
-    }
-  }, [current, colorIds, activeView]) // gradientState.syncPaletteColors is stable
+    const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
+    gradientState.syncPaletteColors(palette)
+  }, [current, colorIds]) // gradientState.syncPaletteColors is stable
 
   // Load palette from URL on mount
   useEffect(() => {
@@ -317,8 +306,6 @@ function App() {
   const handleSwitchView = useCallback((view: 'palette' | 'gradient') => {
     if (view === 'gradient' && gradientState.stops.length < 2) {
       gradientState.resetToPalette(current ?? [], colorIds)
-      gradientBaselineRef.current = (current ?? []).join(',')
-      setGradientNeedsRefresh(false)
     }
     setActiveView(view)
   }, [current, colorIds, gradientState])
@@ -329,16 +316,6 @@ function App() {
 
   const handleRedrawGradient = useCallback(() => {
     gradientState.resetToPalette(current ?? [], colorIds)
-    gradientBaselineRef.current = (current ?? []).join(',')
-    setGradientNeedsRefresh(false)
-  }, [current, colorIds, gradientState])
-
-  const handleDismissRefresh = useCallback(() => {
-    gradientBaselineRef.current = (current ?? []).join(',')
-    setGradientNeedsRefresh(false)
-    // Sync colors now that the user has accepted the current gradient positions
-    const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
-    gradientState.syncPaletteColors(palette)
   }, [current, colorIds, gradientState])
 
   const handleExport = useCallback(() => {
@@ -650,9 +627,7 @@ function App() {
                   colorIds={colorIds}
                   gradientState={gradientState}
                   onOpenExport={() => setIsGradientExportDialog(true)}
-                  gradientNeedsRefresh={gradientNeedsRefresh}
                   onRedrawGradient={handleRedrawGradient}
-                  onDismissRefresh={handleDismissRefresh}
                   previewRatio={gradientPreviewRatio}
                   onPreviewRatioChange={setGradientPreviewRatio}
                 />
