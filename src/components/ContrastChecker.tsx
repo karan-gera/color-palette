@@ -112,7 +112,7 @@ export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab
                       {results.map((r) => (
                         <div
                           key={r.bg}
-                          className="flex items-center gap-2 rounded px-2 py-1"
+                          className="cvd-color flex items-center gap-2 rounded px-2 py-1"
                           style={{ backgroundColor: r.hex }}
                         >
                           <span
@@ -157,7 +157,7 @@ export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab
                         {colors.map((color, j) => (
                           <td key={j} className="px-2 pb-2 text-center">
                             <span
-                              className="size-6 rounded-full border border-border/50 inline-block"
+                              className="cvd-color size-6 rounded-full border border-border/50 inline-block"
                               style={{ backgroundColor: color }}
                             />
                           </td>
@@ -169,7 +169,7 @@ export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab
                         <tr key={i}>
                           <td className="pr-2 py-1">
                             <span
-                              className="size-6 rounded-full border border-border/50 inline-block"
+                              className="cvd-color size-6 rounded-full border border-border/50 inline-block"
                               style={{ backgroundColor: rowColor }}
                             />
                           </td>

@@ -1,9 +1,8 @@
-import { useCallback, useEffect, type MouseEvent } from 'react'
+import { useEffect } from 'react'
 import { Eye } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { useCVD, type CVDType, CVD_LABELS, getCVDFilterUrl } from '@/hooks/useCVD'
-import CircleWipeOverlay from './CircleWipeOverlay'
+import { useCVD, type CVDType, CVD_LABELS } from '@/hooks/useCVD'
 
 const CVD_OPTIONS: { value: CVDType; label: string; shortLabel: string }[] = [
   { value: 'normal', label: CVD_LABELS.normal, shortLabel: '' },
@@ -18,33 +17,19 @@ type CVDToggleProps = {
 }
 
 export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
-  const { cvd, setCVDWithTransition, cycleCVD, transition, applyTransitionTarget, completeTransition } = useCVD()
+  const { cvd, setCVD, cycleCVD } = useCVD()
 
   useEffect(() => {
     onCycleCVD.current = cycleCVD
     return () => { onCycleCVD.current = null }
   }, [cycleCVD, onCycleCVD])
 
-  // Handle click with coordinates for circle wipe animation
-  const handleOptionClick = useCallback((e: MouseEvent, value: CVDType) => {
-    if (value === cvd) return // No change needed
-    
-    // Get click coordinates for animation origin
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const origin = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    }
-    
-    setCVDWithTransition(value, origin)
-  }, [cvd, setCVDWithTransition])
-
   return (
     <TooltipProvider>
       <ToggleGroup
         type="single"
         value={cvd}
-        // Don't use onValueChange - we handle clicks manually for coordinates
+        onValueChange={(value) => value && setCVD(value as CVDType)}
         variant="outline"
         size="sm"
       >
@@ -55,7 +40,6 @@ export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
                 value={option.value} 
                 aria-label={option.label}
                 className={`font-mono text-xs ${cvd === option.value ? 'bg-accent text-accent-foreground' : ''}`}
-                onClick={(e) => handleOptionClick(e, option.value)}
               >
                 {option.value === 'normal' ? (
                   <Eye className="size-4" />
@@ -70,20 +54,6 @@ export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
           </Tooltip>
         ))}
       </ToggleGroup>
-      
-      {/* Horizontal wipe animation overlay for CVD (renders via portal) */}
-      <CircleWipeOverlay
-        isActive={transition !== null}
-        origin={transition?.origin ?? null}
-        config={{
-          filter: transition ? getCVDFilterUrl(transition.to) : '',
-          oldFilter: transition ? getCVDFilterUrl(transition.from) : '',
-          animationType: 'horizontal',
-        }}
-        onApplyState={applyTransitionTarget}
-        onAnimationEnd={completeTransition}
-        targetElementId="palette-container"
-      />
     </TooltipProvider>
   )
 }

@@ -132,6 +132,28 @@
 }
 
 /* Color Vision Deficiency (CVD) Simulation Filters */
-/* Note: Filters are applied via inline style to #cvd-wrapper element
-   for consistent cross-browser behavior (Chrome + Firefox/Waterfox).
-   CSS selectors are not used to avoid double-filtering issues. */
+/* Applied only to .cvd-color elements (color circles) to avoid rasterizing the entire UI */
+/* Opacity transition for crossfade effect when switching CVD modes */
+.cvd-color {
+  transition: opacity 150ms ease;
+}
+
+[data-cvd-transitioning] .cvd-color {
+  opacity: 0;
+}
+
+[data-cvd="deuteranopia"] .cvd-color {
+  filter: url(#cvd-deuteranopia);
+}
+
+[data-cvd="protanopia"] .cvd-color {
+  filter: url(#cvd-protanopia);
+}
+
+[data-cvd="tritanopia"] .cvd-color {
+  filter: url(#cvd-tritanopia);
+}
+
+[data-cvd="achromatopsia"] .cvd-color {
+  filter: url(#cvd-achromatopsia);
+}

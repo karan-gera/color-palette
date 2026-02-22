@@ -42,7 +42,7 @@ function VariationSwatch({ color, isSource, delay, onClick }: VariationSwatchPro
       <TooltipTrigger asChild>
         <button
           type="button"
-          className={`size-10 rounded-lg border transition-all duration-300 cursor-pointer hover:scale-110 hover:border-foreground ${
+          className={`cvd-color size-10 rounded-lg border transition-all duration-300 cursor-pointer hover:scale-110 hover:border-foreground ${
             isSource ? 'border-2 border-foreground ring-2 ring-foreground/20' : 'border-border/50'
           } ${
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
@@ -123,7 +123,7 @@ export default function ColorVariations({
             back
           </Button>
           <div
-            className="size-5 rounded-full border border-border/50"
+            className="cvd-color size-5 rounded-full border border-border/50"
             style={{ backgroundColor: sourceColor }}
           />
           <span className="font-mono text-sm lowercase">

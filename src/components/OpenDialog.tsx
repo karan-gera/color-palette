@@ -190,7 +190,7 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
                         {p.colors.map((color, i) => (
                           <div
                             key={i}
-                            className="size-5 rounded-sm border"
+                            className="cvd-color size-5 rounded-sm border"
                             style={{ backgroundColor: color }}
                             title={color}
                           />
