@@ -6,6 +6,9 @@ export type SavedPalette = {
 }
 
 const STORAGE_KEY = 'color-palette:saved'
+const HISTORY_KEY = 'color-palette:history'
+const MAX_HISTORY_ENTRIES = 2048
+const SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000
 
 function read(): SavedPalette[] {
   try {
@@ -59,6 +62,42 @@ export function removePalette(id: string): void {
 
 export function setAllPalettes(next: SavedPalette[]): void {
   write(next)
+}
+
+export function loadPersistedHistory(): { history: string[][]; index: number } | null {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object') return null
+    const { history, index, savedAt } = parsed as { history: unknown; index: unknown; savedAt: unknown }
+    if (!Array.isArray(history) || typeof index !== 'number') return null
+    const valid = history.filter((entry): entry is string[] =>
+      Array.isArray(entry) && entry.every(c => typeof c === 'string')
+    )
+    if (valid.length === 0) return null
+    const expired = typeof savedAt !== 'number' || Date.now() - savedAt > SESSION_TIMEOUT_MS
+    return { history: valid, index: expired ? -1 : Math.max(-1, Math.min(index, valid.length - 1)) }
+  } catch {
+    return null
+  }
+}
+
+export function persistHistory(history: string[][], index: number): void {
+  if (history.length === 0) return
+  try {
+    const savedAt = Date.now()
+    if (history.length <= MAX_HISTORY_ENTRIES) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify({ history, index, savedAt }))
+      return
+    }
+    const trim = history.length - MAX_HISTORY_ENTRIES
+    const capped = history.slice(trim)
+    const cappedIndex = Math.max(0, index - trim)
+    localStorage.setItem(HISTORY_KEY, JSON.stringify({ history: capped, index: cappedIndex, savedAt }))
+  } catch {
+    // localStorage full or unavailable
+  }
 }
 
 // Export/Import file format

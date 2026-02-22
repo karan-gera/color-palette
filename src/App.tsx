@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react'
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
 import { LayoutGroup, motion } from 'framer-motion'
 import Header from '@/components/Header'
 import Controls from '@/components/Controls'
@@ -18,14 +18,20 @@ import CVDFilters from '@/components/CVDFilters'
 import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
-import { getSavedPalettes, savePalette, removePalette } from '@/helpers/storage'
+import { getSavedPalettes, savePalette, removePalette, loadPersistedHistory, persistHistory, type SavedPalette } from '@/helpers/storage'
 import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, getRowSplit, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 import { shouldScrollOnExpand, SCROLL_DELAY_MS } from '@/helpers/scroll'
 
+const RELATIONSHIP_MODES: ColorRelationship[] = [
+  'random', 'complementary', 'analogous', 'triadic',
+  'tetradic', 'split-complementary', 'monochromatic',
+]
+
 function App() {
   const [isOpenDialog, setIsOpenDialog] = useState(false)
+  const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([])
   const [isSaveDialog, setIsSaveDialog] = useState(false)
   const [isExportDialog, setIsExportDialog] = useState(false)
   const [exportInitialView, setExportInitialView] = useState<'selecting' | 'image'>('selecting')
@@ -45,6 +51,9 @@ function App() {
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const cycleCVDRef = useRef<(() => void) | null>(null)
   const colorInputRef = useRef<HTMLInputElement>(null)
+  const [persistedHistory] = useState(() =>
+    loadPersistedHistory() ?? { history: [] as string[][], index: -1 }
+  )
   const {
     history,
     index: historyIndex,
@@ -56,19 +65,22 @@ function App() {
     redo,
     replace,
     jumpTo,
-  } = useHistory<string[]>({ initialHistory: [], initialIndex: -1 })
+  } = useHistory<string[]>({ initialHistory: persistedHistory.history, initialIndex: persistedHistory.index })
   const { cycleTheme } = useTheme()
   const [urlLoaded, setUrlLoaded] = useState(false)
 
-  const generateRandomColor = useCallback((): string => {
-    const value = Math.floor(Math.random() * 0xffffff)
-    return `#${value.toString(16).padStart(6, '0')}`
-  }, [])
-
   const [editIndex, setEditIndex] = useState<number | null>(null)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
-  const [lockedStates, setLockedStates] = useState<boolean[]>([])
-  const [colorIds, setColorIds] = useState<string[]>([])
+  const [colorMeta, setColorMeta] = useState<{ locked: boolean[]; ids: string[] }>(() => {
+    const currentPalette = persistedHistory.index >= 0
+      ? (persistedHistory.history[persistedHistory.index] ?? [])
+      : []
+    return {
+      locked: currentPalette.map(() => false),
+      ids: currentPalette.map(() => crypto.randomUUID()),
+    }
+  })
+  const { locked: lockedStates, ids: colorIds } = colorMeta
   const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
   const [swapMode, setSwapMode] = useState(false)
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
@@ -80,12 +92,34 @@ function App() {
     const shared = decodePaletteFromUrl()
     if (shared && shared.colors.length > 0) {
       replace([shared.colors], 0)
-      setLockedStates(shared.lockedStates)
-      setColorIds(shared.colors.map(() => crypto.randomUUID()))
+      setColorMeta({ locked: shared.lockedStates, ids: shared.colors.map(() => crypto.randomUUID()) })
       clearUrlParams()
     }
     setUrlLoaded(true)
   }, [urlLoaded, replace])
+
+  // Persist undo/redo history to localStorage
+  useEffect(() => {
+    persistHistory(history, historyIndex)
+  }, [history, historyIndex])
+
+  // After an expired-session restore via history strip, colorMeta.ids will be empty.
+  // Regenerate them so the restored palette has stable React keys.
+  useEffect(() => {
+    if (!current || current.length === 0) return
+    setColorMeta(prev => {
+      if (prev.ids.length > 0) return prev
+      return {
+        locked: current.map(() => false),
+        ids: current.map(() => crypto.randomUUID()),
+      }
+    })
+  }, [current])
+
+  // Load saved palettes when dialog opens
+  useEffect(() => {
+    if (isOpenDialog) setSavedPalettes(getSavedPalettes())
+  }, [isOpenDialog])
 
   // Auto-dismiss notification
   useEffect(() => {
@@ -125,19 +159,11 @@ function App() {
   const addColor = useCallback(() => {
     const base = current ?? []
     if (base.length >= MAX_COLORS) return
-
-    let nextColor: string
-    if (globalRelationship === 'random') {
-      nextColor = generateRandomColor()
-    } else {
-      const lockedColors = base.filter((_, i) => lockedStates[i])
-      nextColor = generateRelatedColor(lockedColors, globalRelationship, base[base.length - 1])
-    }
-
+    const lockedColors = base.filter((_, i) => lockedStates[i])
+    const nextColor = generateRelatedColor(lockedColors, globalRelationship, base[base.length - 1])
     push([...base, nextColor])
-    setLockedStates(prev => [...prev, false])
-    setColorIds(prev => [...prev, crypto.randomUUID()])
-  }, [current, globalRelationship, lockedStates, generateRandomColor, push])
+    setColorMeta(prev => ({ locked: [...prev.locked, false], ids: [...prev.ids, crypto.randomUUID()] }))
+  }, [current, globalRelationship, lockedStates, push])
 
   const rerollAt = useCallback((index: number) => {
     const base = current ?? []
@@ -153,7 +179,8 @@ function App() {
   const rerollAll = useCallback(() => {
     const base = current ?? []
     if (base.length === 0) return
-    
+    if (base.every((_, i) => lockedStates[i])) return
+
     const lockedColors = base.filter((_, i) => lockedStates[i])
     
     const next = base.map((color, index) => 
@@ -166,9 +193,9 @@ function App() {
     const base = current ?? []
     const next = base.filter((_, i) => i !== index)
     push(next)
-    setLockedStates(prev => prev.filter((_, i) => i !== index))
-    setColorIds(prev => {
-      const filtered = prev.filter((_, i) => i !== index)
+    setColorMeta(prev => {
+      const filteredLocked = prev.locked.filter((_, i) => i !== index)
+      const filteredIds = prev.ids.filter((_, i) => i !== index)
       const [oldRow1Count] = getRowSplit(base.length)
       const [newRow1Count] = getRowSplit(next.length)
       // When the row split changes, items that cross between rows would trigger a
@@ -179,17 +206,17 @@ function App() {
       if (oldRow1Count !== newRow1Count) {
         const crossStart = Math.min(oldRow1Count, newRow1Count)
         const crossEnd   = Math.max(oldRow1Count, newRow1Count)
-        return filtered.map((id, i) => (i >= crossStart && i < crossEnd ? crypto.randomUUID() : id))
+        return { locked: filteredLocked, ids: filteredIds.map((id, i) => (i >= crossStart && i < crossEnd ? crypto.randomUUID() : id)) }
       }
-      return filtered
+      return { locked: filteredLocked, ids: filteredIds }
     })
   }, [current, push])
 
   const toggleLockAt = useCallback((index: number) => {
-    setLockedStates(prev => {
-      const next = [...prev]
+    setColorMeta(prev => {
+      const next = [...prev.locked]
       next[index] = !next[index]
-      return next
+      return { ...prev, locked: next }
     })
   }, [])
 
@@ -200,19 +227,26 @@ function App() {
     const [moved] = newColors.splice(fromIndex, 1)
     newColors.splice(toIndex, 0, moved)
     push(newColors)
-    setLockedStates(prev => {
-      const next = [...prev]
-      const [movedLock] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, movedLock)
-      return next
-    })
-    setColorIds(prev => {
-      const next = [...prev]
-      const [movedId] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, movedId)
-      return next
+    setColorMeta(prev => {
+      const nextLocked = [...prev.locked]
+      const [movedLock] = nextLocked.splice(fromIndex, 1)
+      nextLocked.splice(toIndex, 0, movedLock)
+      const nextIds = [...prev.ids]
+      const [movedId] = nextIds.splice(fromIndex, 1)
+      nextIds.splice(toIndex, 0, movedId)
+      return { locked: nextLocked, ids: nextIds }
     })
   }, [current, push])
+
+  const openEdit = useCallback((i: number) => {
+    setVariationsIndex(null)
+    setEditIndex(i)
+  }, [])
+
+  const openVariations = useCallback((i: number) => {
+    setEditIndex(null)
+    setVariationsIndex(i)
+  }, [])
 
   const toggleSwapMode = useCallback(() => {
     setSwapMode(prev => {
@@ -269,8 +303,7 @@ function App() {
     const base = current ?? []
     if (base.length >= MAX_COLORS) return
     push([...base, hex])
-    setLockedStates(prev => [...prev, false])
-    setColorIds(prev => [...prev, crypto.randomUUID()])
+    setColorMeta(prev => ({ locked: [...prev.locked, false], ids: [...prev.ids, crypto.randomUUID()] }))
   }, [current, push])
 
   const handlePickColor = useCallback(async () => {
@@ -283,7 +316,10 @@ function App() {
     }
   }, [current, addPickedColor])
 
-  const [activePresetId, setActivePresetId] = useState<string | null>(null)
+  const activePresetId = useMemo(
+    () => PALETTE_PRESETS.find(p => (current?.length ?? 0) > 0 && isPresetActive(current!, p))?.id ?? null,
+    [current]
+  )
 
   const applyPreset = useCallback((presetId: string) => {
     const preset = PALETTE_PRESETS.find(p => p.id === presetId)
@@ -292,14 +328,12 @@ function App() {
     const currentCount = (current ?? []).length
 
     push(newColors)
-    setLockedStates(new Array(newColors.length).fill(false))
-    setActivePresetId(presetId)
 
     const keepCount = getPresetColorIdKeepCount(currentCount, newColors.length)
-    setColorIds(prev => {
-      const kept = prev.slice(0, keepCount)
+    setColorMeta(prev => {
+      const kept = prev.ids.slice(0, keepCount)
       while (kept.length < newColors.length) kept.push(crypto.randomUUID())
-      return kept
+      return { locked: new Array(newColors.length).fill(false), ids: kept }
     })
   }, [current, push])
 
@@ -325,15 +359,6 @@ function App() {
     handlePresetSelect(PALETTE_PRESETS[nextIndex].id)
   }, [activePresetId, handlePresetSelect])
 
-  // Drift detection: clear active preset if colors leave its HSL bounds
-  useEffect(() => {
-    if (!activePresetId || !current?.length) return
-    const preset = PALETTE_PRESETS.find(p => p.id === activePresetId)
-    if (!preset || !isPresetActive(current, preset)) {
-      setActivePresetId(null)
-    }
-  }, [current, activePresetId])
-
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
@@ -347,15 +372,9 @@ function App() {
   }, [current, lockedStates, push])
 
   const cycleRelationship = useCallback(() => {
-    const modes: ColorRelationship[] = [
-      'random', 'complementary', 'analogous', 'triadic',
-      'tetradic', 'split-complementary', 'monochromatic',
-    ]
-    setGlobalRelationship(prev => {
-      const idx = modes.indexOf(prev)
-      return modes[(idx + 1) % modes.length]
-    })
-  }, [])
+    const idx = RELATIONSHIP_MODES.indexOf(globalRelationship)
+    handleRelationshipChange(RELATIONSHIP_MODES[(idx + 1) % RELATIONSHIP_MODES.length])
+  }, [globalRelationship, handleRelationshipChange])
 
   const handleEditSave = useCallback((index: number, newHex: string) => {
     const base = current ?? []
@@ -404,13 +423,13 @@ function App() {
     onCycleContrastTab: () => cycleContrastTabRef.current?.(),
     onDeleteColor: deleteAt,
     onRerollColor: rerollAt,
-    onEditColor: setEditIndex,
+    onEditColor: openEdit,
     onCycleCVD: () => cycleCVDRef.current?.(),
     onCycleRelationship: cycleRelationship,
     onPickColor: handlePickColor,
     onCyclePreset: cyclePreset,
     onPresetReroll: rerollPreset,
-    onViewVariations: setVariationsIndex,
+    onViewVariations: openVariations,
     onToggleDocs: toggleDocs,
     onToggleSwapMode: toggleSwapMode,
     onToggleHistory: () => setShowHistory(v => !v),
@@ -466,13 +485,13 @@ function App() {
                 colorIds={colorIds}
                 lockedStates={lockedStates}
                 editIndex={variationsIndex !== null ? null : editIndex}
-                onEditStart={setEditIndex}
+                onEditStart={openEdit}
                 onEditSave={handleEditSave}
                 onEditCancel={() => setEditIndex(null)}
                 onReroll={rerollAt}
                 onDelete={deleteAt}
                 onToggleLock={toggleLockAt}
-                onViewVariations={setVariationsIndex}
+                onViewVariations={openVariations}
                 onAdd={addColor}
                 swapMode={swapMode}
                 swapSelection={swapSelection}
@@ -530,31 +549,29 @@ function App() {
 
         {isOpenDialog ? (
           <OpenDialog
-            palettes={getSavedPalettes()}
+            palettes={savedPalettes}
             onCancel={() => setIsOpenDialog(false)}
             onSelect={(id) => {
-              const p = getSavedPalettes().find((x) => x.id === id)
+              const p = savedPalettes.find((x) => x.id === id)
               if (p) {
                 const currentCount = (current ?? []).length
-                replace([p.colors], p.colors.length - 1)
-                setLockedStates(new Array(p.colors.length).fill(true))
-                setActivePresetId(null)
-                
+                replace([p.colors], 0)
+
                 const keepCount = getPresetColorIdKeepCount(currentCount, p.colors.length)
-                setColorIds(prev => {
-                  const kept = prev.slice(0, keepCount)
+                setColorMeta(prev => {
+                  const kept = prev.ids.slice(0, keepCount)
                   while (kept.length < p.colors.length) kept.push(crypto.randomUUID())
-                  return kept
+                  return { locked: new Array(p.colors.length).fill(true), ids: kept }
                 })
               }
               setIsOpenDialog(false)
             }}
             onRemove={(id) => {
               removePalette(id)
+              setSavedPalettes(getSavedPalettes())
             }}
             onPalettesUpdated={() => {
-              setIsOpenDialog(false)
-              setTimeout(() => setIsOpenDialog(true), 100)
+              setSavedPalettes(getSavedPalettes())
             }}
           />
         ) : null}
