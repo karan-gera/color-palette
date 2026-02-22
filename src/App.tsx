@@ -515,9 +515,17 @@ function App() {
             onSelect={(id) => {
               const p = getSavedPalettes().find((x) => x.id === id)
               if (p) {
+                const currentCount = (current ?? []).length
                 replace([p.colors], p.colors.length - 1)
                 setLockedStates(new Array(p.colors.length).fill(true))
-                setColorIds(p.colors.map(() => crypto.randomUUID()))
+                setActivePresetId(null)
+                
+                const keepCount = getPresetColorIdKeepCount(currentCount, p.colors.length)
+                setColorIds(prev => {
+                  const kept = prev.slice(0, keepCount)
+                  while (kept.length < p.colors.length) kept.push(crypto.randomUUID())
+                  return kept
+                })
               }
               setIsOpenDialog(false)
             }}
