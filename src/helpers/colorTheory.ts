@@ -19,6 +19,92 @@ export type RGB = {
   b: number // 0-255
 }
 
+export type OKLCH = {
+  l: number // 0-100 (lightness percentage)
+  c: number // 0-0.4 (chroma, typical max ~0.37 for sRGB gamut)
+  h: number // 0-360 (hue degrees)
+}
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+// sRGB linearization
+function linearize(value: number): number {
+  const v = value / 255
+  return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+}
+
+// sRGB gamma encoding
+function gammaEncode(linear: number): number {
+  return linear <= 0.0031308
+    ? linear * 12.92
+    : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055
+}
+
+export function hexToOklch(hex: string): OKLCH {
+  const { r, g, b } = hexToRgb(hex)
+  const lr = linearize(r)
+  const lg = linearize(g)
+  const lb = linearize(b)
+
+  // Linear RGB to LMS (M1 matrix)
+  const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb
+  const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb
+  const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb
+
+  // Cube root for perceptual scaling
+  const lc = Math.cbrt(l)
+  const mc = Math.cbrt(m)
+  const sc = Math.cbrt(s)
+
+  // LMS to Oklab (M2 matrix)
+  const L = 0.2104542553 * lc + 0.7936177850 * mc - 0.0040720468 * sc
+  const a = 1.9779984951 * lc - 2.4285922050 * mc + 0.4505937099 * sc
+  const okb = 1.0 * lc + 0.0259040371 * mc - 1.0259040371 * sc
+
+  // Oklab to Oklch (cartesian to polar)
+  const C = Math.sqrt(a * a + okb * okb)
+  const H = C < 0.0001 ? 0 : (Math.atan2(okb, a) * 180) / Math.PI
+
+  return {
+    l: L * 100,
+    c: C,
+    h: ((H % 360) + 360) % 360,
+  }
+}
+
+export function oklchToHex({ l, c, h }: OKLCH): string {
+  const L = l / 100
+  const hRad = (h * Math.PI) / 180
+
+  // Oklch to Oklab (polar to cartesian)
+  const a = c * Math.cos(hRad)
+  const okb = c * Math.sin(hRad)
+
+  // Oklab to LMS (inverse M2 matrix)
+  const lc = L + 0.3963377774 * a + 0.2158037573 * okb
+  const mc = L - 0.1055613458 * a - 0.0638541728 * okb
+  const sc = L - 0.0894841775 * a - 1.2914855480 * okb
+
+  // Cube to get LMS
+  const lms_l = lc * lc * lc
+  const lms_m = mc * mc * mc
+  const lms_s = sc * sc * sc
+
+  // LMS to linear RGB (inverse M1 matrix)
+  const lr = +4.0767416621 * lms_l - 3.3077115913 * lms_m + 0.2309699292 * lms_s
+  const lg = -1.2684380046 * lms_l + 2.6097574011 * lms_m - 0.3413193965 * lms_s
+  const lb = -0.0041960863 * lms_l - 0.7034186147 * lms_m + 1.7076147010 * lms_s
+
+  // Gamma encode and clamp to sRGB
+  const r = Math.round(clamp(gammaEncode(lr), 0, 1) * 255)
+  const g = Math.round(clamp(gammaEncode(lg), 0, 1) * 255)
+  const b = Math.round(clamp(gammaEncode(lb), 0, 1) * 255)
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
 export type ColorFormat = 
   | 'hex'
   | 'rgb'
@@ -138,10 +224,6 @@ function randomFloat(min: number, max: number): number {
 
 function normalizeHue(hue: number): number {
   return ((hue % 360) + 360) % 360
-}
-
-export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
 }
 
 function getAverageHsl(colors: string[]): HSL {

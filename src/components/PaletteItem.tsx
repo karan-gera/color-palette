@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import LockIcon from './LockIcon'
 import ColorFormatMenu from './ColorFormatMenu'
-import HslPicker from './HslPicker'
+import ColorPicker from './ColorPicker'
 import { getColorName } from '@/helpers/colorNaming'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -40,14 +40,14 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
   const [isHovered, setIsHovered] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [editInvalid, setEditInvalid] = useState(false)
-  const [showHslPicker, setShowHslPicker] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const fillChar = useMemo(() => hexLuminance(color) > 128 ? 'f' : '0', [color])
   const previewColor = isEditing ? '#' + editValue.padEnd(6, fillChar) : color
 
   useEffect(() => {
-    setShowHslPicker(false)
+    setShowColorPicker(false)
     if (isEditing) {
       setEditValue(color.replace('#', ''))
       setEditInvalid(false)
@@ -218,7 +218,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                   <Pipette className="size-3" />
                 </button>
               )}
-              <Popover open={showHslPicker} onOpenChange={setShowHslPicker}>
+              <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -230,11 +230,11 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                 </PopoverTrigger>
                 <PopoverContent
                   side="top"
-                  className="w-52 p-3"
+                  className="w-56 p-3"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   onMouseDown={(e) => e.preventDefault()}
                 >
-                  <HslPicker
+                  <ColorPicker
                     hex={editValue.padEnd(6, fillChar)}
                     fillChar={fillChar}
                     onChange={setEditValue}
