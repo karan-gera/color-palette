@@ -86,6 +86,12 @@ export function useGradientStops(
     () => persisted?.angle ?? DEFAULT_ANGLE,
   )
 
+  // Keep a ref with the latest values so beforeunload can flush synchronously
+  const latestRef = useRef({ stops, angle })
+  useEffect(() => {
+    latestRef.current = { stops, angle }
+  }, [stops, angle])
+
   // Debounced save to localStorage whenever stops or angle change
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
@@ -99,6 +105,18 @@ export function useGradientStops(
       if (saveTimer.current) clearTimeout(saveTimer.current)
     }
   }, [stops, angle])
+
+  // Flush latest values synchronously on page unload so a refresh mid-debounce
+  // doesn't revert to the previously-saved state
+  useEffect(() => {
+    function saveNow() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(latestRef.current))
+      } catch {}
+    }
+    window.addEventListener('beforeunload', saveNow)
+    return () => window.removeEventListener('beforeunload', saveNow)
+  }, [])
 
   const addStop = useCallback((position: number, source: ColorSource) => {
     const clamped = clamp(Math.round(position), 0, 100)

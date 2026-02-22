@@ -31,6 +31,7 @@ type KeyboardShortcutsConfig = {
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
+  isPaletteView: boolean
 }
 
 export function useKeyboardShortcuts({
@@ -64,6 +65,7 @@ export function useKeyboardShortcuts({
   onEscape,
   colorCount,
   isDialogOpen,
+  isPaletteView,
 }: KeyboardShortcutsConfig) {
   const lastKeyRef = useRef<{ key: string; time: number } | null>(null)
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
@@ -83,10 +85,10 @@ export function useKeyboardShortcuts({
       return
     }
 
-    // M key toggles rearrange mode — works even when active (since it counts as a dialog)
+    // M key toggles rearrange mode — palette view only; works even when active (since it counts as a dialog)
     // Requires at least 2 colors to rearrange
     if (event.key.toLowerCase() === 'm' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      if (colorCount >= 2) {
+      if (isPaletteView && colorCount >= 2) {
         event.preventDefault()
         onToggleSwapMode()
       }
@@ -99,23 +101,25 @@ export function useKeyboardShortcuts({
     const key = event.key.toLowerCase()
     const hasModifier = event.ctrlKey || event.metaKey
 
-    // Undo: Z or Ctrl/Cmd+Z
+    // Undo/redo: palette view only
     if (key === 'z' && !event.shiftKey) {
+      if (!isPaletteView) return
       event.preventDefault()
       onUndo()
       return
     }
 
-    // Redo: Shift+Z or Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y
     if ((key === 'z' && event.shiftKey) || (key === 'y' && hasModifier)) {
+      if (!isPaletteView) return
       event.preventDefault()
       onRedo()
       return
     }
 
-    // Modifier+number combos (shift+1 = '!' on US keyboards, so use event.code)
+    // Modifier+number combos: palette view only (shift+1 = '!' on US keyboards, so use event.code)
     const digitMatch = event.code.match(/^Digit([0-9])$/)
     if (digitMatch) {
+      if (!isPaletteView) return
       const index = digitMatch[1] === '0' ? 9 : parseInt(digitMatch[1]) - 1
       if (index < colorCount) {
         if (event.shiftKey && event.altKey) {
@@ -150,27 +154,35 @@ export function useKeyboardShortcuts({
     switch (key) {
       case 'a':
       case ' ':
+        if (!isPaletteView) break
         event.preventDefault()
         onAddColor()
         break
       case 'o':
+        if (!isPaletteView) break
         event.preventDefault()
         onOpen()
         break
       case 's':
+        if (!isPaletteView) break
         if (colorCount > 0) {
           event.preventDefault()
           onSave()
         }
         break
       case 'c':
+        if (!isPaletteView) break
         if (colorCount > 0) {
           event.preventDefault()
           onShare()
         }
         break
       case 'e':
-        if (colorCount > 0) {
+        // E is context-aware: opens gradient export in gradient view, palette export in palette view
+        if (!isPaletteView) {
+          event.preventDefault()
+          onExport()
+        } else if (colorCount > 0) {
           event.preventDefault()
           if (event.shiftKey && hasModifier) {
             onImageExport()
@@ -180,12 +192,14 @@ export function useKeyboardShortcuts({
         }
         break
       case 'r':
+        if (!isPaletteView) break
         if (colorCount > 0) {
           event.preventDefault()
           onRerollAll()
         }
         break
       case 't':
+        // Theme / CVD always available
         event.preventDefault()
         if (event.shiftKey) {
           onCycleCVD()
@@ -194,14 +208,17 @@ export function useKeyboardShortcuts({
         }
         break
       case 'q':
+        if (!isPaletteView) break
         event.preventDefault()
         onCycleRelationship()
         break
       case 'i':
+        if (!isPaletteView) break
         event.preventDefault()
         onPickColor()
         break
       case 'p':
+        if (!isPaletteView) break
         event.preventDefault()
         if (event.shiftKey) {
           onPresetReroll()
@@ -210,14 +227,17 @@ export function useKeyboardShortcuts({
         }
         break
       case 'g':
+        // Toggle view — always available
         event.preventDefault()
         onToggleView()
         break
       case 'h':
+        if (!isPaletteView) break
         event.preventDefault()
         onToggleHistory()
         break
       case 'k':
+        if (!isPaletteView) break
         event.preventDefault()
         if (event.shiftKey) {
           if (colorCount >= 2) onCycleContrastTab()
@@ -227,6 +247,7 @@ export function useKeyboardShortcuts({
         break
       case '/':
       case '?':
+        // Hints / docs always available
         event.preventDefault()
         if (event.shiftKey || key === '?') {
           onToggleDocs()
@@ -244,6 +265,7 @@ export function useKeyboardShortcuts({
       case '7':
       case '8':
       case '9': {
+        if (!isPaletteView) break
         const index = key === '0' ? 9 : parseInt(key) - 1
         if (index < colorCount) {
           event.preventDefault()
@@ -285,6 +307,7 @@ export function useKeyboardShortcuts({
     onEscape,
     colorCount,
     isDialogOpen,
+    isPaletteView,
   ])
 
   useEffect(() => {

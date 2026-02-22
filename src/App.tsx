@@ -494,6 +494,7 @@ function App() {
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
+    isPaletteView: activeView === 'palette',
   })
 
   return (
@@ -505,26 +506,39 @@ function App() {
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
           <Header title="color palette" cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
-          <Controls
-            onOpen={handleOpen}
-            onSave={handleSave}
-            onShare={handleShare}
-            onExport={handleExport}
-            onPresetSelect={handlePresetSelect}
-            onPresetReroll={rerollPreset}
-            activePresetId={activePresetId}
-            onUndo={undo}
-            onRedo={redo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            canShare={(current ?? []).length > 0}
-            canExport={(current ?? []).length > 0}
-            onPickColor={handlePickColor}
-            canPickColor={(current ?? []).length < MAX_COLORS}
-            onToggleSwapMode={toggleSwapMode}
-            swapMode={swapMode}
-            canSwap={(current ?? []).length >= 2}
-          />
+          <AnimatePresence initial={false}>
+            {activeView === 'palette' && (
+              <motion.div
+                key="controls"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1, transition: { duration: 0.2 } }}
+                exit={{ height: 0, opacity: 0, transition: { duration: 0.12 } }}
+                className="w-full flex justify-center"
+                style={{ overflow: 'hidden' }}
+              >
+                <Controls
+                  onOpen={handleOpen}
+                  onSave={handleSave}
+                  onShare={handleShare}
+                  onExport={handleExport}
+                  onPresetSelect={handlePresetSelect}
+                  onPresetReroll={rerollPreset}
+                  activePresetId={activePresetId}
+                  onUndo={undo}
+                  onRedo={redo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  canShare={(current ?? []).length > 0}
+                  canExport={(current ?? []).length > 0}
+                  onPickColor={handlePickColor}
+                  canPickColor={(current ?? []).length < MAX_COLORS}
+                  onToggleSwapMode={toggleSwapMode}
+                  swapMode={swapMode}
+                  canSwap={(current ?? []).length >= 2}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Workspace: palette view or gradient view, with tab strip on the right */}
