@@ -20,7 +20,7 @@ export default function Hero({ color, onClick }: HeroProps) {
     <button
       type="button"
       onClick={onClick}
-      className="cvd-color size-[200px] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-500 ease-in-out relative"
+      className="cvd-color size-[var(--circle-size)] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-500 ease-in-out relative"
       style={{
         backgroundColor: color ?? '#ffffff',
         borderColor: textColor,

@@ -9,7 +9,7 @@ export default function AddColor({ onAdd }: AddColorProps) {
     <button
       type="button"
       onClick={onAdd}
-      className="size-[200px] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out bg-card hover:bg-accent"
+      className="size-[var(--circle-size)] rounded-full border-2 border-dashed flex items-center justify-center cursor-pointer transition-all duration-300 ease-in-out bg-card hover:bg-accent"
       style={{
         borderColor: 'hsl(var(--border))',
         color: 'hsl(var(--muted-foreground))',

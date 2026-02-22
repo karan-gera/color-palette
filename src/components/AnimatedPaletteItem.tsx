@@ -70,8 +70,8 @@ export default function AnimatedPaletteItem({
           style={{
             boxShadow: `0 0 0 3px ${BLUEPRINT_COLOR}`,
             top: 0,
-            width: 200,
-            height: 200,
+            width: 'var(--circle-size)',
+            height: 'var(--circle-size)',
           }}
         />
       )}

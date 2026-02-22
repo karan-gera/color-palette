@@ -103,7 +103,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
-            className={`cvd-color size-[200px] rounded-full border-2 flex items-center justify-center relative cursor-pointer ${isEditing ? '' : 'transition-all duration-500 ease-in-out'}`}
+            className={`cvd-color size-[var(--circle-size)] rounded-full border-2 flex items-center justify-center relative cursor-pointer ${isEditing ? '' : 'transition-all duration-500 ease-in-out'}`}
             style={{
               backgroundColor: previewColor,
               borderColor: textColor,
@@ -192,7 +192,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
         <motion.span
           layout
           transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-          className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[180px] text-center"
+          className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[var(--circle-size)] text-center"
           title={colorName.name}
         >
           {colorName.name}

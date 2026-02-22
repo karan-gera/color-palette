@@ -26,6 +26,7 @@ type KeyboardShortcutsConfig = {
   onViewVariations: (index: number) => void
   onToggleDocs: () => void
   onToggleSwapMode: () => void
+  onToggleHistory: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -57,6 +58,7 @@ export function useKeyboardShortcuts({
   onViewVariations,
   onToggleDocs,
   onToggleSwapMode,
+  onToggleHistory,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -205,6 +207,10 @@ export function useKeyboardShortcuts({
           onCyclePreset()
         }
         break
+      case 'g':
+        event.preventDefault()
+        onToggleHistory()
+        break
       case 'k':
         event.preventDefault()
         if (event.shiftKey) {
@@ -268,6 +274,7 @@ export function useKeyboardShortcuts({
     onViewVariations,
     onToggleDocs,
     onToggleSwapMode,
+    onToggleHistory,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -333,6 +340,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { modifiers: ['shift'], key: 'T', description: 'cycle cvd mode' },
       { key: 'K', description: 'contrast' },
       { modifiers: ['shift'], key: 'K', description: 'cycle contrast tab', minColors: 2 },
+      { key: 'G', description: 'history' },
     ],
   },
   {

@@ -50,7 +50,7 @@ export default function Controls({
 }: ControlsProps) {
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap justify-center">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="outline" size="sm" onClick={onOpen} className="lowercase font-mono">

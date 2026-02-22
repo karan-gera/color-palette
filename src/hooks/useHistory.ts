@@ -15,6 +15,7 @@ type UseHistoryReturn<T> = {
   undo: () => void
   redo: () => void
   replace: (nextHistory: T[], nextIndex?: number) => void
+  jumpTo: (targetIndex: number) => void
 }
 
 export function useHistory<T>({ initialHistory, initialIndex }: UseHistoryArgs<T>): UseHistoryReturn<T> {
@@ -53,7 +54,12 @@ export function useHistory<T>({ initialHistory, initialIndex }: UseHistoryArgs<T
     setIndex(boundedIndex)
   }, [])
 
-  return { history, index, current, canUndo, canRedo, push, undo, redo, replace }
+  const jumpTo = useCallback((targetIndex: number) => {
+    const bounded = Math.max(0, Math.min(targetIndex, history.length - 1))
+    setIndex(bounded)
+  }, [history.length])
+
+  return { history, index, current, canUndo, canRedo, push, undo, redo, replace, jumpTo }
 }
 
 

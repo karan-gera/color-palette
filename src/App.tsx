@@ -6,6 +6,7 @@ import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
 import ColorVariations from '@/components/ColorVariations'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
 import ContrastChecker from '@/components/ContrastChecker'
+import PaletteHistory from '@/components/PaletteHistory'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
@@ -39,12 +40,14 @@ function App() {
     return stored === 'true'
   })
   const [showDocs, setShowDocs] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<(() => void) | null>(null)
   const cycleCVDRef = useRef<(() => void) | null>(null)
   const colorInputRef = useRef<HTMLInputElement>(null)
   const {
     history,
+    index: historyIndex,
     current,
     canUndo,
     canRedo,
@@ -52,6 +55,7 @@ function App() {
     undo,
     redo,
     replace,
+    jumpTo,
   } = useHistory<string[]>({ initialHistory: [], initialIndex: -1 })
   const { cycleTheme } = useTheme()
   const [urlLoaded, setUrlLoaded] = useState(false)
@@ -376,6 +380,7 @@ function App() {
     setEditIndex(null)
     setVariationsIndex(null)
     setShowDocs(false)
+    setShowHistory(false)
     setSwapMode(false)
     setSwapSelection(null)
   }, [])
@@ -408,6 +413,7 @@ function App() {
     onViewVariations: setVariationsIndex,
     onToggleDocs: toggleDocs,
     onToggleSwapMode: toggleSwapMode,
+    onToggleHistory: () => setShowHistory(v => !v),
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -505,6 +511,20 @@ function App() {
             ref={contrastRef}
           >
             <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
+          </motion.div>
+
+          <motion.div
+            layout
+            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            className="w-full max-w-4xl"
+          >
+            <PaletteHistory
+              history={history}
+              currentIndex={historyIndex}
+              expanded={showHistory}
+              onToggle={() => setShowHistory(v => !v)}
+              onRestore={jumpTo}
+            />
           </motion.div>
         </LayoutGroup>
 
