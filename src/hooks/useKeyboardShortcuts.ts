@@ -27,6 +27,7 @@ type KeyboardShortcutsConfig = {
   onToggleDocs: () => void
   onToggleSwapMode: () => void
   onToggleHistory: () => void
+  onToggleView: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -59,6 +60,7 @@ export function useKeyboardShortcuts({
   onToggleDocs,
   onToggleSwapMode,
   onToggleHistory,
+  onToggleView,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -209,6 +211,10 @@ export function useKeyboardShortcuts({
         break
       case 'g':
         event.preventDefault()
+        onToggleView()
+        break
+      case 'h':
+        event.preventDefault()
         onToggleHistory()
         break
       case 'k':
@@ -275,6 +281,7 @@ export function useKeyboardShortcuts({
     onToggleDocs,
     onToggleSwapMode,
     onToggleHistory,
+    onToggleView,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -329,18 +336,19 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'O', description: 'open' },
       { key: 'S', description: 'save' },
       { key: 'C', description: 'copy link' },
-      { key: 'E', description: 'export' },
+      { key: 'E', description: 'export palette / gradient' },
       { modifiers: ['shift'], key: '⌘E', description: 'export image' },
     ],
   },
   {
     label: 'view',
     shortcuts: [
+      { key: 'G', description: 'toggle gradient / palette' },
       { key: 'T', description: 'cycle theme' },
       { modifiers: ['shift'], key: 'T', description: 'cycle cvd mode' },
       { key: 'K', description: 'contrast' },
       { modifiers: ['shift'], key: 'K', description: 'cycle contrast tab', minColors: 2 },
-      { key: 'G', description: 'history' },
+      { key: 'H', description: 'history' },
     ],
   },
   {

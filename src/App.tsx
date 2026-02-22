@@ -1,15 +1,19 @@
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
-import { LayoutGroup, motion } from 'framer-motion'
+import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
+import { type CVDToggleHandle } from '@/components/CVDToggle'
 import Controls from '@/components/Controls'
 import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
 import ColorVariations from '@/components/ColorVariations'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
-import ContrastChecker from '@/components/ContrastChecker'
+import ContrastChecker, { type ContrastCheckerHandle } from '@/components/ContrastChecker'
 import PaletteHistory from '@/components/PaletteHistory'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
+import GradientView from '@/components/GradientView'
+import GradientExportDialog from '@/components/GradientExportDialog'
+import ViewTabStrip from '@/components/ViewTabStrip'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import KeyboardHints from '@/components/KeyboardHints'
@@ -18,11 +22,11 @@ import CVDFilters from '@/components/CVDFilters'
 import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useGradientStops } from '@/hooks/useGradientStops'
 import { getSavedPalettes, savePalette, removePalette, loadPersistedHistory, persistHistory, type SavedPalette } from '@/helpers/storage'
 import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, getRowSplit, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
-import { shouldScrollOnExpand, SCROLL_DELAY_MS } from '@/helpers/scroll'
 
 const RELATIONSHIP_MODES: ColorRelationship[] = [
   'random', 'complementary', 'analogous', 'triadic',
@@ -48,8 +52,8 @@ function App() {
   const [showDocs, setShowDocs] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const contrastRef = useRef<HTMLDivElement>(null)
-  const cycleContrastTabRef = useRef<(() => void) | null>(null)
-  const cycleCVDRef = useRef<(() => void) | null>(null)
+  const cycleContrastTabRef = useRef<ContrastCheckerHandle>(null)
+  const cycleCVDRef = useRef<CVDToggleHandle>(null)
   const colorInputRef = useRef<HTMLInputElement>(null)
   const [persistedHistory] = useState(() =>
     loadPersistedHistory() ?? { history: [] as string[][], index: -1 }
@@ -84,6 +88,27 @@ function App() {
   const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
   const [swapMode, setSwapMode] = useState(false)
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
+  const [activeView, setActiveView] = useState<'palette' | 'gradient'>('palette')
+  const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
+  const [gradientPreviewRatio, setGradientPreviewRatio] = useState(16 / 9)
+  const gradientState = useGradientStops(current ?? [], colorIds)
+
+  // Baseline palette signature: used to detect when the palette has changed
+  // since the gradient was last drawn, so we can prompt the user to redraw.
+  const gradientBaselineRef = useRef<string>((current ?? []).join(','))
+  const [gradientNeedsRefresh, setGradientNeedsRefresh] = useState(false)
+
+  // When palette changes: if we're in gradient view and it's a new sig, show
+  // the banner and leave the gradient untouched. Otherwise sync stop colors.
+  useEffect(() => {
+    const sig = (current ?? []).join(',')
+    if (activeView === 'gradient' && sig !== gradientBaselineRef.current) {
+      setGradientNeedsRefresh(true)
+    } else {
+      const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
+      gradientState.syncPaletteColors(palette)
+    }
+  }, [current, colorIds, activeView]) // gradientState.syncPaletteColors is stable
 
   // Load palette from URL on mount
   useEffect(() => {
@@ -145,10 +170,10 @@ function App() {
     setShowContrast(prev => {
       const next = !prev
       localStorage.setItem('color-palette:show-contrast', String(next))
-      if (shouldScrollOnExpand(next)) {
+      if (next) {
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-        }, SCROLL_DELAY_MS)
+        }, 350)
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
@@ -289,10 +314,41 @@ function App() {
     }
   }, [current, lockedStates])
 
+  const handleSwitchView = useCallback((view: 'palette' | 'gradient') => {
+    if (view === 'gradient' && gradientState.stops.length < 2) {
+      gradientState.resetToPalette(current ?? [], colorIds)
+      gradientBaselineRef.current = (current ?? []).join(',')
+      setGradientNeedsRefresh(false)
+    }
+    setActiveView(view)
+  }, [current, colorIds, gradientState])
+
+  const handleToggleView = useCallback(() => {
+    handleSwitchView(activeView === 'palette' ? 'gradient' : 'palette')
+  }, [activeView, handleSwitchView])
+
+  const handleRedrawGradient = useCallback(() => {
+    gradientState.resetToPalette(current ?? [], colorIds)
+    gradientBaselineRef.current = (current ?? []).join(',')
+    setGradientNeedsRefresh(false)
+  }, [current, colorIds, gradientState])
+
+  const handleDismissRefresh = useCallback(() => {
+    gradientBaselineRef.current = (current ?? []).join(',')
+    setGradientNeedsRefresh(false)
+    // Sync colors now that the user has accepted the current gradient positions
+    const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
+    gradientState.syncPaletteColors(palette)
+  }, [current, colorIds, gradientState])
+
   const handleExport = useCallback(() => {
-    setExportInitialView('selecting')
-    setIsExportDialog(true)
-  }, [])
+    if (activeView === 'gradient') {
+      setIsGradientExportDialog(true)
+    } else {
+      setExportInitialView('selecting')
+      setIsExportDialog(true)
+    }
+  }, [activeView])
 
   const handleImageExport = useCallback(() => {
     setExportInitialView('image')
@@ -395,6 +451,7 @@ function App() {
     setIsOpenDialog(false)
     setIsSaveDialog(false)
     setIsExportDialog(false)
+    setIsGradientExportDialog(false)
     setPendingPreset(null)
     setEditIndex(null)
     setVariationsIndex(null)
@@ -404,7 +461,7 @@ function App() {
     setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || swapMode
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -420,11 +477,11 @@ function App() {
     onCycleTheme: cycleTheme,
     onToggleHints: toggleHints,
     onToggleContrast: toggleContrast,
-    onCycleContrastTab: () => cycleContrastTabRef.current?.(),
+    onCycleContrastTab: () => cycleContrastTabRef.current?.cycleTab(),
     onDeleteColor: deleteAt,
     onRerollColor: rerollAt,
     onEditColor: openEdit,
-    onCycleCVD: () => cycleCVDRef.current?.(),
+    onCycleCVD: () => cycleCVDRef.current?.cycle(),
     onCycleRelationship: cycleRelationship,
     onPickColor: handlePickColor,
     onCyclePreset: cyclePreset,
@@ -433,6 +490,7 @@ function App() {
     onToggleDocs: toggleDocs,
     onToggleSwapMode: toggleSwapMode,
     onToggleHistory: () => setShowHistory(v => !v),
+    onToggleView: handleToggleView,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -446,7 +504,7 @@ function App() {
       {/* Wrapper for CVD filter application (Firefox workaround) */}
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-          <Header title="color palette" onCycleCVD={cycleCVDRef} onToggleDocs={toggleDocs} />
+          <Header title="color palette" cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
           <Controls
             onOpen={handleOpen}
             onSave={handleSave}
@@ -469,83 +527,125 @@ function App() {
           />
         </div>
 
-        <LayoutGroup>
-          <motion.div
-            layout
-            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-            className="relative w-full flex justify-center"
-          >
-            <div className={`transition-all duration-300 ease-out ${
-              variationsIndex !== null
-                ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
-                : 'opacity-100 scale-100'
-            }`}>
-              <AnimatedPaletteContainer
-                colors={current ?? []}
-                colorIds={colorIds}
-                lockedStates={lockedStates}
-                editIndex={variationsIndex !== null ? null : editIndex}
-                onEditStart={openEdit}
-                onEditSave={handleEditSave}
-                onEditCancel={() => setEditIndex(null)}
-                onReroll={rerollAt}
-                onDelete={deleteAt}
-                onToggleLock={toggleLockAt}
-                onViewVariations={openVariations}
-                onAdd={addColor}
-                swapMode={swapMode}
-                swapSelection={swapSelection}
-                onSwapClick={handleSwapClick}
-              />
-            </div>
-            <div className={`transition-all duration-300 ease-out ${
-              variationsIndex !== null
-                ? 'opacity-100 scale-100'
-                : 'opacity-0 scale-[0.98] pointer-events-none absolute'
-            }`}>
-              {variationsIndex !== null && (current ?? [])[variationsIndex] && (
-                <ColorVariations
-                  sourceColor={(current ?? [])[variationsIndex]!}
-                  sourceIndex={variationsIndex}
-                  onClose={() => setVariationsIndex(null)}
-                  onCopyHex={(hex) => {
-                    navigator.clipboard.writeText(hex)
-                    setNotification(`copied ${hex}`)
-                  }}
-                  onReplaceColor={replaceColorFromVariation}
+        {/* Workspace: palette view or gradient view, with tab strip on the right */}
+        <div className="relative w-full flex justify-center">
+          {/* Vertical tab strip — fixed to right side of viewport */}
+          <div className="fixed right-6 top-1/2 -translate-y-1/2 z-30">
+            <ViewTabStrip activeView={activeView} onSwitch={handleSwitchView} />
+          </div>
+
+          <AnimatePresence mode="wait">
+            {activeView === 'palette' ? (
+              <motion.div
+                key="palette-view"
+                className="w-full flex flex-col items-center gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <LayoutGroup>
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    className="relative w-full flex justify-center"
+                  >
+                    <div className={`transition-all duration-300 ease-out ${
+                      variationsIndex !== null
+                        ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
+                        : 'opacity-100 scale-100'
+                    }`}>
+                      <AnimatedPaletteContainer
+                        colors={current ?? []}
+                        colorIds={colorIds}
+                        lockedStates={lockedStates}
+                        editIndex={variationsIndex !== null ? null : editIndex}
+                        onEditStart={openEdit}
+                        onEditSave={handleEditSave}
+                        onEditCancel={() => setEditIndex(null)}
+                        onReroll={rerollAt}
+                        onDelete={deleteAt}
+                        onToggleLock={toggleLockAt}
+                        onViewVariations={openVariations}
+                        onAdd={addColor}
+                        swapMode={swapMode}
+                        swapSelection={swapSelection}
+                        onSwapClick={handleSwapClick}
+                      />
+                    </div>
+                    <div className={`transition-all duration-300 ease-out ${
+                      variationsIndex !== null
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-[0.98] pointer-events-none absolute'
+                    }`}>
+                      {variationsIndex !== null && (current ?? [])[variationsIndex] && (
+                        <ColorVariations
+                          sourceColor={(current ?? [])[variationsIndex]!}
+                          sourceIndex={variationsIndex}
+                          onClose={() => setVariationsIndex(null)}
+                          onCopyHex={(hex) => {
+                            navigator.clipboard.writeText(hex)
+                            setNotification(`copied ${hex}`)
+                          }}
+                          onReplaceColor={replaceColorFromVariation}
+                        />
+                      )}
+                    </div>
+                  </motion.div>
+
+                  <GlobalColorRelationshipSelector
+                    currentRelationship={globalRelationship}
+                    onRelationshipChange={handleRelationshipChange}
+                    onGlobalReroll={rerollAll}
+                  />
+
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    ref={contrastRef}
+                  >
+                    <ContrastChecker ref={cycleContrastTabRef} colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} />
+                  </motion.div>
+
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    className="w-full max-w-4xl"
+                  >
+                    <PaletteHistory
+                      history={history}
+                      currentIndex={historyIndex}
+                      expanded={showHistory}
+                      onToggle={() => setShowHistory(v => !v)}
+                      onRestore={jumpTo}
+                    />
+                  </motion.div>
+                </LayoutGroup>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="gradient-view"
+                className="w-full max-w-4xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <GradientView
+                  palette={current ?? []}
+                  colorIds={colorIds}
+                  gradientState={gradientState}
+                  onOpenExport={() => setIsGradientExportDialog(true)}
+                  gradientNeedsRefresh={gradientNeedsRefresh}
+                  onRedrawGradient={handleRedrawGradient}
+                  onDismissRefresh={handleDismissRefresh}
+                  previewRatio={gradientPreviewRatio}
+                  onPreviewRatioChange={setGradientPreviewRatio}
                 />
-              )}
-            </div>
-          </motion.div>
-
-          <GlobalColorRelationshipSelector
-            currentRelationship={globalRelationship}
-            onRelationshipChange={handleRelationshipChange}
-            onGlobalReroll={rerollAll}
-          />
-
-          <motion.div
-            layout
-            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-            ref={contrastRef}
-          >
-            <ContrastChecker colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} onCycleTab={cycleContrastTabRef} />
-          </motion.div>
-
-          <motion.div
-            layout
-            transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-            className="w-full max-w-4xl"
-          >
-            <PaletteHistory
-              history={history}
-              currentIndex={historyIndex}
-              expanded={showHistory}
-              onToggle={() => setShowHistory(v => !v)}
-              onRestore={jumpTo}
-            />
-          </motion.div>
-        </LayoutGroup>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {isOpenDialog ? (
           <OpenDialog
@@ -598,6 +698,15 @@ function App() {
             onCancel={() => setIsExportDialog(false)}
             onCopied={setNotification}
             initialView={exportInitialView}
+          />
+        ) : null}
+
+        {isGradientExportDialog ? (
+          <GradientExportDialog
+            config={{ type: 'linear', angle: gradientState.angle, stops: gradientState.stops }}
+            aspectRatio={gradientPreviewRatio}
+            onCancel={() => setIsGradientExportDialog(false)}
+            onCopied={setNotification}
           />
         ) : null}
 

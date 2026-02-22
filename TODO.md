@@ -205,9 +205,13 @@ Redesign the preset selector to feel like a synth VST preset browser.
 
 ---
 
-## Mobile / Responsive Design
+## Mobile / Responsive Design ✅ (separate repo)
 
-The app is desktop-only today. Making it genuinely usable on phones and tablets is a prerequisite before any serious growth. This is a full layout pass — not a polish task.
+**This was moved to a separate repo: `color-palette-mobile` (one directory above, `/Users/curro/Documents/Dev/color-palette-mobile`).**
+
+Reason: Framer Motion is incompatible with the touch "add a color" action — the conflict was fundamental enough that a clean-slate native-first approach made more sense than patching the web repo.
+
+~~The app is desktop-only today. Making it genuinely usable on phones and tablets is a prerequisite before any serious growth. This is a full layout pass — not a polish task.~~
 
 ### Root causes (from BUGS.md)
 - Fixed widths (`w-[200px]`, `size-[200px]`, etc.) cause horizontal overflow at narrow viewports or high zoom levels
@@ -480,17 +484,47 @@ A visual timeline of every palette state generated during the current session. S
 
 ---
 
-## Gradient Generator
+## Gradient Generator ✅
 
-Generate CSS gradients from palette colors.
+A second workspace view (palette ↔ gradient), accessible via a compact vertical tab strip on the right edge of the main content area. Palette colors seed the gradient stops; stops auto-update when the palette changes. Keyboard shortcut `E` is context-aware (opens palette export in palette view, gradient export in gradient view).
 
-- [ ] Linear gradient (configurable angle)
-- [ ] Radial gradient
-- [ ] Conic gradient
-- [ ] Copy as CSS
-- [ ] Visual preview of gradient
+### Architecture decisions
+- **Navigation**: Vertical tab strip (right edge), compact dots → hover expands to labels. Quick opacity crossfade (150ms Framer AnimatePresence) between views.
+- **Stop bar**: Click empty space to place stop at that position; drag handle to move; X appears on hover to delete. Min 2 stops. Collision guard: can't place within ~2% of another stop.
+- **Color source**: Each stop is either palette-linked (auto-updates when palette rerolls) or custom (fixed hex). Color picker shows current palette swatches.
+- **Default**: All palette colors seeded as stops, evenly distributed (first=0%, last=100%).
+- **Angle**: Slider + numeric input for linear gradient.
+- **v1 scope**: Linear gradient only. Radial/conic modularly designed for later.
+- **GRD (Photoshop binary)**: Deferred — research task required before implementing.
 
-**Implementation:** Build gradient CSS strings from palette hex values. Simple UI with angle picker and type selector. Coolors Pro and Colorffy Pro paywall this.
+### Export formats (v1)
+- CSS `linear-gradient(...)` — copy to clipboard
+- SVG file — `<linearGradient>` block
+- PNG gradient strip — ~800×100px raster
+- Tailwind — `bg-gradient-to-r from-[…] via-[…] to-[…]`
+
+### Deferred
+- [ ] Radial gradient type
+- [ ] Conic gradient type
+- [ ] GIMP `.ggr` format
+- [ ] **Photoshop `.grd`** — *research task first*: audit binary format spec (Adobe devnet), find if any JS encoder exists, estimate implementation complexity. Only implement if feasible without a native dependency.
+
+---
+
+### Implementation Checkpoints
+
+#### CP1–CP9 — All checkpoints complete ✅
+
+**Implementation notes:**
+- `src/helpers/gradientGenerator.ts` — types (`GradientStop`, `LinearGradientConfig`, `GradientConfig`), `initStopsFromPalette`, CSS/SVG/PNG/Tailwind generators. 24 tests in `src/__tests__/helpers/gradientGenerator.test.ts`.
+- `src/hooks/useGradientStops.ts` — full stop CRUD with collision guard (2%), min-2-stops enforcement, palette sync, angle clamp. 23 tests in `src/__tests__/hooks/useGradientStops.test.ts`.
+- `src/components/GradientStopBar.tsx` — click-to-add, pointer-capture drag, X-on-hover delete, selected stop highlight + position label.
+- `src/components/StopColorPicker.tsx` — palette swatches + custom hex input popover, closes on outside click/Escape, flips alignment past 70%.
+- `src/components/GradientView.tsx` — 140px preview bar, stop bar + picker, angle slider+input, CSS preview, reset + export buttons.
+- `src/components/ViewTabStrip.tsx` — compact dots, hover expands labels leftward, `fixed right-6 top-1/2` positioned.
+- `src/components/GradientExportDialog.tsx` — CSS/Tailwind/SVG/PNG export, keyboard nav via `useListKeyboardNav`, confirmation screen, Tailwind >3-stop warning.
+- `App.tsx` — `activeView`, `isGradientExportDialog`, `gradientState`, `handleSwitchView`, `syncPaletteColors` effect, `AnimatePresence` view fade, context-aware `E` key, `closeAllDialogs` + `isAnyDialogOpen` updated.
+- `useKeyboardShortcuts.ts` — `E` description updated to "export palette / gradient".
 
 ---
 
@@ -910,9 +944,9 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 12. ~~**Drag to Reorder** - Missing table-stakes interaction, low-medium effort~~ ✅ Done!
 13. ~~**EyeDropper / Color Picker** - Native EyeDropper + input[type=color] fallback~~ ✅ Done!
 14. ~~**Expand to 10 Colors** - Two-row layout, Framer Motion animations, 2D drag, free what competitors paywall~~ ✅ Done!
-15. **Mobile / Responsive Design** - Prerequisite for growth; pointer-events softlock first, then layout audit
+15. ~~**Mobile / Responsive Design**~~ ✅ Separate repo (`color-palette-mobile`) — Framer Motion incompatible with touch add-color
 16. ~~**PNG / Image Export** - Social sharing, mood boards; Canvas API for raster, SVG for vector~~ ✅ Done!
-17. **Gradient Generator** - Nice companion feature, low effort
+17. ~~**Gradient Generator**~~ ✅ Done! Vertical tab strip, stop bar, palette-linked stops, CSS/SVG/PNG/Tailwind export
 17. **Palette Visualization** - High wow factor, moderate effort
 18. **Color Harmony Score** - Unique differentiator, medium effort
 19. **Session Palette History** - Solves real reroll regret, low-medium effort

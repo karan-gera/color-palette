@@ -1,14 +1,14 @@
 import { CircleHelp } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
-import CVDToggle from './CVDToggle'
+import CVDToggle, { type CVDToggleHandle } from './CVDToggle'
 
 type HeaderProps = {
   title: string
-  onCycleCVD: React.MutableRefObject<(() => void) | null>
+  cvdRef: React.Ref<CVDToggleHandle>
   onToggleDocs: () => void
 }
 
-export default function Header({ title, onCycleCVD, onToggleDocs }: HeaderProps) {
+export default function Header({ title, cvdRef, onToggleDocs }: HeaderProps) {
   return (
     <div className="flex items-center justify-between gap-4 w-full max-w-2xl">
       <h1 className="text-2xl font-medium tracking-tight lowercase">{title}</h1>
@@ -20,7 +20,7 @@ export default function Header({ title, onCycleCVD, onToggleDocs }: HeaderProps)
         >
           <CircleHelp className="size-4" />
         </button>
-        <CVDToggle onCycleCVD={onCycleCVD} />
+        <CVDToggle ref={cvdRef} />
         <ThemeToggle />
       </div>
     </div>

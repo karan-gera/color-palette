@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useListKeyboardNav } from '@/hooks/useListKeyboardNav'
 import { Copy, Download, Check, ChevronDown, ChevronUp, Image } from 'lucide-react'
 import {
   Dialog,
@@ -130,7 +131,6 @@ type ExportSelectingViewProps = {
 }
 
 function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
   const [showArrowUp, setShowArrowUp] = useState(false)
@@ -213,43 +213,19 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
     }
   }, [totalItems])
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowUp': {
-          e.preventDefault()
-          if (selectedIndex > 0) {
-            const newIndex = selectedIndex - 1
-            setSelectedIndex(newIndex)
-            scrollToSelected(newIndex)
-          }
-          break
-        }
-        case 'ArrowDown': {
-          e.preventDefault()
-          if (selectedIndex < totalItems - 1) {
-            const newIndex = selectedIndex + 1
-            setSelectedIndex(newIndex)
-            scrollToSelected(newIndex)
-          }
-          break
-        }
-        case 'Enter':
-          e.preventDefault()
-          if (selectedIndex === 4) {
-            onImageExport()
-          } else if (selectedIndex < 4) {
-            onExport(EXPORT_FORMATS[selectedIndex].value)
-          } else {
-            onExport(EXPORT_FORMATS[selectedIndex - 1].value)
-          }
-          break
+  const { selectedIndex, setSelectedIndex } = useListKeyboardNav({
+    count: totalItems,
+    onEnter: (i) => {
+      if (i === 4) {
+        onImageExport()
+      } else if (i < 4) {
+        onExport(EXPORT_FORMATS[i].value)
+      } else {
+        onExport(EXPORT_FORMATS[i - 1].value)
       }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedIndex, onExport, onImageExport, scrollToSelected, totalItems])
+    },
+    onNavigate: scrollToSelected,
+  })
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 import { Eye } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -12,17 +12,12 @@ const CVD_OPTIONS: { value: CVDType; label: string; shortLabel: string }[] = [
   { value: 'achromatopsia', label: CVD_LABELS.achromatopsia, shortLabel: 'A' },
 ]
 
-type CVDToggleProps = {
-  onCycleCVD: React.MutableRefObject<(() => void) | null>
-}
+export type CVDToggleHandle = { cycle: () => void }
 
-export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
+const CVDToggle = forwardRef<CVDToggleHandle>(function CVDToggle(_, ref) {
   const { cvd, setCVD, cycleCVD } = useCVD()
 
-  useEffect(() => {
-    onCycleCVD.current = cycleCVD
-    return () => { onCycleCVD.current = null }
-  }, [cycleCVD, onCycleCVD])
+  useImperativeHandle(ref, () => ({ cycle: cycleCVD }), [cycleCVD])
 
   return (
     <TooltipProvider>
@@ -56,4 +51,6 @@ export default function CVDToggle({ onCycleCVD }: CVDToggleProps) {
       </ToggleGroup>
     </TooltipProvider>
   )
-}
+})
+
+export default CVDToggle

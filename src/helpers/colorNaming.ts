@@ -207,11 +207,16 @@ type ColorNameResult = {
   cssName: string | null
 }
 
+const nameCache = new Map<string, ColorNameResult>()
+
 /**
  * Find the closest human-readable name for a hex color using
  * nearest-neighbor lookup in Oklab perceptual color space.
  */
 export function getColorName(hex: string): ColorNameResult {
+  const cached = nameCache.get(hex)
+  if (cached) return cached
+
   const lab = hexToOklab(hex)
 
   // Find nearest color name
@@ -236,8 +241,10 @@ export function getColorName(hex: string): ColorNameResult {
     }
   }
 
-  return {
+  const result: ColorNameResult = {
     name: bestName,
     cssName: bestCssDist < CSS_MATCH_THRESHOLD_SQ ? cssName : null,
   }
+  nameCache.set(hex, result)
+  return result
 }

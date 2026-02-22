@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2 } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
@@ -350,13 +350,11 @@ function DocArticle({ title, children }: { title: string; children: React.ReactN
 }
 
 function ContrastDemo() {
-  const ref = useRef<(() => void) | null>(null)
   return (
     <ContrastChecker
       colors={['#e74c3c', '#3498db', '#2ecc71']}
       expanded={true}
       onToggle={noop}
-      onCycleTab={ref}
     />
   )
 }

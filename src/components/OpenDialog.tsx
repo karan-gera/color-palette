@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { useListKeyboardNav } from '@/hooks/useListKeyboardNav'
 import { Trash2, Download, Upload } from 'lucide-react'
 import {
   Dialog,
@@ -37,7 +38,12 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
   const [fading, setFading] = useState<Record<string, boolean>>({})
   const [showNotification, setShowNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const { selectedIndex, setSelectedIndex } = useListKeyboardNav({
+    count: list.length,
+    onEnter: (i) => { if (list[i]) onSelect(list[i].id) },
+    onDelete: (i) => { if (list[i]) handleDelete(list[i].id, i) },
+    enabled: !showNotification,
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -106,51 +112,7 @@ export default function OpenDialog({ palettes, onCancel, onSelect, onRemove, onP
     }, 200)
   }, [onRemove])
 
-  const handleLoad = useCallback(() => {
-    if (list.length > 0 && list[selectedIndex]) {
-      onSelect(list[selectedIndex].id)
-    }
-  }, [list, selectedIndex, onSelect])
 
-  const handleDeleteSelected = useCallback(() => {
-    if (list.length > 0 && list[selectedIndex]) {
-      handleDelete(list[selectedIndex].id, selectedIndex)
-    }
-  }, [list, selectedIndex, handleDelete])
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle if notification is showing
-      if (showNotification) return
-
-      switch (e.key) {
-        case 'ArrowUp':
-          e.preventDefault()
-          setSelectedIndex(prev => Math.max(0, prev - 1))
-          break
-        case 'ArrowDown':
-          e.preventDefault()
-          setSelectedIndex(prev => Math.min(list.length - 1, prev + 1))
-          break
-        case 'Enter':
-          e.preventDefault()
-          handleLoad()
-          break
-        case 'Delete':
-        case 'Backspace':
-          // Only handle if not in an input
-          if ((e.target as HTMLElement).tagName !== 'INPUT') {
-            e.preventDefault()
-            handleDeleteSelected()
-          }
-          break
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [list.length, handleLoad, handleDeleteSelected, showNotification])
 
   return (
     <>

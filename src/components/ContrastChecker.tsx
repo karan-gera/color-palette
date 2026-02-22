@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from 'react'
+import { useMemo, useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -12,14 +12,16 @@ import {
 
 const TAB_VALUES = ['backgrounds', 'each-other'] as const
 
+export type ContrastCheckerHandle = { cycleTab: () => void }
+
 type ContrastCheckerProps = {
   colors: string[]
   expanded: boolean
   onToggle: () => void
-  onCycleTab: React.MutableRefObject<(() => void) | null>
 }
 
-export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab }: ContrastCheckerProps) {
+const ContrastChecker = forwardRef<ContrastCheckerHandle, ContrastCheckerProps>(
+function ContrastChecker({ colors, expanded, onToggle }, ref) {
   const [activeTab, setActiveTab] = useState<string>(TAB_VALUES[0])
 
   const cycleTab = useCallback(() => {
@@ -29,10 +31,7 @@ export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab
     })
   }, [])
 
-  useEffect(() => {
-    onCycleTab.current = cycleTab
-    return () => { onCycleTab.current = null }
-  }, [cycleTab, onCycleTab])
+  useImperativeHandle(ref, () => ({ cycleTab }), [cycleTab])
 
   useEffect(() => {
     if (colors.length < 2) setActiveTab(TAB_VALUES[0])
@@ -215,4 +214,6 @@ export default function ContrastChecker({ colors, expanded, onToggle, onCycleTab
       </div>
     </div>
   )
-}
+})
+
+export default ContrastChecker
