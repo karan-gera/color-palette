@@ -224,7 +224,7 @@ export default function GradientView({
           onClick={onRedrawGradient}
         >
           <RotateCcw size={12} />
-          reset to palette
+          rebuild from palette
         </Button>
 
         <Button
