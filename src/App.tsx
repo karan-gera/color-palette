@@ -90,8 +90,16 @@ function App() {
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
   const [activeView, setActiveView] = useState<'palette' | 'gradient'>('palette')
   const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
-  const [gradientPreviewRatio, setGradientPreviewRatio] = useState(16 / 9)
+  const [gradientPreviewRatio, setGradientPreviewRatio] = useState(() => {
+    const stored = localStorage.getItem('color-palette:gradient-ratio')
+    return stored ? parseFloat(stored) : 16 / 9
+  })
   const gradientState = useGradientStops(current ?? [], colorIds)
+
+  // Persist gradient preview ratio
+  useEffect(() => {
+    localStorage.setItem('color-palette:gradient-ratio', String(gradientPreviewRatio))
+  }, [gradientPreviewRatio])
 
   // Always keep palette-linked stops in sync with the current palette colors
   useEffect(() => {
@@ -305,6 +313,10 @@ function App() {
 
   const handleSwitchView = useCallback((view: 'palette' | 'gradient') => {
     if (view === 'gradient' && gradientState.stops.length < 2) {
+      if ((current ?? []).length === 0) {
+        setNotification('add colors to the palette first')
+        return
+      }
       gradientState.resetToPalette(current ?? [], colorIds)
     }
     setActiveView(view)

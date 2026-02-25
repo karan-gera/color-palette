@@ -153,10 +153,15 @@ export function useGradientStops(
   }, [])
 
   const setAngle = useCallback((degrees: number) => {
-    setAngleState(clamp(Math.round(degrees), 0, 360))
+    const rounded = Math.round(degrees)
+    // Negative values wrap around (e.g. -45 → 315); positive values clamp to [0, 360]
+    const normalized = rounded < 0 ? ((rounded % 360) + 360) % 360 : clamp(rounded, 0, 360)
+    setAngleState(normalized)
   }, [])
 
-  // Called when the palette rerolls — updates hex on palette-linked stops
+  // Called when the palette changes — updates hex on palette-linked stops.
+  // If a stop's colorId no longer exists in the palette (color was deleted),
+  // the stop is converted to a custom stop, freezing its current hex in place.
   const syncPaletteColors = useCallback(
     (palette: Array<{ id: string; hex: string }>) => {
       const lookup = new Map(palette.map(p => [p.id, p.hex]))
@@ -164,7 +169,8 @@ export function useGradientStops(
         prev.map(s => {
           if (s.source.type !== 'palette') return s
           const newHex = lookup.get(s.source.colorId)
-          if (!newHex || newHex === s.hex) return s
+          if (newHex === undefined) return { ...s, source: { type: 'custom' } }
+          if (newHex === s.hex) return s
           return { ...s, hex: newHex }
         }),
       )

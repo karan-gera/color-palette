@@ -174,12 +174,18 @@ describe('setAngle', () => {
     expect(result.current.angle).toBe(45)
   })
 
-  it('clamps angle to 0–360', () => {
+  it('clamps positive angle to 0–360', () => {
     const { result } = setup()
-    act(() => { result.current.setAngle(-10) })
-    expect(result.current.angle).toBe(0)
     act(() => { result.current.setAngle(400) })
     expect(result.current.angle).toBe(360)
+  })
+
+  it('wraps negative angles (e.g. -45 → 315)', () => {
+    const { result } = setup()
+    act(() => { result.current.setAngle(-10) })
+    expect(result.current.angle).toBe(350)
+    act(() => { result.current.setAngle(-45) })
+    expect(result.current.angle).toBe(315)
   })
 
   it('rounds to nearest integer', () => {
@@ -222,13 +228,20 @@ describe('syncPaletteColors', () => {
     expect(result.current.stops.find(s => s.id === customStop.id)?.hex).toBe('#ffffff')
   })
 
-  it('ignores palette entries that do not match any stop colorId', () => {
-    const { result } = setup()
-    const before = result.current.stops.map(s => s.hex)
+  it('converts orphaned palette-linked stops to custom when their color is deleted', () => {
+    const { result } = setup() // 3 stops linked to id-a, id-b, id-c
+    const orphanStopId = result.current.stops[1].id // linked to id-b
+    const hexBeforeDeletion = result.current.stops[1].hex
     act(() => {
-      result.current.syncPaletteColors([{ id: 'unknown-id', hex: '#ffffff' }])
+      // id-b removed from palette
+      result.current.syncPaletteColors([
+        { id: 'id-a', hex: '#aaaaaa' },
+        { id: 'id-c', hex: '#cccccc' },
+      ])
     })
-    expect(result.current.stops.map(s => s.hex)).toEqual(before)
+    const orphan = result.current.stops.find(s => s.id === orphanStopId)!
+    expect(orphan.source.type).toBe('custom')     // converted to custom
+    expect(orphan.hex).toBe(hexBeforeDeletion)    // hex preserved
   })
 })
 

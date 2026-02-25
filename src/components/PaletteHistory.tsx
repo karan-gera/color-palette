@@ -55,10 +55,19 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
   }, [history.length])
 
   // Scroll to current thumbnail when jumping (user clicks a thumbnail / undo / redo)
+  // Uses container-relative scroll to avoid propagating to page scroll ancestors.
   useEffect(() => {
     if (!expanded || !scrollRef.current) return
-    const child = scrollRef.current.children[currentIndex] as HTMLElement | undefined
-    child?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    const el = scrollRef.current
+    const child = el.children[currentIndex] as HTMLElement | undefined
+    if (!child) return
+    const childRect = child.getBoundingClientRect()
+    const containerRect = el.getBoundingClientRect()
+    if (childRect.left < containerRect.left) {
+      el.scrollBy({ left: childRect.left - containerRect.left, behavior: 'smooth' })
+    } else if (childRect.right > containerRect.right) {
+      el.scrollBy({ left: childRect.right - containerRect.right, behavior: 'smooth' })
+    }
   }, [currentIndex, expanded])
 
   const scrollLeft = useCallback(() => {
