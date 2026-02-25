@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Download, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -94,13 +94,31 @@ export default function GradientView({
     [selectedStopId, setStopColor],
   )
 
-  const handleAngleInput = useCallback(
-    (raw: string) => {
-      const n = parseInt(raw, 10)
-      if (!isNaN(n)) setAngle(n)
-    },
-    [setAngle],
-  )
+  const [angleInputValue, setAngleInputValue] = useState(String(angle))
+  const angleInputFocused = useRef(false)
+
+  // Sync display value when angle changes from outside (e.g. +/− buttons)
+  useEffect(() => {
+    if (!angleInputFocused.current) setAngleInputValue(String(angle))
+  }, [angle])
+
+  const handleAngleInputChange = useCallback((raw: string) => {
+    setAngleInputValue(raw)
+    const n = parseInt(raw, 10)
+    if (!isNaN(n)) setAngle(n)
+  }, [setAngle])
+
+  const handleAngleInputBlur = useCallback(() => {
+    angleInputFocused.current = false
+    const n = parseInt(angleInputValue, 10)
+    if (isNaN(n) || angleInputValue.trim() === '') {
+      setAngle(90)
+      setAngleInputValue('90')
+    } else {
+      // Sync display to the normalized angle (e.g. 9999 → 360, -45 → 315)
+      setAngleInputValue(String(angle))
+    }
+  }, [angleInputValue, angle, setAngle])
 
   return (
     <div className="flex flex-col gap-4 w-full px-8 py-6">
@@ -199,8 +217,10 @@ export default function GradientView({
               type="number"
               min={0}
               max={360}
-              value={angle}
-              onChange={e => handleAngleInput(e.target.value)}
+              value={angleInputValue}
+              onChange={e => handleAngleInputChange(e.target.value)}
+              onFocus={() => { angleInputFocused.current = true }}
+              onBlur={handleAngleInputBlur}
               className="w-14 font-mono text-xs pl-2 pr-5 py-1 rounded border border-border bg-background text-foreground text-right focus:outline-none focus:ring-1 focus:ring-foreground/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="absolute right-1.5 top-1/2 -translate-y-1/2 font-mono text-xs text-muted-foreground pointer-events-none select-none">°</span>
