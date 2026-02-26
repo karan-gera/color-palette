@@ -333,16 +333,13 @@ Click any color to see tints (lighter), shades (darker), and tones (desaturated)
 
 Full-screen preview overlay (toggle with `F` key when in palette view; `Esc` or click-outside to dismiss). `PalettePreviewOverlay.tsx` scaffold exists — modes need real implementation.
 
-### UI
-- [ ] `F` key opens palette preview when `activeView === 'palette'` (context-aware, same pattern as `E`)
-- [ ] Bottom bar: mode switcher + regenerate button + close
-- [ ] Smooth fade in/out transition
+### UI ✅
+- [x] `F` key opens palette preview when `activeView === 'palette'` (context-aware, same pattern as `E`)
+- [x] Bottom bar: mode switcher + regenerate button + close
+- [x] Smooth fade in/out transition
 
-### Mosaic Mode
-- [ ] Canvas-generated geometric composition — random circles, rects, triangles, each filled with a palette color
-- [ ] Regenerate on each open and via refresh button (new random seed each time)
-- [ ] Optional: subtle float/pulse CSS animation on shapes
-- [ ] Canvas API only, no external assets
+### ~~Mosaic Mode~~ — scrapped
+Color bars look better. Struck.
 
 ### UI Elements Mode — shadcn Dashboard
 Split-pane layout: left sidebar role editor + right live dashboard mockup.
@@ -366,11 +363,11 @@ Split-pane layout: left sidebar role editor + right live dashboard mockup.
 - [ ] `Nunito` — friendly/rounded (consumer apps)
 - [ ] `JetBrains Mono` — dev/technical (terminal aesthetic)
 
-### Title Design Mode
-- [ ] Large display typography using palette colors for heading, subheading, accent
-- [ ] Multiple layout variants: stacked, side-by-side, overlapping
-- [ ] Editable placeholder text (click to edit inline)
-- [ ] Font selector shared with UI elements mode
+### Title Design Mode ✅
+- [x] Large display typography using palette colors for heading, subheading, accent
+- [x] Multiple layout variants: stacked, side-by-side, overlapping
+- [x] Editable placeholder text (click to edit inline)
+- [ ] Font selector shared with UI elements mode (deferred — ships with UI elements mode)
 
 **Implementation:** Canvas API for mosaic. CSS custom properties for UI elements live theming. Google Fonts `<link>` injected at runtime for font switching (applied to mockup only, not the rest of the app).
 
