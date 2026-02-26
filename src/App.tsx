@@ -13,6 +13,8 @@ import SaveDialog from '@/components/SaveDialog'
 import ExportDialog from '@/components/ExportDialog'
 import GradientView from '@/components/GradientView'
 import GradientExportDialog from '@/components/GradientExportDialog'
+import ExtractView from '@/components/ExtractView'
+import PalettePreviewOverlay from '@/components/PalettePreviewOverlay'
 import ViewTabStrip from '@/components/ViewTabStrip'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -88,7 +90,8 @@ function App() {
   const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
   const [swapMode, setSwapMode] = useState(false)
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
-  const [activeView, setActiveView] = useState<'palette' | 'gradient'>('palette')
+  const [activeView, setActiveView] = useState<'palette' | 'gradient' | 'extract'>('palette')
+  const [showPreviewOverlay, setShowPreviewOverlay] = useState(false)
   const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
   const [gradientPreviewRatio, setGradientPreviewRatio] = useState(() => {
     const stored = localStorage.getItem('color-palette:gradient-ratio')
@@ -311,7 +314,7 @@ function App() {
     }
   }, [current, lockedStates])
 
-  const handleSwitchView = useCallback((view: 'palette' | 'gradient') => {
+  const handleSwitchView = useCallback((view: 'palette' | 'gradient' | 'extract') => {
     if (view === 'gradient' && gradientState.stops.length < 2) {
       if ((current ?? []).length === 0) {
         setNotification('add colors to the palette first')
@@ -322,8 +325,19 @@ function App() {
     setActiveView(view)
   }, [current, colorIds, gradientState])
 
+  // Cycle through all tab-strip views in order
   const handleToggleView = useCallback(() => {
-    handleSwitchView(activeView === 'palette' ? 'gradient' : 'palette')
+    const cycle: Array<'palette' | 'gradient' | 'extract'> = ['palette', 'gradient', 'extract']
+    const next = cycle[(cycle.indexOf(activeView) + 1) % cycle.length]
+    handleSwitchView(next)
+  }, [activeView, handleSwitchView])
+
+  const handleTogglePreview = useCallback(() => {
+    setShowPreviewOverlay(v => !v)
+  }, [])
+
+  const handleToggleExtract = useCallback(() => {
+    handleSwitchView(activeView === 'extract' ? 'palette' : 'extract')
   }, [activeView, handleSwitchView])
 
   const handleRedrawGradient = useCallback(() => {
@@ -446,11 +460,12 @@ function App() {
     setVariationsIndex(null)
     setShowDocs(false)
     setShowHistory(false)
+    setShowPreviewOverlay(false)
     setSwapMode(false)
     setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || swapMode
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -480,6 +495,8 @@ function App() {
     onToggleSwapMode: toggleSwapMode,
     onToggleHistory: () => setShowHistory(v => !v),
     onToggleView: handleToggleView,
+    onTogglePreview: handleTogglePreview,
+    onToggleExtract: handleToggleExtract,
     onEscape: closeAllDialogs,
     colorCount: (current ?? []).length,
     isDialogOpen: isAnyDialogOpen,
@@ -625,7 +642,7 @@ function App() {
                   </motion.div>
                 </LayoutGroup>
               </motion.div>
-            ) : (
+            ) : activeView === 'gradient' ? (
               <motion.div
                 key="gradient-view"
                 className="w-full max-w-4xl"
@@ -642,6 +659,30 @@ function App() {
                   onRedrawGradient={handleRedrawGradient}
                   previewRatio={gradientPreviewRatio}
                   onPreviewRatioChange={setGradientPreviewRatio}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="extract-view"
+                className="w-full max-w-4xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <ExtractView
+                  palette={current ?? []}
+                  colorIds={colorIds}
+                  onAddColors={(colors) => {
+                    const base = current ?? []
+                    const next = [...base, ...colors].slice(0, MAX_COLORS)
+                    push(next)
+                    setColorMeta(prev => ({
+                      locked: [...prev.locked, ...colors.map(() => false)].slice(0, MAX_COLORS),
+                      ids: [...prev.ids, ...colors.map(() => crypto.randomUUID())].slice(0, MAX_COLORS),
+                    }))
+                    handleSwitchView('palette')
+                  }}
                 />
               </motion.div>
             )}
@@ -751,6 +792,12 @@ function App() {
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
       <DocsOverlay visible={showDocs} onClose={() => setShowDocs(false)} />
+      {showPreviewOverlay && (
+        <PalettePreviewOverlay
+          palette={current ?? []}
+          onClose={() => setShowPreviewOverlay(false)}
+        />
+      )}
 
       {/* Hidden color input fallback for non-Chromium browsers */}
       <input

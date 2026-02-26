@@ -28,6 +28,8 @@ type KeyboardShortcutsConfig = {
   onToggleSwapMode: () => void
   onToggleHistory: () => void
   onToggleView: () => void
+  onTogglePreview: () => void
+  onToggleExtract: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -62,6 +64,8 @@ export function useKeyboardShortcuts({
   onToggleSwapMode,
   onToggleHistory,
   onToggleView,
+  onTogglePreview,
+  onToggleExtract,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -227,9 +231,19 @@ export function useKeyboardShortcuts({
         }
         break
       case 'g':
-        // Toggle view — always available
+        // Cycle tab-strip views — always available
         event.preventDefault()
         onToggleView()
+        break
+      case 'f':
+        // Preview overlay — always available
+        event.preventDefault()
+        onTogglePreview()
+        break
+      case 'x':
+        // Extract view — always available
+        event.preventDefault()
+        onToggleExtract()
         break
       case 'h':
         if (!isPaletteView) break
@@ -304,6 +318,8 @@ export function useKeyboardShortcuts({
     onToggleSwapMode,
     onToggleHistory,
     onToggleView,
+    onTogglePreview,
+    onToggleExtract,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -366,7 +382,9 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     label: 'view',
     shortcuts: [
-      { key: 'G', description: 'toggle gradient / palette' },
+      { key: 'G', description: 'cycle views (palette / gradient / extract)' },
+      { key: 'X', description: 'toggle extract view' },
+      { key: 'F', description: 'preview mode' },
       { key: 'T', description: 'cycle theme' },
       { modifiers: ['shift'], key: 'T', description: 'cycle cvd mode' },
       { key: 'K', description: 'contrast' },

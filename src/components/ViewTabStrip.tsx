@@ -1,4 +1,4 @@
-type ViewTab = 'palette' | 'gradient'
+type ViewTab = 'palette' | 'gradient' | 'extract'
 
 type ViewTabStripProps = {
   activeView: ViewTab
@@ -8,6 +8,7 @@ type ViewTabStripProps = {
 const TABS: Array<{ id: ViewTab; label: string }> = [
   { id: 'palette',  label: 'palette'  },
   { id: 'gradient', label: 'gradient' },
+  { id: 'extract',  label: 'extract'  },
 ]
 
 export default function ViewTabStrip({ activeView, onSwitch }: ViewTabStripProps) {
