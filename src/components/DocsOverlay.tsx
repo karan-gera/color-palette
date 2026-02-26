@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2 } from 'lucide-react'
+import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import AddColor from './AddColor'
@@ -33,6 +33,7 @@ const FEATURES = [
   { icon: Type, label: 'color naming', desc: '4,000+ names matched by oklab distance' },
   { icon: Blend, label: 'variations', desc: 'tints, shades, tones' },
   { icon: Pipette, label: 'color picker', desc: 'eyedropper or os picker' },
+  { icon: Layers, label: 'gradient generator', desc: 'linear gradients with palette-linked stops, css/svg/png/tailwind export' },
   { icon: Keyboard, label: 'keyboard', desc: 'every action has a shortcut' },
 ]
 
@@ -51,6 +52,21 @@ const COMPETITOR_ROWS = [
 ]
 
 const CHANGELOG = [
+  {
+    version: '0.14',
+    title: 'gradient generator',
+    items: [
+      'linear gradient view — switch with G key or the tab strip',
+      'interactive stop bar: click to add, drag to move, remove button per stop',
+      'stops can be palette-linked (auto-sync with palette) or custom (fixed color)',
+      'angle control: range slider, +/− buttons, and type-in field (0–360°)',
+      'export to css, tailwind, svg, and png at up to 1920px',
+      'aspect ratio toggle: 16:9, 4:3, 1:1, 4:5, 9:16',
+      'rebuild from palette button re-seeds all stops from current palette',
+      'E key opens gradient export when in gradient view',
+      'gradient state persists across page reloads',
+    ],
+  },
   {
     version: '0.13',
     title: 'image export, oklch picker, polish',
@@ -304,6 +320,7 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'page', id: 'export', label: 'export' },
   { type: 'section', label: 'color tools' },
   { type: 'page', id: 'edit-mode', label: 'edit mode' },
+  { type: 'page', id: 'gradient', label: 'gradient generator' },
   { type: 'page', id: 'color-picker', label: 'color picker' },
   { type: 'page', id: 'color-naming', label: 'color naming' },
   { type: 'page', id: 'variations', label: 'variations' },
@@ -1276,6 +1293,67 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             <h3 className="text-sm font-medium text-foreground lowercase">undo behavior</h3>
             <p>
               typing and slider adjustments are not tracked individually. only a confirmed edit (<Kbd>enter</Kbd>) is pushed onto the undo stack — so you can explore freely and then either commit or discard. cancelling never creates an undo entry.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'gradient':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              the gradient generator turns your palette into a linear gradient. switch to it with <Kbd>G</Kbd> or the tab strip on the right edge of the screen.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">stop bar</h3>
+            <p>
+              the horizontal bar below the gradient preview is the stop bar. each colored handle is a stop — a point in the gradient with a fixed position and color.
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">add a stop</strong> — click any empty area on the bar</li>
+              <li><strong className="text-foreground font-medium">move a stop</strong> — drag its handle left or right</li>
+              <li><strong className="text-foreground font-medium">remove a stop</strong> — click the handle to select it, then click the remove button (minimum 2 stops)</li>
+              <li><strong className="text-foreground font-medium">change color</strong> — click a handle to select it, then pick a color from the panel below</li>
+            </ul>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">palette-linked vs custom stops</h3>
+            <p>
+              stops initialized from your palette are <em>palette-linked</em> — when you edit a palette color, the linked stop automatically updates to match. if you assign a different color manually, the stop becomes <em>custom</em> and no longer follows the palette.
+            </p>
+            <p>
+              if a palette color is deleted, any stops linked to it convert to custom, preserving their last hex value in place.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">angle</h3>
+            <p>
+              the angle slider and +/− buttons set the gradient direction in degrees (0–360°). you can also type directly into the field — it normalizes on blur (e.g. 400 → 360, empty → 90).
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">aspect ratio</h3>
+            <p>
+              the buttons in the top-right corner of the preview toggle the preview and export aspect ratio: 16:9, 4:3, 1:1, 4:5, or 9:16. the selected ratio is remembered across reloads.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">rebuild from palette</h3>
+            <p>
+              the <RefreshCw className="size-3 inline" /> rebuild from palette button replaces all current stops with the palette colors evenly distributed across 0–100%. this resets any custom stop positions or colors.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">export</h3>
+            <p>
+              press <Kbd>E</Kbd> while in gradient view (or click the export button) to open the export dialog. available formats:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">css</strong> — <code className="font-mono text-[11px]">linear-gradient(...)</code> value, ready to paste</li>
+              <li><strong className="text-foreground font-medium">tailwind</strong> — utility classes using <code className="font-mono text-[11px]">from-[...]</code>, <code className="font-mono text-[11px]">via-[...]</code>, <code className="font-mono text-[11px]">to-[...]</code></li>
+              <li><strong className="text-foreground font-medium">svg</strong> — standalone svg file with a <code className="font-mono text-[11px]">linearGradient</code> element</li>
+              <li><strong className="text-foreground font-medium">png</strong> — rasterized image at up to 1920px, matching the selected aspect ratio</li>
+            </ul>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">persistence</h3>
+            <p>
+              your stops, angle, and aspect ratio are saved automatically and restored when you return to the gradient view.
             </p>
           </div>
         </DocArticle>
