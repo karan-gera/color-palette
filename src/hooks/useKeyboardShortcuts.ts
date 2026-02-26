@@ -99,6 +99,13 @@ export function useKeyboardShortcuts({
       return
     }
 
+    // F key toggles preview overlay — must work even when the overlay itself is open
+    if (event.key.toLowerCase() === 'f' && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey) {
+      event.preventDefault()
+      onTogglePreview()
+      return
+    }
+
     // Don't trigger other shortcuts when dialog is open
     if (isDialogOpen) return
 
@@ -234,11 +241,6 @@ export function useKeyboardShortcuts({
         // Cycle tab-strip views — always available
         event.preventDefault()
         onToggleView()
-        break
-      case 'f':
-        // Preview overlay — always available
-        event.preventDefault()
-        onTogglePreview()
         break
       case 'x':
         // Extract view — always available

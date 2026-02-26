@@ -15,6 +15,7 @@ import GradientView from '@/components/GradientView'
 import GradientExportDialog from '@/components/GradientExportDialog'
 import ExtractView from '@/components/ExtractView'
 import PalettePreviewOverlay from '@/components/PalettePreviewOverlay'
+import GradientPreviewOverlay from '@/components/GradientPreviewOverlay'
 import ViewTabStrip from '@/components/ViewTabStrip'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -92,6 +93,7 @@ function App() {
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
   const [activeView, setActiveView] = useState<'palette' | 'gradient' | 'extract'>('palette')
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(false)
+  const [showGradientPreviewOverlay, setShowGradientPreviewOverlay] = useState(false)
   const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
   const [gradientPreviewRatio, setGradientPreviewRatio] = useState(() => {
     const stored = localStorage.getItem('color-palette:gradient-ratio')
@@ -333,8 +335,13 @@ function App() {
   }, [activeView, handleSwitchView])
 
   const handleTogglePreview = useCallback(() => {
-    setShowPreviewOverlay(v => !v)
-  }, [])
+    if (activeView === 'gradient') {
+      setShowGradientPreviewOverlay(v => !v)
+    } else if (activeView === 'palette') {
+      setShowPreviewOverlay(v => !v)
+    }
+    // extract view: no preview yet
+  }, [activeView])
 
   const handleToggleExtract = useCallback(() => {
     handleSwitchView(activeView === 'extract' ? 'palette' : 'extract')
@@ -461,11 +468,12 @@ function App() {
     setShowDocs(false)
     setShowHistory(false)
     setShowPreviewOverlay(false)
+    setShowGradientPreviewOverlay(false)
     setSwapMode(false)
     setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || swapMode
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || showGradientPreviewOverlay || swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -792,12 +800,21 @@ function App() {
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
       <DocsOverlay visible={showDocs} onClose={() => setShowDocs(false)} />
-      {showPreviewOverlay && (
-        <PalettePreviewOverlay
-          palette={current ?? []}
-          onClose={() => setShowPreviewOverlay(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showPreviewOverlay && (
+          <PalettePreviewOverlay
+            palette={current ?? []}
+            onClose={() => setShowPreviewOverlay(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showGradientPreviewOverlay && (
+          <GradientPreviewOverlay
+            onClose={() => setShowGradientPreviewOverlay(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Hidden color input fallback for non-Chromium browsers */}
       <input

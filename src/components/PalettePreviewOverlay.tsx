@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { X, RefreshCw } from 'lucide-react'
 
 type PreviewMode = 'mosaic' | 'ui' | 'title'
@@ -82,7 +83,14 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
   const [mode, setMode] = useState<PreviewMode>('mosaic')
 
   return (
-    <div className="fixed inset-0 z-[9997] bg-background flex flex-col" onClick={onClose}>
+    <motion.div
+      className="fixed inset-0 z-[9997] bg-background flex flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      onClick={onClose}
+    >
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
@@ -137,6 +145,6 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
