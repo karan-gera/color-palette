@@ -331,38 +331,48 @@ Click any color to see tints (lighter), shades (darker), and tones (desaturated)
 
 ## Palette Visualization / Preview Mode
 
-Full-screen preview mode to see your palette in context. Accessed via a preview button in the toolbar.
-
-### Preview Modes
-- [ ] **Dynamic mosaic** — full-screen abstract composition using palette colors (default)
-- [ ] **UI elements** — cards, buttons, nav bars, form inputs with palette applied
-- [ ] **Title design** — large typography compositions showcasing the palette
+Full-screen preview overlay (toggle with `F` key when in palette view; `Esc` or click-outside to dismiss). `PalettePreviewOverlay.tsx` scaffold exists — modes need real implementation.
 
 ### UI
-- [ ] Preview button in toolbar (Eye or Maximize icon)
-- [ ] Keyboard shortcut: `F` for fullscreen preview
-- [ ] Bottom bar with mode switcher (mosaic / ui / title)
-- [ ] Press `Esc` or click anywhere to exit
-- [ ] Smooth fade transition in/out
+- [ ] `F` key opens palette preview when `activeView === 'palette'` (context-aware, same pattern as `E`)
+- [ ] Bottom bar: mode switcher + regenerate button + close
+- [ ] Smooth fade in/out transition
 
 ### Mosaic Mode
-- [ ] Randomly generated geometric shapes (circles, rectangles, triangles)
-- [ ] Each shape uses a palette color
-- [ ] Regenerate layout on each open or with a refresh button
-- [ ] Optional: subtle animation (floating, pulsing)
+- [ ] Canvas-generated geometric composition — random circles, rects, triangles, each filled with a palette color
+- [ ] Regenerate on each open and via refresh button (new random seed each time)
+- [ ] Optional: subtle float/pulse CSS animation on shapes
+- [ ] Canvas API only, no external assets
 
-### UI Elements Mode
-- [ ] Sample mockup with primary, secondary, accent, background, text slots
-- [ ] Auto-assign palette colors to slots based on luminance
-- [ ] Multiple templates: dashboard, landing page, mobile app
-- [ ] Copy CSS variable assignments
+### UI Elements Mode — shadcn Dashboard
+Split-pane layout: left sidebar role editor + right live dashboard mockup.
+
+**Left: color role editor**
+- [ ] Role slots: `background`, `foreground`, `card`, `primary`, `secondary`, `accent`, `border`, `muted`
+- [ ] Each slot: color swatch + dropdown to assign from current palette (with neutral fallbacks)
+- [ ] Auto-assign on open via luminance heuristic (lightest → background, darkest → foreground, most saturated → primary)
+- [ ] "copy CSS vars" button exports `--background: #hex; --primary: #hex; …`
+
+**Right: mock dashboard**
+- [ ] shadcn-flavored layout: sidebar with nav links + icons, top header, content area with stat cards + data table skeleton
+- [ ] All surfaces driven by role assignments as CSS custom properties — updates live
+- [ ] No real data, no external assets — all placeholder shapes and text
+
+**Font selector** (curated by design personality, not typeface variety — lazy-loaded via Google Fonts at runtime)
+- [ ] `Inter` — neutral/modern (default)
+- [ ] `Playfair Display` — editorial/luxury (serif, magazine)
+- [ ] `Space Grotesk` — tech/geometric (startup)
+- [ ] `Syne` — bold/expressive (display/statement)
+- [ ] `Nunito` — friendly/rounded (consumer apps)
+- [ ] `JetBrains Mono` — dev/technical (terminal aesthetic)
 
 ### Title Design Mode
-- [ ] Large display typography with palette colors
-- [ ] Multiple layouts: stacked, side-by-side, overlapping
-- [ ] Editable placeholder text
+- [ ] Large display typography using palette colors for heading, subheading, accent
+- [ ] Multiple layout variants: stacked, side-by-side, overlapping
+- [ ] Editable placeholder text (click to edit inline)
+- [ ] Font selector shared with UI elements mode
 
-**Implementation:** Pure CSS/HTML components, no external assets. Canvas API for mosaic generation. Realtime Colors does a version of UI preview; most tools paywall it or don't offer it.
+**Implementation:** Canvas API for mosaic. CSS custom properties for UI elements live theming. Google Fonts `<link>` injected at runtime for font switching (applied to mockup only, not the rest of the app).
 
 ---
 
@@ -510,6 +520,43 @@ A second workspace view (palette ↔ gradient), accessible via a compact vertica
 - [ ] **Photoshop `.grd`** — *research task first*: audit binary format spec (Adobe devnet), find if any JS encoder exists, estimate implementation complexity. Only implement if feasible without a native dependency.
 
 ---
+
+### Gradient Preview Mode
+
+Full-screen gradient preview overlay (toggle with `F` key when in gradient view — same pattern as palette preview). `GradientPreviewOverlay.tsx` to be created alongside `PalettePreviewOverlay.tsx`. Wiring: `showGradientPreviewOverlay` state in `App.tsx`, `F` key becomes context-aware (gradient view → gradient preview, palette view → palette preview).
+
+#### UI
+- [ ] `F` key context-aware: opens gradient preview when `activeView === 'gradient'`
+- [ ] Bottom bar: mode switcher + close; gradient map mode also has blend mode selector + opacity slider
+- [ ] `Esc` or click-outside dismisses
+
+#### Mode 1: Fullscreen Fill
+- [ ] Gradient fills the entire viewport, no chrome
+- [ ] Regenerate button cycles through angle variants (0°, 45°, 90°, 135°, 180°, 270°)
+
+#### Mode 2: Background Composition
+- [ ] Gradient rendered as a full-page background behind placeholder content (hero heading + body text + CTA button)
+- [ ] Text color auto-assigned by contrast against gradient endpoints
+- [ ] Editable placeholder text
+
+#### Mode 3: Gradient on Text
+- [ ] Large display text with CSS `background-clip: text` + `color: transparent` — gradient fills the letterforms
+- [ ] High impact for hero headings, logos
+- [ ] Editable placeholder text
+- [ ] Font selector (shared with palette preview modes)
+
+#### Mode 4: Gradient Map (flagship)
+True gradient map applied to an image — luminance of each pixel mapped to the gradient's color range, same as Photoshop's Gradient Map adjustment layer.
+
+- [ ] Built-in stock photos: 2–3 curated options, no network fetch — bundled as data URIs or imported assets (portrait, landscape, abstract)
+- [ ] "bring your own image" — drag/drop or file picker, any resolution (downscaled for canvas performance before processing)
+- [ ] Blend mode selector: `normal`, `multiply`, `screen`, `overlay`, `soft light`, `hard light`, `color` (7 modes)
+- [ ] Opacity slider (0–100%) for the gradient map layer over the original image
+- [ ] Canvas API implementation: `getImageData` → per-pixel luminance (0.299R + 0.587G + 0.114B) → look up gradient color at that position → `putImageData`
+- [ ] Regenerates on gradient change — debounced ~150ms to avoid canvas thrashing
+- [ ] "reset image" button to discard BYOI and return to stock
+
+**Implementation:** Canvas API for gradient map pixel processing. CSS `background-clip: text` for mode 3. Blend modes via CSS `mix-blend-mode` on a canvas overlay element. Stock photos bundled as compressed data URIs to avoid network dependency.
 
 ### Implementation Checkpoints
 
