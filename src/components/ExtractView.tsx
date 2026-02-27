@@ -155,42 +155,47 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
 
   return (
     <div className="w-full max-w-4xl px-8 py-6 flex flex-col gap-6">
-      {/* Drop zone */}
+      {/* Drop zone — 16:9 proportioned, same as gradient preview */}
       <motion.div
-        className={[
-          'relative flex flex-col items-center justify-center min-h-56 rounded-xl border-2 border-dashed transition-colors duration-200 cursor-pointer gap-3 p-8 text-center select-none',
-          isDragging
-            ? 'border-foreground/60 bg-foreground/5'
-            : 'border-border hover:border-foreground/30 hover:bg-foreground/[0.02]',
-        ].join(' ')}
-        onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        className="w-full relative"
+        style={{ paddingBottom: '56.25%' }}
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
-        {imageSrc ? (
-          <img
-            src={imageSrc}
-            alt="uploaded"
-            className="max-h-40 max-w-full rounded-lg object-contain pointer-events-none"
-          />
-        ) : (
-          <>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Upload className="size-5" />
-              <ImageIcon className="size-5" />
-            </div>
-            <p className="font-mono text-sm text-muted-foreground lowercase">
-              drop an image here, or click to browse
-            </p>
-            <p className="font-mono text-[11px] text-muted-foreground/50 lowercase">
-              png, jpg, gif, webp — dominant colors extracted client-side
-            </p>
-          </>
-        )}
+        <div
+          className={[
+            'absolute inset-0 flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors duration-200 cursor-pointer gap-3 p-8 text-center select-none overflow-hidden',
+            isDragging
+              ? 'border-foreground/60 bg-foreground/5'
+              : 'border-border hover:border-foreground/30 hover:bg-foreground/[0.02]',
+          ].join(' ')}
+          onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt="uploaded"
+              className="max-h-full max-w-full rounded-lg object-contain pointer-events-none"
+            />
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Upload className="size-5" />
+                <ImageIcon className="size-5" />
+              </div>
+              <p className="font-mono text-sm text-muted-foreground lowercase">
+                drop an image here, or click to browse
+              </p>
+              <p className="font-mono text-[11px] text-muted-foreground/50 lowercase">
+                png, jpg, gif, webp — dominant colors extracted client-side
+              </p>
+            </>
+          )}
+        </div>
       </motion.div>
 
       <input
