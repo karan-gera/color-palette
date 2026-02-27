@@ -573,7 +573,7 @@ function RoleSwatchPicker({
   palette: string[]
   selectedIndex: number
   onSelect: (index: number) => void
-  direction?: 'up' | 'right'
+  direction?: 'up' | 'down' | 'right'
 }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -614,7 +614,9 @@ function RoleSwatchPicker({
           'absolute bg-popover border border-border rounded-lg p-2 shadow-lg z-50',
           direction === 'right'
             ? 'top-full mt-1 left-0'
-            : 'bottom-full mb-2 left-1/2 -translate-x-1/2',
+            : direction === 'down'
+              ? 'top-full mt-1 left-1/2 -translate-x-1/2'
+              : 'bottom-full mb-2 left-1/2 -translate-x-1/2',
         ].join(' ')}>
           <div className={['flex gap-1.5', direction === 'right' ? '' : 'flex-wrap max-w-[180px]'].join(' ')}>
             {palette.map((hex, i) => (
@@ -893,9 +895,9 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
 
               {/* Color role pickers */}
               <div className="flex items-center gap-0.5">
-                <RoleSwatchPicker label="bg"     palette={palette} selectedIndex={roles.bg}      onSelect={i => setRole('bg', i)} />
-                <RoleSwatchPicker label="text"   palette={palette} selectedIndex={roles.heading}  onSelect={i => setRole('heading', i)} />
-                <RoleSwatchPicker label="accent" palette={palette} selectedIndex={roles.accent}   onSelect={i => setRole('accent', i)} />
+                <RoleSwatchPicker label="bg"     palette={palette} selectedIndex={roles.bg}      onSelect={i => setRole('bg', i)}      direction="down" />
+                <RoleSwatchPicker label="text"   palette={palette} selectedIndex={roles.heading}  onSelect={i => setRole('heading', i)} direction="down" />
+                <RoleSwatchPicker label="accent" palette={palette} selectedIndex={roles.accent}   onSelect={i => setRole('accent', i)} direction="down" />
               </div>
             </>
           )}
