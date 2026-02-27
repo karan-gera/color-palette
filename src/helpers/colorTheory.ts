@@ -515,3 +515,166 @@ export function generateTones(hex: string, count = 9): string[] {
     return hslToHex({ h, s: clamp(Math.round(s + (target - s) * step), 0, 100), l })
   })
 }
+
+// ---------------------------------------------------------------------------
+// Color harmony scoring
+// ---------------------------------------------------------------------------
+
+export type HarmonyMetrics = {
+  hueQuality: number     // 0–100 (high = well-organized hues: tight cluster OR even distribution)
+  satConsistency: number // 0–100 (high = consistent saturation)
+  lightnessRange: number // 0–100 (high = wide lightness spread)
+}
+
+export type HarmonyResult = {
+  score: number
+  label: string
+  detectedRelationship: ColorRelationship | null
+  metrics: HarmonyMetrics
+}
+
+function mean(arr: number[]): number {
+  return arr.reduce((a, b) => a + b, 0) / arr.length
+}
+
+function circularGap(a: number, b: number): number {
+  const diff = Math.abs(a - b) % 360
+  return diff > 180 ? 360 - diff : diff
+}
+
+// For each K (number of intended evenly-spaced hue positions), find the rotation
+// that best matches the actual hues. halfInterval = 90/K degrees — colors within
+// that distance of a template position score proportionally. Returns 0–100.
+// K=1 rewards tight clusters (mono/analogous); K=2 rewards complementary pairs;
+// K=3 rewards triadic; etc. Taking max over all K catches multi-cluster palettes
+// (e.g. 4 colors split into two complementary families) that pure variance metrics miss.
+function bestFitHueScore(hues: number[]): number {
+  const n = hues.length
+  let best = 0
+  for (let k = 1; k <= n; k++) {
+    const halfInterval = 90 / k
+    for (const anchor of hues) {
+      let total = 0
+      for (const h of hues) {
+        let minDist = Infinity
+        for (let i = 0; i < k; i++) {
+          const d = circularGap(h, anchor + (i * 360) / k)
+          if (d < minDist) minDist = d
+        }
+        total += Math.max(0, 1 - minDist / halfInterval)
+      }
+      const s = (total / n) * 100
+      if (s > best) best = s
+    }
+  }
+  return Math.round(best)
+}
+
+function detectRelationship(hues: number[]): ColorRelationship | null {
+  const n = hues.length
+  if (n < 2) return null
+
+  const sorted = [...hues].sort((a, b) => a - b)
+
+  // All gaps for any n
+  const allGaps: number[] = []
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      allGaps.push(circularGap(sorted[i], sorted[j]))
+    }
+  }
+
+  const TOL = 22 // degrees tolerance
+
+  // Monochromatic: all pairwise gaps < 20°
+  if (allGaps.every(g => g < 20)) return 'monochromatic'
+
+  // Analogous: all pairwise gaps < 60° (covers a typical ±30° span)
+  if (allGaps.every(g => g < 60)) return 'analogous'
+
+  if (n === 2) {
+    if (Math.abs(allGaps[0] - 180) < TOL) return 'complementary'
+  }
+
+  if (n === 3) {
+    // Consecutive clockwise gaps
+    const consec = [
+      circularGap(sorted[0], sorted[1]),
+      circularGap(sorted[1], sorted[2]),
+      circularGap(sorted[2], sorted[0] + 360),
+    ]
+    // Triadic: all consecutive gaps ≈ 120°
+    if (consec.every(g => Math.abs(g - 120) < TOL)) return 'triadic'
+
+    // Split-complementary: one small gap between the two accent colors (<110°),
+    // two large equal gaps from the base to each accent (>120° each, ±20° of each other)
+    const consecSorted = [...consec].sort((a, b) => a - b)
+    const [small, mid, large] = consecSorted
+    if (small < 110 && mid > 120 && large > 120 && Math.abs(mid - large) < 40) {
+      return 'split-complementary'
+    }
+  }
+
+  if (n === 4) {
+    const consec = [
+      circularGap(sorted[0], sorted[1]),
+      circularGap(sorted[1], sorted[2]),
+      circularGap(sorted[2], sorted[3]),
+      circularGap(sorted[3], sorted[0] + 360),
+    ]
+    if (consec.every(g => Math.abs(g - 90) < TOL)) return 'tetradic'
+  }
+
+  return null
+}
+
+export function calculateHarmonyScore(colors: string[]): HarmonyResult {
+  if (colors.length === 0) {
+    return { score: 0, label: '—', detectedRelationship: null, metrics: { hueQuality: 0, satConsistency: 0, lightnessRange: 0 } }
+  }
+  if (colors.length === 1) {
+    return { score: 0, label: '—', detectedRelationship: null, metrics: { hueQuality: 0, satConsistency: 100, lightnessRange: 0 } }
+  }
+
+  const hsls = colors.map(hexToHsl)
+  const hues = hsls.map(c => c.h)
+  const sats = hsls.map(c => c.s)
+  const lights = hsls.map(c => c.l)
+
+  // --- Hue quality ---
+  const hueQuality = bestFitHueScore(hues)
+
+  // --- Saturation consistency (inverse std dev, S in 0–100) ---
+  const mean_s = mean(sats)
+  const stdDev_s = Math.sqrt(mean(sats.map(s => (s - mean_s) ** 2)))
+  const satConsistency = Math.max(0, Math.round(100 - stdDev_s * 2))
+
+  // --- Lightness range (50-point spread → 100) ---
+  const lightnessRange = Math.min(100, Math.round((Math.max(...lights) - Math.min(...lights)) / 50 * 100))
+
+  // --- Relationship detection ---
+  const detectedRelationship = detectRelationship(hues)
+
+  // --- Overall score (+ bonus when a named relationship is detected) ---
+  // Weights: hue organization matters most; lightness range less so than saturation.
+  const rawScore = Math.round(hueQuality * 0.45 + satConsistency * 0.25 + lightnessRange * 0.30)
+  const score = detectedRelationship ? Math.min(100, rawScore + 15) : rawScore
+
+  // --- Label ---
+  let label: string
+  if (detectedRelationship) {
+    label = detectedRelationship.replace('-', '\u2011') // non-breaking hyphen
+  } else if (lightnessRange > 70) {
+    label = 'high contrast'
+  } else if (score >= 80) {
+    label = 'balanced'
+  } else if (score >= 60) {
+    label = 'varied'
+  } else if (score >= 40) {
+    label = 'inconsistent'
+  } else {
+    label = 'discordant'
+  }
+
+  return { score, label, detectedRelationship, metrics: { hueQuality, satConsistency, lightnessRange } }
+}

@@ -30,6 +30,7 @@ type KeyboardShortcutsConfig = {
   onToggleView: () => void
   onTogglePreview: () => void
   onToggleExtract: () => void
+  onToggleHarmony: () => void
   onEscape: () => void
   colorCount: number
   isDialogOpen: boolean
@@ -66,6 +67,7 @@ export function useKeyboardShortcuts({
   onToggleView,
   onTogglePreview,
   onToggleExtract,
+  onToggleHarmony,
   onEscape,
   colorCount,
   isDialogOpen,
@@ -252,6 +254,11 @@ export function useKeyboardShortcuts({
         event.preventDefault()
         onToggleHistory()
         break
+      case 'y':
+        if (!isPaletteView) break
+        event.preventDefault()
+        onToggleHarmony()
+        break
       case 'k':
         if (!isPaletteView) break
         event.preventDefault()
@@ -322,6 +329,7 @@ export function useKeyboardShortcuts({
     onToggleView,
     onTogglePreview,
     onToggleExtract,
+    onToggleHarmony,
     onEscape,
     colorCount,
     isDialogOpen,
@@ -392,6 +400,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: 'K', description: 'contrast' },
       { modifiers: ['shift'], key: 'K', description: 'cycle contrast tab', minColors: 2 },
       { key: 'H', description: 'history' },
+      { key: 'Y', description: 'harmony score' },
     ],
   },
   {
