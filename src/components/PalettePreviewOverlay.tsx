@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
 
 type PreviewMode = 'mosaic' | 'ui' | 'title'
-type TitleLayout = 'stacked' | 'side' | 'overlap'
+type TitleLayout = 'hero' | 'editorial' | 'poster'
 
 type PalettePreviewOverlayProps = {
   palette: string[]
@@ -25,9 +25,9 @@ const MODES: Array<{ id: PreviewMode; label: string }> = [
 ]
 
 const TITLE_LAYOUTS: Array<{ id: TitleLayout; label: string }> = [
-  { id: 'stacked', label: 'stacked' },
-  { id: 'side',    label: 'side'    },
-  { id: 'overlap', label: 'overlap' },
+  { id: 'hero',      label: 'hero'      },
+  { id: 'editorial', label: 'editorial' },
+  { id: 'poster',    label: 'poster'    },
 ]
 
 const ROLES_KEY    = 'color-palette:preview-title-roles'
@@ -637,60 +637,92 @@ function RoleSwatchPicker({
 
 type TitleColors = { bg: string; heading: string; accent: string }
 
-function TitleStacked({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: {
+type TitleLayoutProps = {
   heading: string; subtitle: string
   onHeadingChange: (v: string) => void; onSubtitleChange: (v: string) => void
   colors: TitleColors
-}) {
+}
+
+function TitleHero({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: TitleLayoutProps) {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-12" style={{ backgroundColor: colors.bg }}>
+    <div className="w-full h-full flex flex-col justify-center gap-6 px-20 py-16" style={{ backgroundColor: colors.bg }}>
       <EditableText value={heading} onChange={onHeadingChange}
-        className="font-mono text-7xl font-bold tracking-tight leading-none text-center"
+        className="font-mono text-8xl font-bold tracking-tight leading-none"
         style={{ color: colors.heading }} />
       <EditableText value={subtitle} onChange={onSubtitleChange}
-        className="font-mono text-2xl tracking-widest text-center"
+        className="font-mono text-2xl tracking-[0.2em] uppercase"
         style={{ color: colors.accent }} />
+      <p className="font-mono text-base leading-relaxed max-w-lg"
+        style={{ color: colors.heading, opacity: 0.6 }}>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+        incididunt ut labore et dolore magna aliqua.
+      </p>
+      <div>
+        <div className="w-16 h-0.5 mb-3" style={{ backgroundColor: colors.accent }} />
+        <p className="font-mono text-xs tracking-widest uppercase"
+          style={{ color: colors.accent, opacity: 0.7 }}>
+          est. mmxxv · color system
+        </p>
+      </div>
     </div>
   )
 }
 
-function TitleSide({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: {
-  heading: string; subtitle: string
-  onHeadingChange: (v: string) => void; onSubtitleChange: (v: string) => void
-  colors: TitleColors
-}) {
+function TitleEditorial({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: TitleLayoutProps) {
   return (
-    <div className="w-full h-full flex" style={{ backgroundColor: colors.bg }}>
-      <div className="flex-1 flex items-center justify-end pr-12 border-r-2" style={{ borderColor: `${colors.accent}40` }}>
+    <div className="w-full h-full flex flex-col" style={{ backgroundColor: colors.bg }}>
+      {/* Masthead */}
+      <div className="flex items-center justify-between px-12 py-4" style={{ borderBottom: `3px solid ${colors.accent}` }}>
         <EditableText value={heading} onChange={onHeadingChange}
-          className="font-mono text-7xl font-bold tracking-tight leading-none text-right"
+          className="font-mono text-4xl font-bold tracking-tight"
           style={{ color: colors.heading }} />
+        <span className="font-mono text-xs tracking-widest uppercase" style={{ color: colors.accent }}>
+          vol. 01 · no. 04
+        </span>
       </div>
-      <div className="flex-1 flex items-center pl-12">
+      {/* Category */}
+      <div className="px-12 pt-6 pb-4">
+        <p className="font-mono text-xs tracking-[0.25em] uppercase" style={{ color: colors.accent }}>
+          issue: color theory
+        </p>
+      </div>
+      {/* Feature */}
+      <div className="flex-1 px-12 flex flex-col justify-center gap-6">
         <EditableText value={subtitle} onChange={onSubtitleChange}
-          className="font-mono text-3xl tracking-widest"
-          style={{ color: colors.accent }} />
+          className="font-mono text-5xl font-bold leading-tight max-w-2xl"
+          style={{ color: colors.heading }} />
+        <p className="font-mono text-base leading-relaxed max-w-xl"
+          style={{ color: colors.heading, opacity: 0.65 }}>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+          tempor incididunt ut labore. Ut enim ad minim veniam, quis nostrud exercitation.
+        </p>
+        <p className="font-mono text-xs tracking-widest text-right max-w-xl"
+          style={{ color: colors.accent, opacity: 0.7 }}>
+          — april 2025
+        </p>
       </div>
     </div>
   )
 }
 
-function TitleOverlap({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: {
-  heading: string; subtitle: string
-  onHeadingChange: (v: string) => void; onSubtitleChange: (v: string) => void
-  colors: TitleColors
-}) {
+function TitlePoster({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: TitleLayoutProps) {
   return (
-    <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: colors.bg }}>
-      <div className="absolute inset-0 flex items-center pl-12">
+    <div className="w-full h-full flex flex-col" style={{ backgroundColor: colors.bg }}>
+      {/* Main display area */}
+      <div className="flex-1 flex items-center pl-16 pr-8 overflow-hidden">
         <EditableText value={heading} onChange={onHeadingChange}
-          className="font-mono font-bold leading-none w-full text-left"
-          style={{ color: colors.heading, fontSize: 'clamp(5rem, 18vw, 18rem)', opacity: 0.15 }} />
+          className="font-mono font-black leading-none w-full"
+          style={{ color: colors.heading, fontSize: 'clamp(5rem, 18vw, 16rem)' }} />
       </div>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+      {/* Bottom accent strip */}
+      <div className="shrink-0 flex items-center justify-between px-8 py-5"
+        style={{ backgroundColor: colors.accent }}>
         <EditableText value={subtitle} onChange={onSubtitleChange}
-          className="font-mono tracking-[0.3em] uppercase text-center"
-          style={{ color: colors.accent, fontSize: 'clamp(1.25rem, 3vw, 2.5rem)' }} />
+          className="font-mono text-xl font-semibold tracking-widest uppercase"
+          style={{ color: colors.bg }} />
+        <p className="font-mono text-xs tracking-wider" style={{ color: colors.bg, opacity: 0.75 }}>
+          lorem ipsum · dolor sit amet · mmxxv
+        </p>
       </div>
     </div>
   )
@@ -704,9 +736,10 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
   const [mode, setMode] = useState<PreviewMode>(
     () => (localStorage.getItem(MODE_KEY) as PreviewMode | null) ?? 'mosaic'
   )
-  const [titleLayout, setTitleLayout] = useState<TitleLayout>(
-    () => (localStorage.getItem(LAYOUT_KEY) as TitleLayout | null) ?? 'stacked'
-  )
+  const [titleLayout, setTitleLayout] = useState<TitleLayout>(() => {
+    const stored = localStorage.getItem(LAYOUT_KEY)
+    return (stored === 'hero' || stored === 'editorial' || stored === 'poster') ? stored : 'hero'
+  })
   const [heading, setHeading] = useState(
     () => localStorage.getItem(TEXT_KEY + ':heading') ?? 'palette'
   )
@@ -786,9 +819,9 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
       <div className="flex-1 overflow-hidden">
         {mode === 'mosaic'  && <MosaicPlaceholder palette={palette} />}
         {mode === 'ui'      && <UIElementsMode palette={palette} roles={uiRoles} colors={uiColors} onRolesChange={setUIRoles} />}
-        {mode === 'title'   && titleLayout === 'stacked' && <TitleStacked  {...titleProps} />}
-        {mode === 'title'   && titleLayout === 'side'    && <TitleSide     {...titleProps} />}
-        {mode === 'title'   && titleLayout === 'overlap' && <TitleOverlap  {...titleProps} />}
+        {mode === 'title'   && titleLayout === 'hero'      && <TitleHero      {...titleProps} />}
+        {mode === 'title'   && titleLayout === 'editorial' && <TitleEditorial {...titleProps} />}
+        {mode === 'title'   && titleLayout === 'poster'    && <TitlePoster    {...titleProps} />}
       </div>
 
       {/* Bottom bar */}
