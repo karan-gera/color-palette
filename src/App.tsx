@@ -685,12 +685,23 @@ function App() {
                   colorIds={colorIds}
                   onAddColors={(colors) => {
                     const base = current ?? []
-                    const next = [...base, ...colors].slice(0, MAX_COLORS)
-                    push(next)
-                    setColorMeta(prev => ({
-                      locked: [...prev.locked, ...colors.map(() => false)].slice(0, MAX_COLORS),
-                      ids: [...prev.ids, ...colors.map(() => crypto.randomUUID())].slice(0, MAX_COLORS),
-                    }))
+                    if (base.length >= MAX_COLORS) {
+                      // Palette full — replace entirely with extracted colors
+                      const next = colors.slice(0, MAX_COLORS)
+                      push(next)
+                      setColorMeta({
+                        locked: next.map(() => false),
+                        ids: next.map(() => crypto.randomUUID()),
+                      })
+                    } else {
+                      // Append into remaining slots
+                      const next = [...base, ...colors].slice(0, MAX_COLORS)
+                      push(next)
+                      setColorMeta(prev => ({
+                        locked: [...prev.locked, ...colors.map(() => false)].slice(0, MAX_COLORS),
+                        ids: [...prev.ids, ...colors.map(() => crypto.randomUUID())].slice(0, MAX_COLORS),
+                      }))
+                    }
                     handleSwitchView('palette')
                   }}
                 />
