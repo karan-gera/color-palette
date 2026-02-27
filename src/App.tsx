@@ -7,6 +7,7 @@ import AnimatedPaletteContainer from '@/components/AnimatedPaletteContainer'
 import ColorVariations from '@/components/ColorVariations'
 import GlobalColorRelationshipSelector from '@/components/GlobalColorRelationshipSelector'
 import ContrastChecker, { type ContrastCheckerHandle } from '@/components/ContrastChecker'
+import HarmonyScore from '@/components/HarmonyScore'
 import PaletteHistory from '@/components/PaletteHistory'
 import OpenDialog from '@/components/OpenDialog'
 import SaveDialog from '@/components/SaveDialog'
@@ -43,6 +44,7 @@ function App() {
   const [isExportDialog, setIsExportDialog] = useState(false)
   const [exportInitialView, setExportInitialView] = useState<'selecting' | 'image'>('selecting')
   const [pendingPreset, setPendingPreset] = useState<string | null>(null)
+  const [pendingExtractColors, setPendingExtractColors] = useState<string[] | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem('color-palette:show-hints')
@@ -54,6 +56,7 @@ function App() {
   })
   const [showDocs, setShowDocs] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showHarmony, setShowHarmony] = useState(false)
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<ContrastCheckerHandle>(null)
   const cycleCVDRef = useRef<CVDToggleHandle>(null)
@@ -463,6 +466,7 @@ function App() {
     setIsExportDialog(false)
     setIsGradientExportDialog(false)
     setPendingPreset(null)
+    setPendingExtractColors(null)
     setEditIndex(null)
     setVariationsIndex(null)
     setShowDocs(false)
@@ -473,7 +477,7 @@ function App() {
     setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || showGradientPreviewOverlay || swapMode
+  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || pendingExtractColors !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || showGradientPreviewOverlay || swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
@@ -502,6 +506,7 @@ function App() {
     onToggleDocs: toggleDocs,
     onToggleSwapMode: toggleSwapMode,
     onToggleHistory: () => setShowHistory(v => !v),
+    onToggleHarmony: () => setShowHarmony(v => !v),
     onToggleView: handleToggleView,
     onTogglePreview: handleTogglePreview,
     onToggleExtract: handleToggleExtract,
@@ -632,6 +637,18 @@ function App() {
                   <motion.div
                     layout
                     transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    className="w-full"
+                  >
+                    <HarmonyScore
+                      colors={current ?? []}
+                      expanded={showHarmony}
+                      onToggle={() => setShowHarmony(v => !v)}
+                    />
+                  </motion.div>
+
+                  <motion.div
+                    layout
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                     ref={contrastRef}
                   >
                     <ContrastChecker ref={cycleContrastTabRef} colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} />
@@ -684,25 +701,14 @@ function App() {
                   palette={current ?? []}
                   colorIds={colorIds}
                   onAddColors={(colors) => {
-                    const base = current ?? []
-                    if (base.length >= MAX_COLORS) {
-                      // Palette full — replace entirely with extracted colors
+                    if (lockedStates.some(Boolean)) {
+                      setPendingExtractColors(colors)
+                    } else {
                       const next = colors.slice(0, MAX_COLORS)
                       push(next)
-                      setColorMeta({
-                        locked: next.map(() => false),
-                        ids: next.map(() => crypto.randomUUID()),
-                      })
-                    } else {
-                      // Append into remaining slots
-                      const next = [...base, ...colors].slice(0, MAX_COLORS)
-                      push(next)
-                      setColorMeta(prev => ({
-                        locked: [...prev.locked, ...colors.map(() => false)].slice(0, MAX_COLORS),
-                        ids: [...prev.ids, ...colors.map(() => crypto.randomUUID())].slice(0, MAX_COLORS),
-                      }))
+                      setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
+                      handleSwitchView('palette')
                     }
-                    handleSwitchView('palette')
                   }}
                 />
               </motion.div>
@@ -772,6 +778,35 @@ function App() {
             onCopied={setNotification}
           />
         ) : null}
+
+        {pendingExtractColors !== null && (
+          <Dialog open onOpenChange={(open) => !open && setPendingExtractColors(null)}>
+            <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+              <div className="text-center py-2">
+                <p className="font-mono text-sm leading-relaxed">
+                  this will replace your palette, including locked colors. continue?
+                </p>
+              </div>
+              <DialogFooter className="sm:justify-center gap-2">
+                <Button variant="outline" onClick={() => setPendingExtractColors(null)} className="font-mono lowercase">
+                  cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    const next = pendingExtractColors.slice(0, MAX_COLORS)
+                    push(next)
+                    setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
+                    setPendingExtractColors(null)
+                    handleSwitchView('palette')
+                  }}
+                  className="font-mono lowercase"
+                >
+                  replace
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {pendingPreset !== null && (
           <Dialog open onOpenChange={(open) => !open && setPendingPreset(null)}>
