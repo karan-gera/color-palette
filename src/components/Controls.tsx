@@ -1,4 +1,4 @@
-import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette, ArrowLeftRight } from 'lucide-react'
+import { Undo2, Redo2, FolderOpen, Save, Link, Download, Pipette, ArrowLeftRight, Eye } from 'lucide-react'
 import { motion, type Variants } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -36,6 +36,8 @@ type ControlsProps = {
   onToggleSwapMode: () => void
   swapMode: boolean
   canSwap: boolean
+  onPreview: () => void
+  canPreview: boolean
 }
 
 export default function Controls({
@@ -57,6 +59,8 @@ export default function Controls({
   onToggleSwapMode,
   swapMode,
   canSwap,
+  onPreview,
+  canPreview,
 }: ControlsProps) {
   return (
     <TooltipProvider>
@@ -125,6 +129,24 @@ export default function Controls({
             </TooltipTrigger>
             <TooltipContent>
               <p className="font-mono text-xs lowercase">export palette</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPreview}
+                disabled={!canPreview}
+                className="lowercase font-mono"
+              >
+                <Eye className="size-4" />
+                preview
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="font-mono text-xs lowercase">preview palette</p>
             </TooltipContent>
           </Tooltip>
         </motion.div>

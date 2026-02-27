@@ -549,6 +549,8 @@ function App() {
                   onToggleSwapMode={toggleSwapMode}
                   swapMode={swapMode}
                   canSwap={(current ?? []).length >= 2}
+                  onPreview={() => setShowPreviewOverlay(v => !v)}
+                  canPreview={(current ?? []).length > 0}
                 />
               </motion.div>
             )}

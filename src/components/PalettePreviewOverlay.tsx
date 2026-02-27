@@ -389,6 +389,7 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
   const [radius, setRadius] = useState<number>(
     () => parseFloat(localStorage.getItem(RADIUS_KEY) ?? '0.5')
   )
+  const [fontReady, setFontReady] = useState(true)
 
   // Persist font selection
   useEffect(() => {
@@ -400,16 +401,21 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
     localStorage.setItem(RADIUS_KEY, String(radius))
   }, [radius])
 
-  // Inject / remove Google Fonts <link>
+  // Inject / remove Google Fonts <link>, fade in once loaded
   useEffect(() => {
     const font = FONTS.find(f => f.id === fontId)
     document.getElementById('preview-font-link')?.remove()
     if (font?.url) {
+      setFontReady(false)
       const link = document.createElement('link')
       link.id = 'preview-font-link'
       link.rel = 'stylesheet'
       link.href = font.url
       document.head.appendChild(link)
+      const familyName = font.family.split(',')[0].replace(/"/g, '').trim()
+      document.fonts.load(`400 16px ${familyName}`).then(() => setFontReady(true))
+    } else {
+      setFontReady(true)
     }
     return () => { document.getElementById('preview-font-link')?.remove() }
   }, [fontId])
@@ -492,7 +498,9 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
       </div>
 
       {/* Right: live dashboard */}
-      <ShadcnDashboard colors={colors} fontFamily={fontFamily} fontScale={fontScale} radius={radius} />
+      <div className="flex-1 overflow-hidden transition-opacity duration-500" style={{ opacity: fontReady ? 1 : 0 }}>
+        <ShadcnDashboard colors={colors} fontFamily={fontFamily} fontScale={fontScale} radius={radius} />
+      </div>
     </div>
   )
 }
@@ -842,35 +850,22 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
       transition={{ duration: 0.18 }}
     >
 
-      {/* Content area */}
-      <div className="flex-1 overflow-hidden">
-        {mode === 'mosaic'  && <MosaicPlaceholder palette={palette} />}
-        {mode === 'ui'      && <UIElementsMode palette={palette} roles={uiRoles} colors={uiColors} onRolesChange={setUIRoles} />}
-        {mode === 'title'   && titleLayout === 'hero'      && <TitleHero      {...titleProps} />}
-        {mode === 'title'   && titleLayout === 'editorial' && <TitleEditorial {...titleProps} />}
-        {mode === 'title'   && titleLayout === 'poster'    && <TitlePoster    {...titleProps} />}
-      </div>
-
-      {/* Bottom bar */}
-      <div className="shrink-0 border-t border-border/50 bg-background/80 backdrop-blur-sm">
-        <div className="h-14 flex items-center px-6 gap-4">
+      {/* Top bar */}
+      <div className="shrink-0 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="h-12 flex items-center px-4 gap-2">
 
           {/* View mode switcher */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {MODES.map(m => (
-              <button
+              <Button
                 key={m.id}
-                type="button"
+                variant={mode === m.id ? 'default' : 'outline'}
+                size="sm"
                 onClick={() => setMode(m.id)}
-                className={[
-                  'font-mono text-xs px-3 py-1.5 rounded-md transition-colors duration-150 lowercase',
-                  mode === m.id
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
-                ].join(' ')}
+                className="lowercase font-mono"
               >
                 {m.label}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -879,22 +874,18 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
             <>
               <div className="w-px h-5 bg-border/50 shrink-0" />
 
-              {/* Layout — all options visible */}
-              <div className="flex items-center gap-1 border border-border/50 rounded-md p-0.5">
+              {/* Layout picker */}
+              <div className="flex items-center gap-1.5">
                 {TITLE_LAYOUTS.map(l => (
-                  <button
+                  <Button
                     key={l.id}
-                    type="button"
+                    variant={titleLayout === l.id ? 'default' : 'outline'}
+                    size="sm"
                     onClick={() => setTitleLayout(l.id)}
-                    className={[
-                      'font-mono text-xs px-2.5 py-1 rounded transition-colors duration-100 lowercase',
-                      titleLayout === l.id
-                        ? 'bg-foreground text-background'
-                        : 'text-muted-foreground hover:text-foreground',
-                    ].join(' ')}
+                    className="lowercase font-mono"
                   >
                     {l.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -910,15 +901,25 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
           )}
 
           {/* Close — pushed to the right */}
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon-sm"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-foreground/5 ml-auto"
             aria-label="close preview"
+            className="ml-auto"
           >
             <X className="size-4" />
-          </button>
+          </Button>
         </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-hidden">
+        {mode === 'mosaic'  && <MosaicPlaceholder palette={palette} />}
+        {mode === 'ui'      && <UIElementsMode palette={palette} roles={uiRoles} colors={uiColors} onRolesChange={setUIRoles} />}
+        {mode === 'title'   && titleLayout === 'hero'      && <TitleHero      {...titleProps} />}
+        {mode === 'title'   && titleLayout === 'editorial' && <TitleEditorial {...titleProps} />}
+        {mode === 'title'   && titleLayout === 'poster'    && <TitlePoster    {...titleProps} />}
       </div>
     </motion.div>
   )
