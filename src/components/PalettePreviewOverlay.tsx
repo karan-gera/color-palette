@@ -670,35 +670,62 @@ function TitleHero({ heading, subtitle, onHeadingChange, onSubtitleChange, color
 
 function TitleEditorial({ heading, subtitle, onHeadingChange, onSubtitleChange, colors }: TitleLayoutProps) {
   return (
-    <div className="w-full h-full flex flex-col" style={{ backgroundColor: colors.bg }}>
-      {/* Masthead */}
-      <div className="flex items-center justify-between px-12 py-4" style={{ borderBottom: `3px solid ${colors.accent}` }}>
-        <EditableText value={heading} onChange={onHeadingChange}
-          className="font-mono text-4xl font-bold tracking-tight"
-          style={{ color: colors.heading }} />
-        <span className="font-mono text-xs tracking-widest uppercase" style={{ color: colors.accent }}>
-          vol. 01 · no. 04
+    <div className="w-full h-full flex flex-col overflow-hidden" style={{ backgroundColor: colors.bg }}>
+      {/* Top nav bar */}
+      <div className="shrink-0 flex items-center justify-between px-12 py-3" style={{ borderBottom: `1px solid ${colors.accent}40` }}>
+        <span className="font-mono text-sm font-bold tracking-widest uppercase" style={{ color: colors.heading }}>
+          color system
         </span>
+        <div className="flex items-center gap-8" style={{ color: colors.heading, opacity: 0.45 }}>
+          {['archive', 'about', 'subscribe'].map(item => (
+            <span key={item} className="font-mono text-xs tracking-wider">{item}</span>
+          ))}
+        </div>
       </div>
-      {/* Category */}
-      <div className="px-12 pt-6 pb-4">
-        <p className="font-mono text-xs tracking-[0.25em] uppercase" style={{ color: colors.accent }}>
-          issue: color theory
-        </p>
-      </div>
-      {/* Feature */}
-      <div className="flex-1 px-12 flex flex-col justify-center gap-6">
-        <EditableText value={subtitle} onChange={onSubtitleChange}
-          className="font-mono text-5xl font-bold leading-tight max-w-2xl"
+
+      {/* Article body */}
+      <div className="flex-1 overflow-hidden px-16 pt-8 pb-6 flex flex-col gap-4">
+        {/* Category tag */}
+        <span className="font-mono text-xs tracking-[0.25em] uppercase shrink-0" style={{ color: colors.accent }}>
+          color theory
+        </span>
+
+        {/* Headline */}
+        <EditableText value={heading} onChange={onHeadingChange}
+          className="font-mono text-6xl font-bold leading-tight shrink-0"
           style={{ color: colors.heading }} />
-        <p className="font-mono text-base leading-relaxed max-w-xl"
-          style={{ color: colors.heading, opacity: 0.65 }}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-          tempor incididunt ut labore. Ut enim ad minim veniam, quis nostrud exercitation.
+
+        {/* Deck */}
+        <EditableText value={subtitle} onChange={onSubtitleChange}
+          className="font-mono text-xl leading-relaxed max-w-2xl shrink-0"
+          style={{ color: colors.accent }} />
+
+        {/* Byline */}
+        <div className="flex items-center gap-3 shrink-0" style={{ color: colors.heading, opacity: 0.45 }}>
+          <span className="font-mono text-xs tracking-wider">by lorem ipsum</span>
+          <span className="font-mono text-xs">·</span>
+          <span className="font-mono text-xs tracking-wider">april 2025</span>
+          <span className="font-mono text-xs">·</span>
+          <span className="font-mono text-xs tracking-wider">6 min read</span>
+        </div>
+
+        {/* Rule */}
+        <div className="w-full h-px shrink-0" style={{ backgroundColor: `${colors.accent}30` }} />
+
+        {/* Lede */}
+        <p className="font-mono text-base leading-relaxed max-w-3xl shrink-0"
+          style={{ color: colors.heading, opacity: 0.85 }}>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+          incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+          exercitation ullamco laboris nisi ut aliquip.
         </p>
-        <p className="font-mono text-xs tracking-widest text-right max-w-xl"
-          style={{ color: colors.accent, opacity: 0.7 }}>
-          — april 2025
+
+        {/* Body */}
+        <p className="font-mono text-sm leading-relaxed max-w-3xl shrink-0"
+          style={{ color: colors.heading, opacity: 0.55 }}>
+          Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.
+          Donec velit neque, auctor sit amet aliquam vel, ullamcorper sit amet ligula. Curabitur
+          aliquet quam id dui posuere blandit. Nulla porttitor accumsan tincidunt.
         </p>
       </div>
     </div>
