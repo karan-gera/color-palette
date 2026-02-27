@@ -470,12 +470,12 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
         <div className="w-full h-px bg-border/50 my-4 shrink-0" />
 
         <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest mb-2">corner radius</p>
-        <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex items-center gap-2">
           <input
             type="range" min="0" max="1.5" step="0.05"
             value={radius}
             onChange={e => setRadius(parseFloat(e.target.value))}
-            className="min-w-0 flex-1 h-1 accent-foreground cursor-pointer"
+            className="min-w-0 flex-1 accent-foreground cursor-pointer"
           />
           <span className="font-mono text-xs text-muted-foreground w-14 text-right shrink-0">
             {radius === 0 ? 'none' : `${radius}rem`}
