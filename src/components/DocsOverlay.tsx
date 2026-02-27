@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers } from 'lucide-react'
+import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import AddColor from './AddColor'
@@ -34,6 +34,8 @@ const FEATURES = [
   { icon: Blend, label: 'variations', desc: 'tints, shades, tones' },
   { icon: Pipette, label: 'color picker', desc: 'eyedropper or os picker' },
   { icon: Layers, label: 'gradient generator', desc: 'linear gradients with palette-linked stops, css/svg/png/tailwind export' },
+  { icon: LayoutTemplate, label: 'palette preview', desc: 'title design (hero/editorial/poster) + shadcn ui elements mockup + font selector' },
+  { icon: ImageIcon, label: 'extract from image', desc: 'drag-and-drop an image to extract dominant colors via k-means clustering' },
   { icon: Keyboard, label: 'keyboard', desc: 'every action has a shortcut' },
 ]
 
@@ -52,6 +54,33 @@ const COMPETITOR_ROWS = [
 ]
 
 const CHANGELOG = [
+  {
+    version: '0.16',
+    title: 'extract from image',
+    items: [
+      'drag-and-drop or click to upload any image (png, jpg, gif, webp)',
+      'canvas api scales image down, samples every 3rd opaque pixel',
+      'k-means clustering (k=10, 20 iterations) extracts dominant colors',
+      'click or drag across swatches to batch-toggle selection',
+      'dynamic "add n colors to palette" button',
+      'full palette handled: replaces palette entirely when at max capacity',
+      'X key or tab strip to open the extract view',
+    ],
+  },
+  {
+    version: '0.15',
+    title: 'palette preview / title design',
+    items: [
+      'full-screen preview overlay — F key or preview button in toolbar',
+      'title design mode: hero (editorial left-aligned), editorial (blog post flow), poster (giant display type)',
+      'ui elements mode: shadcn-flavored dashboard mockup driven by palette color roles',
+      'font selector: inter, playfair display, space grotesk, syne, nunito, jetbrains mono — lazy-loaded via google fonts',
+      'font fade transition eliminates fout on font switch',
+      'color role pickers in top bar for heading, background, accent colors',
+      'editable headline and subtitle text (click inline to edit)',
+      'controls bar moved to top for consistency with rest of app',
+    ],
+  },
   {
     version: '0.14',
     title: 'gradient generator',

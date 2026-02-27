@@ -284,16 +284,18 @@ Evaluate moving from localStorage to IndexedDB for future-proofing storage.
 
 ---
 
-## Extract from Image
+## Extract from Image ✅
 
 Drag-and-drop an image to extract dominant colors.
 
-- [ ] Drag-and-drop zone or file picker
-- [ ] Extract 3-5 dominant colors from image
-- [ ] Use color quantization algorithm (k-means or median cut)
-- [ ] Preview extracted colors before adding to palette
+- [x] Drag-and-drop zone or file picker
+- [x] Extract dominant colors from image (10 clusters)
+- [x] Use color quantization algorithm — k-means in RGB space
+- [x] Preview extracted colors before adding to palette
+- [x] Click or drag to batch-toggle swatch selection
+- [x] Dynamic "add N colors" button (disabled when none selected)
 
-**Implementation:** Use Canvas API to read pixel data. Implement k-means clustering or use a lightweight library. Fully client-side.
+**Implementation:** `ExtractView.tsx` tab-strip view (X key). Canvas API scales image to max 150px, samples every 3rd opaque pixel, runs k-means (k=10, 20 iterations) to produce hex centroids. Drag-to-toggle uses `mousedown` mode ref + `mouseenter` handler. Full palette handled: replaces palette entirely when at MAX_COLORS capacity.
 
 ---
 
@@ -329,45 +331,48 @@ Click any color to see tints (lighter), shades (darker), and tones (desaturated)
 
 ---
 
-## Palette Visualization / Preview Mode
+## Palette Visualization / Preview Mode ✅
 
-Full-screen preview overlay (toggle with `F` key when in palette view; `Esc` or click-outside to dismiss). `PalettePreviewOverlay.tsx` scaffold exists — modes need real implementation.
+Full-screen preview overlay (toggle with `F` key when in palette view; `Esc` or click-outside to dismiss). `PalettePreviewOverlay.tsx`.
 
 ### UI ✅
 - [x] `F` key opens palette preview when `activeView === 'palette'` (context-aware, same pattern as `E`)
-- [x] Bottom bar: mode switcher + regenerate button + close
+- [x] Top bar: mode switcher + close (moved from bottom for consistency)
 - [x] Smooth fade in/out transition
+- [x] Preview button added to Controls toolbar (mouse access)
 
 ### ~~Mosaic Mode~~ — scrapped
 Color bars look better. Struck.
 
-### UI Elements Mode — shadcn Dashboard
-Split-pane layout: left sidebar role editor + right live dashboard mockup.
+### UI Elements Mode — shadcn Dashboard ✅
+Live dashboard mockup driven by palette color roles.
 
-**Left: color role editor**
-- [ ] Role slots: `background`, `foreground`, `card`, `primary`, `secondary`, `accent`, `border`, `muted`
-- [ ] Each slot: color swatch + dropdown to assign from current palette (with neutral fallbacks)
-- [ ] Auto-assign on open via luminance heuristic (lightest → background, darkest → foreground, most saturated → primary)
+**Color role pickers (top bar)**
+- [x] Role swatches in top bar for background, foreground, accent — click to reassign from current palette
+- [x] Auto-assign on open via luminance heuristic (lightest → background, darkest → foreground, most saturated → primary/accent)
+- [ ] Full role set: `card`, `secondary`, `border`, `muted` (deferred — top-bar space constrained)
 - [ ] "copy CSS vars" button exports `--background: #hex; --primary: #hex; …`
 
-**Right: mock dashboard**
-- [ ] shadcn-flavored layout: sidebar with nav links + icons, top header, content area with stat cards + data table skeleton
-- [ ] All surfaces driven by role assignments as CSS custom properties — updates live
-- [ ] No real data, no external assets — all placeholder shapes and text
+**Mock dashboard** ✅
+- [x] shadcn-flavored layout: sidebar with nav links + icons, top header, content area with stat cards + data table skeleton
+- [x] All surfaces driven by role assignments as CSS custom properties — updates live
+- [x] No real data, no external assets — all placeholder shapes and text
 
-**Font selector** (curated by design personality, not typeface variety — lazy-loaded via Google Fonts at runtime)
-- [ ] `Inter` — neutral/modern (default)
-- [ ] `Playfair Display` — editorial/luxury (serif, magazine)
-- [ ] `Space Grotesk` — tech/geometric (startup)
-- [ ] `Syne` — bold/expressive (display/statement)
-- [ ] `Nunito` — friendly/rounded (consumer apps)
-- [ ] `JetBrains Mono` — dev/technical (terminal aesthetic)
+**Font selector** ✅ (lazy-loaded via Google Fonts at runtime)
+- [x] `Inter` — neutral/modern (default)
+- [x] `Playfair Display` — editorial/luxury (serif, magazine)
+- [x] `Space Grotesk` — tech/geometric (startup)
+- [x] `Syne` — bold/expressive (display/statement)
+- [x] `Nunito` — friendly/rounded (consumer apps)
+- [x] `JetBrains Mono` — dev/technical (terminal aesthetic)
+- [x] Fade transition after font loads (avoids FOUT flicker)
 
 ### Title Design Mode ✅
 - [x] Large display typography using palette colors for heading, subheading, accent
-- [x] Multiple layout variants: stacked, side-by-side, overlapping
+- [x] Three layout presets: hero (editorial left-aligned), editorial (blog post flow with nav/byline), poster (giant display type)
 - [x] Editable placeholder text (click to edit inline)
-- [ ] Font selector shared with UI elements mode (deferred — ships with UI elements mode)
+- [x] Color role pickers in top bar (heading, background, accent) with direction="down" popover
+- [x] Layout persists in localStorage
 
 **Implementation:** Canvas API for mosaic. CSS custom properties for UI elements live theming. Google Fonts `<link>` injected at runtime for font switching (applied to mockup only, not the rest of the app).
 
@@ -991,12 +996,12 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 15. ~~**Mobile / Responsive Design**~~ ✅ Separate repo (`color-palette-mobile`) — Framer Motion incompatible with touch add-color
 16. ~~**PNG / Image Export** - Social sharing, mood boards; Canvas API for raster, SVG for vector~~ ✅ Done!
 17. ~~**Gradient Generator**~~ ✅ Done! Vertical tab strip, stop bar, palette-linked stops, CSS/SVG/PNG/Tailwind export
-17. **Palette Visualization** - High wow factor, moderate effort
+17. ~~**Palette Visualization**~~ ✅ Done! Title design (hero/editorial/poster) + shadcn UI elements mockup + font selector
 18. **Color Harmony Score** - Unique differentiator, medium effort
 19. **Session Palette History** - Solves real reroll regret, low-medium effort
 20. **Palette Collections and Tags** - Natural save/open evolution, medium effort
 21. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
-22. **Extract from Image** - Big feature, most complex
+22. ~~**Extract from Image**~~ ✅ Done! Canvas API + k-means (k=10), drag-to-toggle swatch selection
 23. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
 24. **IndexedDB Migration** - Low priority, not needed yet
 25. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
