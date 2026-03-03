@@ -20,13 +20,18 @@ function read(): SavedPalette[] {
     return parsed.filter((p) =>
       p && typeof p === 'object' && Array.isArray((p as SavedPalette).colors)
     ) as SavedPalette[]
-  } catch {
+  } catch (e) {
+    console.warn('[storage] Failed to read palettes:', e)
     return []
   }
 }
 
 function write(palettes: SavedPalette[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(palettes))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(palettes))
+  } catch (e) {
+    console.warn('[storage] Failed to write palettes:', e)
+  }
 }
 
 export function getSavedPalettes(): SavedPalette[] {
@@ -87,8 +92,8 @@ export function persistHistory(history: string[][], index: number): void {
     const capped = history.slice(trim)
     const cappedIndex = Math.max(0, index - trim)
     localStorage.setItem(HISTORY_KEY, JSON.stringify({ history: capped, index: cappedIndex, savedAt }))
-  } catch {
-    // localStorage full or unavailable
+  } catch (e) {
+    console.warn('[storage] Failed to persist history:', e)
   }
 }
 

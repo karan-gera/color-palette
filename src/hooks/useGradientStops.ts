@@ -68,7 +68,8 @@ function loadPersisted(): PersistedGradient | null {
     if (!Array.isArray(parsed.stops) || parsed.stops.length < MIN_STOPS) return null
     if (typeof parsed.angle !== 'number') return null
     return parsed
-  } catch {
+  } catch (e) {
+    console.warn('[useGradientStops] Failed to load persisted state:', e)
     return null
   }
 }
@@ -99,7 +100,9 @@ export function useGradientStops(
     saveTimer.current = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ stops, angle }))
-      } catch {}
+      } catch (e) {
+        console.warn('[useGradientStops] Failed to save state:', e)
+      }
     }, SAVE_DEBOUNCE_MS)
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
@@ -112,7 +115,9 @@ export function useGradientStops(
     function saveNow() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(latestRef.current))
-      } catch {}
+      } catch (e) {
+        console.warn('[useGradientStops] Failed to flush state on unload:', e)
+      }
     }
     window.addEventListener('beforeunload', saveNow)
     return () => window.removeEventListener('beforeunload', saveNow)
