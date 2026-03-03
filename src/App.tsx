@@ -27,6 +27,7 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useGradientStops } from '@/hooks/useGradientStops'
 import { useUIPanels } from '@/hooks/useUIPanels'
 import { usePaletteColors } from '@/hooks/usePaletteColors'
+import { useColorEditing } from '@/hooks/useColorEditing'
 import { getSavedPalettes, savePalette, removePalette, type SavedPalette } from '@/helpers/storage'
 import { generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, shouldWarnBeforePreset, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
@@ -76,8 +77,18 @@ function App() {
   } = usePaletteColors()
   const { cycleTheme } = useTheme()
 
-  const [editIndex, setEditIndex] = useState<number | null>(null)
-  const [variationsIndex, setVariationsIndex] = useState<number | null>(null)
+  const {
+    editIndex,
+    variationsIndex,
+    setEditIndex,
+    setVariationsIndex,
+    openEdit,
+    openVariations,
+    handleEditSave,
+    replaceColorFromVariation,
+    isAnyOpen: isColorEditingOpen,
+    closeAll: closeColorEditing,
+  } = useColorEditing({ current, push })
   const [swapMode, setSwapMode] = useState(false)
   const [swapSelection, setSwapSelection] = useState<number | null>(null)
   const [activeView, setActiveView] = useState<'palette' | 'gradient' | 'extract'>('palette')
@@ -105,16 +116,6 @@ function App() {
   useEffect(() => {
     if (isOpenDialog) setSavedPalettes(getSavedPalettes())
   }, [isOpenDialog])
-
-  const openEdit = useCallback((i: number) => {
-    setVariationsIndex(null)
-    setEditIndex(i)
-  }, [])
-
-  const openVariations = useCallback((i: number) => {
-    setEditIndex(null)
-    setVariationsIndex(i)
-  }, [])
 
   const toggleSwapMode = useCallback(() => {
     setSwapMode(prev => {
@@ -259,20 +260,6 @@ function App() {
     handlePresetSelect(PALETTE_PRESETS[nextIndex].id)
   }, [activePresetId, handlePresetSelect])
 
-  const handleEditSave = useCallback((index: number, newHex: string) => {
-    const base = current ?? []
-    const next = [...base]
-    next[index] = newHex
-    push(next)
-    setEditIndex(null)
-  }, [current, push])
-
-  const replaceColorFromVariation = useCallback((index: number, newHex: string) => {
-    const next = [...(current ?? [])]
-    next[index] = newHex
-    push(next)
-    setVariationsIndex(null)
-  }, [current, push])
 
   const closeAllDialogs = useCallback(() => {
     setIsOpenDialog(false)
@@ -281,8 +268,7 @@ function App() {
     setIsGradientExportDialog(false)
     setPendingPreset(null)
     setPendingExtractColors(null)
-    setEditIndex(null)
-    setVariationsIndex(null)
+    closeColorEditing()
     closeDocs()
     setShowHistory(false)
     setShowPreviewOverlay(false)
@@ -300,8 +286,7 @@ function App() {
     isGradientExportDialog ||
     pendingPreset !== null ||
     pendingExtractColors !== null ||
-    editIndex !== null ||
-    variationsIndex !== null ||
+    isColorEditingOpen ||
     showDocs ||
     showPreviewOverlay ||
     showGradientPreviewOverlay ||
