@@ -36,6 +36,7 @@ export type UsePaletteColorsReturn = {
   deleteAt: (index: number) => void
   toggleLockAt: (index: number) => void
   reorderColors: (fromIndex: number, toIndex: number) => void
+  swapColors: (indexA: number, indexB: number) => void
   handleRelationshipChange: (relationship: ColorRelationship) => void
   cycleRelationship: () => void
   addPickedColor: (hex: string) => void
@@ -179,6 +180,21 @@ export function usePaletteColors(): UsePaletteColorsReturn {
     })
   }, [current, push])
 
+  const swapColors = useCallback((indexA: number, indexB: number) => {
+    const base = current ?? []
+    if (indexA === indexB) return
+    const newColors = [...base]
+    ;[newColors[indexA], newColors[indexB]] = [newColors[indexB], newColors[indexA]]
+    push(newColors)
+    setColorMeta(prev => {
+      const nextLocked = [...prev.locked]
+      ;[nextLocked[indexA], nextLocked[indexB]] = [nextLocked[indexB], nextLocked[indexA]]
+      const nextIds = [...prev.ids]
+      ;[nextIds[indexA], nextIds[indexB]] = [nextIds[indexB], nextIds[indexA]]
+      return { locked: nextLocked, ids: nextIds }
+    })
+  }, [current, push])
+
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
@@ -224,6 +240,7 @@ export function usePaletteColors(): UsePaletteColorsReturn {
     deleteAt,
     toggleLockAt,
     reorderColors,
+    swapColors,
     handleRelationshipChange,
     cycleRelationship,
     addPickedColor,

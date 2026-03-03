@@ -28,6 +28,7 @@ import { useGradientStops } from '@/hooks/useGradientStops'
 import { useUIPanels } from '@/hooks/useUIPanels'
 import { usePaletteColors } from '@/hooks/usePaletteColors'
 import { useColorEditing } from '@/hooks/useColorEditing'
+import { useSwapMode } from '@/hooks/useSwapMode'
 import { getSavedPalettes, savePalette, removePalette, type SavedPalette } from '@/helpers/storage'
 import { generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, shouldWarnBeforePreset, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
@@ -70,7 +71,7 @@ function App() {
     rerollAll,
     deleteAt,
     toggleLockAt,
-    reorderColors,
+    swapColors,
     handleRelationshipChange,
     cycleRelationship,
     addPickedColor,
@@ -89,8 +90,13 @@ function App() {
     isAnyOpen: isColorEditingOpen,
     closeAll: closeColorEditing,
   } = useColorEditing({ current, push })
-  const [swapMode, setSwapMode] = useState(false)
-  const [swapSelection, setSwapSelection] = useState<number | null>(null)
+  const {
+    swapMode,
+    swapSelection,
+    toggleSwapMode,
+    handleSwapClick,
+    close: closeSwapMode,
+  } = useSwapMode({ swapColors, setEditIndex })
   const [activeView, setActiveView] = useState<'palette' | 'gradient' | 'extract'>('palette')
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(false)
   const [showGradientPreviewOverlay, setShowGradientPreviewOverlay] = useState(false)
@@ -116,27 +122,6 @@ function App() {
   useEffect(() => {
     if (isOpenDialog) setSavedPalettes(getSavedPalettes())
   }, [isOpenDialog])
-
-  const toggleSwapMode = useCallback(() => {
-    setSwapMode(prev => {
-      if (!prev) {
-        setEditIndex(null)
-      }
-      setSwapSelection(null)
-      return !prev
-    })
-  }, [])
-
-  const handleSwapClick = useCallback((index: number) => {
-    if (swapSelection === null) {
-      setSwapSelection(index)
-    } else if (swapSelection === index) {
-      setSwapSelection(null)
-    } else {
-      reorderColors(swapSelection, index)
-      setSwapSelection(null)
-    }
-  }, [swapSelection, reorderColors])
 
   const handleOpen = useCallback(() => {
     setIsOpenDialog(true)
@@ -273,8 +258,7 @@ function App() {
     setShowHistory(false)
     setShowPreviewOverlay(false)
     setShowGradientPreviewOverlay(false)
-    setSwapMode(false)
-    setSwapSelection(null)
+    closeSwapMode()
   }, [])
 
   // Keep this list in sync with closeAllDialogs above.
