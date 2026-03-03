@@ -207,6 +207,7 @@ type ColorNameResult = {
   cssName: string | null
 }
 
+const NAME_CACHE_LIMIT = 1000
 const nameCache = new Map<string, ColorNameResult>()
 
 /**
@@ -245,6 +246,7 @@ export function getColorName(hex: string): ColorNameResult {
     name: bestName,
     cssName: bestCssDist < CSS_MATCH_THRESHOLD_SQ ? cssName : null,
   }
+  if (nameCache.size >= NAME_CACHE_LIMIT) nameCache.delete(nameCache.keys().next().value!)
   nameCache.set(hex, result)
   return result
 }
