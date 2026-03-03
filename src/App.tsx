@@ -15,11 +15,10 @@ import ExportDialog from '@/components/ExportDialog'
 import GradientView from '@/components/GradientView'
 import GradientExportDialog from '@/components/GradientExportDialog'
 import ExtractView from '@/components/ExtractView'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import PalettePreviewOverlay from '@/components/PalettePreviewOverlay'
 import GradientPreviewOverlay from '@/components/GradientPreviewOverlay'
 import ViewTabStrip from '@/components/ViewTabStrip'
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import KeyboardHints from '@/components/KeyboardHints'
 import DocsOverlay from '@/components/DocsOverlay'
 import CVDFilters from '@/components/CVDFilters'
@@ -777,60 +776,30 @@ function App() {
           />
         ) : null}
 
-        {pendingExtractColors !== null && (
-          <Dialog open onOpenChange={(open) => !open && setPendingExtractColors(null)}>
-            <DialogContent className="sm:max-w-sm" showCloseButton={false}>
-              <div className="text-center py-2">
-                <p className="font-mono text-sm leading-relaxed">
-                  this will replace your palette, including locked colors. continue?
-                </p>
-              </div>
-              <DialogFooter className="sm:justify-center gap-2">
-                <Button variant="outline" onClick={() => setPendingExtractColors(null)} className="font-mono lowercase">
-                  cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    const next = pendingExtractColors.slice(0, MAX_COLORS)
-                    push(next)
-                    setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
-                    setPendingExtractColors(null)
-                    handleSwitchView('palette')
-                  }}
-                  className="font-mono lowercase"
-                >
-                  replace
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+        <ConfirmDialog
+          open={pendingExtractColors !== null}
+          message="this will replace your palette, including locked colors. continue?"
+          confirmLabel="replace"
+          onConfirm={() => {
+            const next = pendingExtractColors!.slice(0, MAX_COLORS)
+            push(next)
+            setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
+            setPendingExtractColors(null)
+            handleSwitchView('palette')
+          }}
+          onCancel={() => setPendingExtractColors(null)}
+        />
 
-        {pendingPreset !== null && (
-          <Dialog open onOpenChange={(open) => !open && setPendingPreset(null)}>
-            <DialogContent className="sm:max-w-sm" showCloseButton={false}>
-              <div className="text-center py-2">
-                <p className="font-mono text-sm leading-relaxed">
-                  this will replace your current palette. continue?
-                </p>
-              </div>
-              <DialogFooter className="sm:justify-center gap-2">
-                <Button variant="outline" onClick={() => setPendingPreset(null)} className="font-mono lowercase">
-                  cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    applyPreset(pendingPreset)
-                    setPendingPreset(null)
-                  }}
-                  className="font-mono lowercase"
-                >
-                  continue
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+        <ConfirmDialog
+          open={pendingPreset !== null}
+          message="this will replace your current palette. continue?"
+          confirmLabel="continue"
+          onConfirm={() => {
+            applyPreset(pendingPreset!)
+            setPendingPreset(null)
+          }}
+          onCancel={() => setPendingPreset(null)}
+        />
 
         {/* Spacer to clear fixed keyboard hints overlay */}
         <div className="h-52" aria-hidden="true" />
