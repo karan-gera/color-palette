@@ -243,6 +243,11 @@ function randomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min
 }
 
+/** Symmetric random offset in [-range, +range]. */
+function jitter(range: number): number {
+  return randomFloat(-range, range)
+}
+
 function normalizeHue(hue: number): number {
   return ((hue % 360) + 360) % 360
 }
@@ -291,18 +296,18 @@ export function generateRelatedColor(
       // Exact opposite on color wheel from reference
       newHsl = {
         h: normalizeHue(baseHsl.h + 180),
-        s: clamp(baseHsl.s + randomFloat(-15, 15), 25, 90),
-        l: clamp(baseHsl.l + randomFloat(-20, 20), 25, 75)
+        s: clamp(baseHsl.s + jitter(15), 25, 90),
+        l: clamp(baseHsl.l + jitter(20), 25, 75)
       }
       break
 
     case 'analogous': {
       // Adjacent colors (±30° from reference)
-      const analogousOffset = randomFloat(-30, 30)
+      const analogousOffset = jitter(30)
       newHsl = {
         h: normalizeHue(baseHsl.h + analogousOffset),
-        s: clamp(baseHsl.s + randomFloat(-10, 10), 30, 85),
-        l: clamp(baseHsl.l + randomFloat(-15, 15), 30, 70)
+        s: clamp(baseHsl.s + jitter(10), 30, 85),
+        l: clamp(baseHsl.l + jitter(15), 30, 70)
       }
       break
     }
@@ -312,8 +317,8 @@ export function generateRelatedColor(
       const triadicOffset = Math.random() > 0.5 ? 120 : 240
       newHsl = {
         h: normalizeHue(baseHsl.h + triadicOffset),
-        s: clamp(baseHsl.s + randomFloat(-20, 20), 35, 85),
-        l: clamp(baseHsl.l + randomFloat(-25, 25), 25, 75)
+        s: clamp(baseHsl.s + jitter(20), 35, 85),
+        l: clamp(baseHsl.l + jitter(25), 25, 75)
       }
       break
     }
@@ -324,8 +329,8 @@ export function generateRelatedColor(
       const tetradicOffset = tetradicOffsets[Math.floor(Math.random() * tetradicOffsets.length)]
       newHsl = {
         h: normalizeHue(baseHsl.h + tetradicOffset),
-        s: clamp(baseHsl.s + randomFloat(-15, 15), 30, 80),
-        l: clamp(baseHsl.l + randomFloat(-20, 20), 30, 70)
+        s: clamp(baseHsl.s + jitter(15), 30, 80),
+        l: clamp(baseHsl.l + jitter(20), 30, 70)
       }
       break
     }
@@ -335,8 +340,8 @@ export function generateRelatedColor(
       const splitOffset = Math.random() > 0.5 ? 150 : 210
       newHsl = {
         h: normalizeHue(baseHsl.h + splitOffset),
-        s: clamp(baseHsl.s + randomFloat(-12, 12), 35, 85),
-        l: clamp(baseHsl.l + randomFloat(-18, 18), 30, 70)
+        s: clamp(baseHsl.s + jitter(12), 35, 85),
+        l: clamp(baseHsl.l + jitter(18), 30, 70)
       }
       break
     }
@@ -345,8 +350,8 @@ export function generateRelatedColor(
       // Same hue as reference, vary saturation and lightness
       newHsl = {
         h: baseHsl.h,
-        s: clamp(baseHsl.s + randomFloat(-40, 40), 15, 95),
-        l: clamp(baseHsl.l + randomFloat(-50, 50), 15, 85)
+        s: clamp(baseHsl.s + jitter(40), 15, 95),
+        l: clamp(baseHsl.l + jitter(50), 15, 85)
       }
       break
 
@@ -475,10 +480,10 @@ export function generatePresetPalette(preset: PalettePreset, count = 5): string[
   if (isFullHue) {
     // Space hues apart with jitter
     const hueSegment = 360 / count
-    const jitter = hueSegment * 0.3
+    const hueJitter = hueSegment * 0.3
     const offset = randomFloat(0, 360)
     for (let i = 0; i < count; i++) {
-      hueValues.push(normalizeHue(offset + i * hueSegment + randomFloat(-jitter, jitter)))
+      hueValues.push(normalizeHue(offset + i * hueSegment + jitter(hueJitter)))
     }
   } else if (isWrapping) {
     // Wrapping range (e.g. warm: 330–60 wraps through 0)
