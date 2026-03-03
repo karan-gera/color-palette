@@ -476,7 +476,21 @@ function App() {
     setSwapSelection(null)
   }, [])
 
-  const isAnyDialogOpen = isOpenDialog || isSaveDialog || isExportDialog || isGradientExportDialog || pendingPreset !== null || pendingExtractColors !== null || editIndex !== null || variationsIndex !== null || showDocs || showPreviewOverlay || showGradientPreviewOverlay || swapMode
+  // Keep this list in sync with closeAllDialogs above.
+  // showHistory is intentionally excluded — shortcuts still work while the history panel is open.
+  const isAnyDialogOpen =
+    isOpenDialog ||
+    isSaveDialog ||
+    isExportDialog ||
+    isGradientExportDialog ||
+    pendingPreset !== null ||
+    pendingExtractColors !== null ||
+    editIndex !== null ||
+    variationsIndex !== null ||
+    showDocs ||
+    showPreviewOverlay ||
+    showGradientPreviewOverlay ||
+    swapMode
 
   useKeyboardShortcuts({
     onAddColor: addColor,
