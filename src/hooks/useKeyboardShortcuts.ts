@@ -73,6 +73,9 @@ export function useKeyboardShortcuts({
   isDialogOpen,
   isPaletteView,
 }: KeyboardShortcutsConfig) {
+  // Maps digit key character ('0'-'9') to 0-based color index ('0' → 9, '1' → 0, etc.)
+  const digitToIndex = (digit: string) => digit === '0' ? 9 : parseInt(digit) - 1
+
   const lastKeyRef = useRef<{ key: string; time: number } | null>(null)
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     // Don't trigger shortcuts when typing in inputs
@@ -133,7 +136,7 @@ export function useKeyboardShortcuts({
     const digitMatch = event.code.match(/^Digit([0-9])$/)
     if (digitMatch) {
       if (!isPaletteView) return
-      const index = digitMatch[1] === '0' ? 9 : parseInt(digitMatch[1]) - 1
+      const index = digitToIndex(digitMatch[1])
       if (index < colorCount) {
         if (event.shiftKey && event.altKey) {
           event.preventDefault()
@@ -289,7 +292,7 @@ export function useKeyboardShortcuts({
       case '8':
       case '9': {
         if (!isPaletteView) break
-        const index = key === '0' ? 9 : parseInt(key) - 1
+        const index = digitToIndex(key)
         if (index < colorCount) {
           event.preventDefault()
           onToggleLock(index)
