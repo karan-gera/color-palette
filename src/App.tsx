@@ -26,6 +26,7 @@ import { useHistory } from '@/hooks/useHistory'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useGradientStops } from '@/hooks/useGradientStops'
+import { useUIPanels } from '@/hooks/useUIPanels'
 import { getSavedPalettes, savePalette, removePalette, loadPersistedHistory, persistHistory, type SavedPalette } from '@/helpers/storage'
 import { generateRelatedColor, generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, getRowSplit, shouldWarnBeforePreset, getPresetColorIdKeepCount, type ColorRelationship } from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, copyShareUrl, clearUrlParams } from '@/helpers/urlShare'
@@ -44,18 +45,11 @@ function App() {
   const [exportInitialView, setExportInitialView] = useState<'selecting' | 'image'>('selecting')
   const [pendingPreset, setPendingPreset] = useState<string | null>(null)
   const [pendingExtractColors, setPendingExtractColors] = useState<string[] | null>(null)
-  const [notification, setNotification] = useState<string | null>(null)
-  const [showHints, setShowHints] = useState(() => {
-    const stored = localStorage.getItem('color-palette:show-hints')
-    return stored !== 'false'
-  })
-  const [showContrast, setShowContrast] = useState(() => {
-    const stored = localStorage.getItem('color-palette:show-contrast')
-    return stored === 'true'
-  })
-  const [showDocs, setShowDocs] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
-  const [showHarmony, setShowHarmony] = useState(false)
+  const {
+    showHints, showContrast, showDocs, showHistory, showHarmony,
+    notification, setNotification, setShowHistory, setShowHarmony,
+    toggleHints, toggleContrast, toggleDocs, closeDocs,
+  } = useUIPanels()
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<ContrastCheckerHandle>(null)
   const cycleCVDRef = useRef<CVDToggleHandle>(null)
@@ -149,41 +143,6 @@ function App() {
   useEffect(() => {
     if (isOpenDialog) setSavedPalettes(getSavedPalettes())
   }, [isOpenDialog])
-
-  // Auto-dismiss notification
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [notification])
-
-  const toggleHints = useCallback(() => {
-    setShowHints(prev => {
-      const next = !prev
-      localStorage.setItem('color-palette:show-hints', String(next))
-      return next
-    })
-  }, [])
-
-  const toggleDocs = useCallback(() => {
-    setShowDocs(prev => !prev)
-  }, [])
-
-  const toggleContrast = useCallback(() => {
-    setShowContrast(prev => {
-      const next = !prev
-      localStorage.setItem('color-palette:show-contrast', String(next))
-      if (next) {
-        setTimeout(() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-        }, 350)
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
-      return next
-    })
-  }, [])
 
   const addColor = useCallback(() => {
     const base = current ?? []
@@ -468,7 +427,7 @@ function App() {
     setPendingExtractColors(null)
     setEditIndex(null)
     setVariationsIndex(null)
-    setShowDocs(false)
+    closeDocs()
     setShowHistory(false)
     setShowPreviewOverlay(false)
     setShowGradientPreviewOverlay(false)
@@ -828,7 +787,7 @@ function App() {
 
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
-      <DocsOverlay visible={showDocs} onClose={() => setShowDocs(false)} />
+      <DocsOverlay visible={showDocs} onClose={closeDocs} />
       <AnimatePresence>
         {showPreviewOverlay && (
           <PalettePreviewOverlay
