@@ -698,8 +698,6 @@ function App() {
                 transition={{ duration: 0.15 }}
               >
                 <ExtractView
-                  palette={current ?? []}
-                  colorIds={colorIds}
                   onAddColors={(colors) => {
                     if (lockedStates.some(Boolean)) {
                       setPendingExtractColors(colors)

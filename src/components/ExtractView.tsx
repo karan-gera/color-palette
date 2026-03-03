@@ -1,11 +1,9 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 type ExtractViewProps = {
-  palette: string[]
-  colorIds: string[]
   onAddColors: (colors: string[]) => void
 }
 
@@ -95,13 +93,22 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const objectUrlRef = useRef<string | null>(null)
   const [extracted, setExtracted] = useState<string[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [isExtracting, setIsExtracting] = useState(false)
 
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
+    }
+  }, [])
+
   const loadFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current)
     const url = URL.createObjectURL(file)
+    objectUrlRef.current = url
     setImageSrc(url)
     setExtracted([])
     setSelected(new Set())
