@@ -60,7 +60,7 @@ function rgbToHex([r, g, b]: RGB): string {
 }
 
 function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const img = new Image()
     img.onload = () => {
       const MAX = 150
@@ -80,7 +80,7 @@ function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
       }
       resolve(kmeans(pixels, k).map(rgbToHex))
     }
-    img.onerror = () => resolve([])
+    img.onerror = () => reject(new Error('could not load image'))
     img.src = src
   })
 }
@@ -97,6 +97,7 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
   const [extracted, setExtracted] = useState<string[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [isExtracting, setIsExtracting] = useState(false)
+  const [extractError, setExtractError] = useState<string | null>(null)
 
   useEffect(() => {
     return () => {
@@ -113,9 +114,13 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
     setExtracted([])
     setSelected(new Set())
     setIsExtracting(true)
+    setExtractError(null)
     extractColorsFromImage(url, 10).then(colors => {
       setExtracted(colors)
       setSelected(new Set(colors.map((_, i) => i)))
+      setIsExtracting(false)
+    }).catch(() => {
+      setExtractError('could not load image — try a different file')
       setIsExtracting(false)
     })
   }, [])
@@ -221,6 +226,17 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
           animate={{ opacity: 1 }}
         >
           extracting colors…
+        </motion.p>
+      )}
+
+      {/* Error */}
+      {extractError && (
+        <motion.p
+          className="font-mono text-xs text-destructive lowercase"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {extractError}
         </motion.p>
       )}
 
