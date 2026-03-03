@@ -51,7 +51,13 @@ function gammaEncode(linear: number): number {
     : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055
 }
 
-export function hexToOklch(hex: string): OKLCH {
+export type Oklab = { L: number; a: number; b: number }
+
+/**
+ * Convert hex to Oklab perceptual color space.
+ * Pipeline: sRGB → linear RGB → LMS (M1) → cube root → Oklab (M2)
+ */
+export function hexToOklab(hex: string): Oklab {
   const { r, g, b } = hexToRgb(hex)
   const lr = linearize(r)
   const lg = linearize(g)
@@ -68,9 +74,15 @@ export function hexToOklch(hex: string): OKLCH {
   const sc = Math.cbrt(s)
 
   // LMS to Oklab (M2 matrix)
-  const L = 0.2104542553 * lc + 0.7936177850 * mc - 0.0040720468 * sc
-  const a = 1.9779984951 * lc - 2.4285922050 * mc + 0.4505937099 * sc
-  const okb = 1.0 * lc + 0.0259040371 * mc - 1.0259040371 * sc
+  return {
+    L: 0.2104542553 * lc + 0.7936177850 * mc - 0.0040720468 * sc,
+    a: 1.9779984951 * lc - 2.4285922050 * mc + 0.4505937099 * sc,
+    b: 0.0259040371 * lc + 0.7827717662 * mc - 0.8086757660 * sc,
+  }
+}
+
+export function hexToOklch(hex: string): OKLCH {
+  const { L, a, b: okb } = hexToOklab(hex)
 
   // Oklab to Oklch (cartesian to polar)
   const C = Math.sqrt(a * a + okb * okb)

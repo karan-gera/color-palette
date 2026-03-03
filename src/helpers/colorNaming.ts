@@ -1,35 +1,5 @@
-import { hexToRgb, linearize } from '@/helpers/colorTheory'
+import { hexToOklab, type Oklab } from '@/helpers/colorTheory'
 import { colornames } from 'color-name-list/bestof'
-
-type Oklab = { L: number; a: number; b: number }
-
-/**
- * Convert hex color to Oklab perceptual color space.
- * Pipeline: sRGB → linear RGB → LMS (M1) → cube root → Oklab (M2)
- */
-function hexToOklab(hex: string): Oklab {
-  const { r, g, b } = hexToRgb(hex)
-  const lr = linearize(r)
-  const lg = linearize(g)
-  const lb = linearize(b)
-
-  // sRGB to LMS via M1 matrix
-  const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb
-  const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb
-  const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb
-
-  // Cube root
-  const lc = Math.cbrt(l)
-  const mc = Math.cbrt(m)
-  const sc = Math.cbrt(s)
-
-  // LMS to Oklab via M2 matrix
-  return {
-    L: 0.2104542553 * lc + 0.7936177850 * mc - 0.0040720468 * sc,
-    a: 1.9779984951 * lc - 2.4285922050 * mc + 0.4505937099 * sc,
-    b: 0.0259040371 * lc + 0.7827717662 * mc - 0.8086757660 * sc,
-  }
-}
 
 /**
  * Squared Euclidean distance in Oklab space (skip sqrt for perf).
