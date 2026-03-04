@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate } from 'lucide-react'
+import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import AddColor from './AddColor'
@@ -32,6 +32,7 @@ const FEATURES = [
   { icon: Sparkles, label: 'presets', desc: 'pastel, neon, earth, jewel, monochrome, warm, cool, muted' },
   { icon: Type, label: 'color naming', desc: '4,000+ names matched by oklab distance' },
   { icon: Blend, label: 'variations', desc: 'tints, shades, tones' },
+  { icon: Gauge, label: 'harmony score', desc: 'rates palette cohesion 0–100 across hue spacing, saturation, and lightness' },
   { icon: Pipette, label: 'color picker', desc: 'eyedropper or os picker' },
   { icon: Layers, label: 'gradient generator', desc: 'linear gradients with palette-linked stops, css/svg/png/tailwind export' },
   { icon: LayoutTemplate, label: 'palette preview', desc: 'title design (hero/editorial/poster) + shadcn ui elements mockup + font selector' },
@@ -54,6 +55,17 @@ const COMPETITOR_ROWS = [
 ]
 
 const CHANGELOG = [
+  {
+    version: '0.17',
+    title: 'color harmony score',
+    items: [
+      'inline score panel below the palette — Y key or click the row to expand',
+      'rates palette cohesion 0–100 across hue spacing (45%), saturation consistency (25%), and lightness range (30%)',
+      'detects named relationships (complementary, analogous, triadic, tetradic, split-complementary, monochromatic) and awards a 15-point bonus',
+      'labels: detected relationship name → high contrast → balanced → varied → inconsistent → discordant',
+      'requires 2+ colors; single-color palettes show a placeholder',
+    ],
+  },
   {
     version: '0.16',
     title: 'extract from image',
@@ -350,9 +362,12 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'section', label: 'color tools' },
   { type: 'page', id: 'edit-mode', label: 'edit mode' },
   { type: 'page', id: 'gradient', label: 'gradient generator' },
+  { type: 'page', id: 'preview', label: 'palette preview' },
+  { type: 'page', id: 'extract', label: 'extract from image' },
   { type: 'page', id: 'color-picker', label: 'color picker' },
   { type: 'page', id: 'color-naming', label: 'color naming' },
   { type: 'page', id: 'variations', label: 'variations' },
+  { type: 'page', id: 'harmony', label: 'harmony score' },
   { type: 'section', label: 'accessibility' },
   { type: 'page', id: 'color-blindness', label: 'color blindness' },
   { type: 'page', id: 'contrast', label: 'contrast checker' },
@@ -682,7 +697,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               arrow buttons cycle presets, or press <Kbd>P</Kbd>. hover the label for a dropdown and reroll button (<Kbd>{getModifierLabel('shift')}</Kbd><Kbd>P</Kbd>).
             </p>
             <p>
-              locked colors trigger a confirmation dialog since presets replace everything.
+              if any palette colors are locked, a confirmation dialog appears before applying the preset. unlocked palettes apply immediately — undo is always available.
             </p>
             <p>
               if you edit a color outside the preset's hsl ranges, the label fades back to "presets."
@@ -1383,6 +1398,113 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">persistence</h3>
             <p>
               your stops, angle, and aspect ratio are saved automatically and restored when you return to the gradient view.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'preview':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              the palette preview overlay renders your colors in a full-screen mockup. press <Kbd>F</Kbd> or click the preview button in the toolbar to open it. press <Kbd>Escape</Kbd> or click × to close.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">modes</h3>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">mosaic</strong> — full-screen color bars, one per palette color</li>
+              <li><strong className="text-foreground font-medium">title design</strong> — typography layout driven by your palette</li>
+              <li><strong className="text-foreground font-medium">ui elements</strong> — shadcn-flavored dashboard mockup powered by color roles</li>
+            </ul>
+            <p>the last-used mode is remembered across reloads.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">title design</h3>
+            <p>three layout presets:</p>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">hero</strong> — left-aligned editorial headline with accent underline</li>
+              <li><strong className="text-foreground font-medium">editorial</strong> — blog/article flow with drop cap and body text block</li>
+              <li><strong className="text-foreground font-medium">poster</strong> — giant centered display type spanning the full width</li>
+            </ul>
+            <p>click the headline or subtitle to edit the text inline. color role pickers in the top bar control heading, body, background, and accent colors drawn from the palette.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">ui elements</h3>
+            <p>
+              a shadcn-flavored dashboard mockup — cards, buttons, badges, charts — driven by four color roles (background, primary, accent, muted). role pickers in the top bar let you assign any palette color to each role. font and corner radius are adjustable.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">fonts</h3>
+            <p>six fonts available in title and ui modes: system, inter, playfair display, space grotesk, nunito, jetbrains mono. fonts load lazily via google fonts on first use.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">gradient preview</h3>
+            <p>
+              when in gradient view, <Kbd>F</Kbd> opens a separate gradient preview overlay instead. it renders the current gradient at the selected aspect ratio and exits on <Kbd>Escape</Kbd>.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'extract':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              extract dominant colors from any image using k-means clustering. switch to the extract view with <Kbd>X</Kbd> or the tab strip on the right edge of the screen.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">loading an image</h3>
+            <p>drag-and-drop an image onto the canvas, or click the upload area to browse. png, jpg, gif, and webp are supported. the canvas scales the image down before sampling.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">selecting colors</h3>
+            <p>extracted swatches appear below the image. click a swatch to toggle its selection. click and drag across multiple swatches to batch-toggle a range.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">adding to palette</h3>
+            <p>
+              the button shows how many colors are selected. clicking it adds them to your palette (up to 10 total). if the palette is already full or the selected count exceeds the remaining space, the entire palette is replaced with the selected colors.
+            </p>
+            <p>
+              if any palette color is locked, a confirmation dialog appears before replacing the palette.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">how it works</h3>
+            <p>
+              the canvas api scales the image down and samples every 3rd opaque pixel. k-means clustering (k=10, 20 iterations) groups sampled pixels into clusters. the centroid of each cluster becomes a candidate color.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'harmony':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              the harmony score rates how well your palette colors work together. it appears as a collapsible row below the palette — press <Kbd>Y</Kbd> or click the row to expand the detail breakdown.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">what it measures</h3>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">hue organization (45%)</strong> — how well the hues fit a harmonic template (evenly spaced positions on the color wheel)</li>
+              <li><strong className="text-foreground font-medium">saturation consistency (25%)</strong> — how similar the saturation levels are across colors</li>
+              <li><strong className="text-foreground font-medium">lightness range (30%)</strong> — whether the palette spans a useful contrast spread</li>
+            </ul>
+            <p>
+              when a named hue relationship is detected (complementary, analogous, triadic, etc.) a 15-point bonus is applied, capped at 100.
+            </p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">labels</h3>
+            <ul className="list-disc list-inside space-y-1 text-[13px]">
+              <li><strong className="text-foreground font-medium">relationship name</strong> — a named hue relationship was detected (e.g. complementary, triadic, monochromatic)</li>
+              <li><strong className="text-foreground font-medium">high contrast</strong> — no named relationship, but lightness range exceeds 70</li>
+              <li><strong className="text-foreground font-medium">balanced</strong> — score ≥ 80</li>
+              <li><strong className="text-foreground font-medium">varied</strong> — score ≥ 60</li>
+              <li><strong className="text-foreground font-medium">inconsistent</strong> — score ≥ 40</li>
+              <li><strong className="text-foreground font-medium">discordant</strong> — score below 40</li>
+            </ul>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">notes</h3>
+            <p>
+              the score is descriptive, not prescriptive — a discordant palette can be intentional and striking. high contrast and monochromatic palettes often score well for different reasons. the score requires at least 2 colors; a single color shows —.
             </p>
           </div>
         </DocArticle>
