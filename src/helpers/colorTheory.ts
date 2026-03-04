@@ -393,13 +393,11 @@ export function getRowSplit(count: number): [number, number] {
 }
 
 /**
- * Returns true whenever there are existing colors that a preset would overwrite.
- * Used to decide whether to show the confirmation dialog before applying a preset.
- * The old (incorrect) condition checked lockedStates.some(Boolean), which silently
- * replaced unlocked palettes without warning.
+ * Returns true when applying a preset would discard locked colors.
+ * Unlocked palettes can always be recovered via undo/history, so no warning is needed.
  */
-export function shouldWarnBeforePreset(currentColors: string[]): boolean {
-  return currentColors.length > 0
+export function shouldWarnBeforePreset(lockedStates: boolean[]): boolean {
+  return lockedStates.some(Boolean)
 }
 
 /**

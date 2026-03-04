@@ -448,24 +448,24 @@ describe('getRowSplit', () => {
 })
 
 describe('shouldWarnBeforePreset', () => {
-  it('returns false for an empty palette — no warning needed', () => {
+  it('returns false for an empty palette — no locked colors to lose', () => {
     expect(shouldWarnBeforePreset([])).toBe(false)
   })
 
-  it('returns true for a single color — any existing work should be confirmed', () => {
-    expect(shouldWarnBeforePreset(['#ff0000'])).toBe(true)
+  it('returns false when all colors are unlocked — undo/history covers the user', () => {
+    expect(shouldWarnBeforePreset([false, false, false])).toBe(false)
   })
 
-  it('returns true for multiple unlocked colors (regression: old code checked lockedStates.some(Boolean) and silently replaced unlocked palettes)', () => {
-    expect(shouldWarnBeforePreset(['#ff0000', '#00ff00', '#0000ff'])).toBe(true)
+  it('returns true when at least one color is locked — preset would discard it', () => {
+    expect(shouldWarnBeforePreset([false, true, false])).toBe(true)
   })
 
-  it('returns true for a full 5-color palette', () => {
-    expect(shouldWarnBeforePreset(['#1', '#2', '#3', '#4', '#5'])).toBe(true)
+  it('returns true when all colors are locked', () => {
+    expect(shouldWarnBeforePreset([true, true, true, true, true])).toBe(true)
   })
 
-  it('returns true for a 10-color palette', () => {
-    expect(shouldWarnBeforePreset(new Array(10).fill('#ff0000'))).toBe(true)
+  it('returns true when only the first color is locked', () => {
+    expect(shouldWarnBeforePreset([true, false, false])).toBe(true)
   })
 })
 

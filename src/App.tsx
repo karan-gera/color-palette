@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
 import { type CVDToggleHandle } from '@/components/CVDToggle'
@@ -29,8 +29,10 @@ import { useUIPanels } from '@/hooks/useUIPanels'
 import { usePaletteColors } from '@/hooks/usePaletteColors'
 import { useColorEditing } from '@/hooks/useColorEditing'
 import { useSwapMode } from '@/hooks/useSwapMode'
+import { usePresetControl } from '@/hooks/usePresetControl'
+import { useViewNavigation } from '@/hooks/useViewNavigation'
 import { getSavedPalettes, savePalette, removePalette, type SavedPalette } from '@/helpers/storage'
-import { generatePresetPalette, PALETTE_PRESETS, isPresetActive, MAX_COLORS, shouldWarnBeforePreset, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
+import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -97,20 +99,23 @@ function App() {
     handleSwapClick,
     close: closeSwapMode,
   } = useSwapMode({ swapColors, setEditIndex })
-  const [activeView, setActiveView] = useState<'palette' | 'gradient' | 'extract'>('palette')
-  const [showPreviewOverlay, setShowPreviewOverlay] = useState(false)
-  const [showGradientPreviewOverlay, setShowGradientPreviewOverlay] = useState(false)
   const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
-  const [gradientPreviewRatio, setGradientPreviewRatio] = useState(() => {
-    const stored = localStorage.getItem('color-palette:gradient-ratio')
-    return stored ? parseFloat(stored) : 16 / 9
-  })
   const gradientState = useGradientStops(current ?? [], colorIds)
-
-  // Persist gradient preview ratio
-  useEffect(() => {
-    localStorage.setItem('color-palette:gradient-ratio', String(gradientPreviewRatio))
-  }, [gradientPreviewRatio])
+  const {
+    activeView,
+    showPreviewOverlay,
+    setShowPreviewOverlay,
+    showGradientPreviewOverlay,
+    setShowGradientPreviewOverlay,
+    gradientPreviewRatio,
+    setGradientPreviewRatio,
+    handleSwitchView,
+    handleToggleView,
+    handleTogglePreview,
+    handleToggleExtract,
+    handleRedrawGradient,
+    closePreviews,
+  } = useViewNavigation({ current, colorIds, gradientState, setNotification })
 
   // Always keep palette-linked stops in sync with the current palette colors
   useEffect(() => {
@@ -143,41 +148,6 @@ function App() {
     }
   }, [current, lockedStates])
 
-  const handleSwitchView = useCallback((view: 'palette' | 'gradient' | 'extract') => {
-    if (view === 'gradient' && gradientState.stops.length < 2) {
-      if ((current ?? []).length === 0) {
-        setNotification('add colors to the palette first')
-        return
-      }
-      gradientState.resetToPalette(current ?? [], colorIds)
-    }
-    setActiveView(view)
-  }, [current, colorIds, gradientState])
-
-  // Cycle through all tab-strip views in order
-  const handleToggleView = useCallback(() => {
-    const cycle: Array<'palette' | 'gradient' | 'extract'> = ['palette', 'gradient', 'extract']
-    const next = cycle[(cycle.indexOf(activeView) + 1) % cycle.length]
-    handleSwitchView(next)
-  }, [activeView, handleSwitchView])
-
-  const handleTogglePreview = useCallback(() => {
-    if (activeView === 'gradient') {
-      setShowGradientPreviewOverlay(v => !v)
-    } else if (activeView === 'palette') {
-      setShowPreviewOverlay(v => !v)
-    }
-    // extract view: no preview yet
-  }, [activeView])
-
-  const handleToggleExtract = useCallback(() => {
-    handleSwitchView(activeView === 'extract' ? 'palette' : 'extract')
-  }, [activeView, handleSwitchView])
-
-  const handleRedrawGradient = useCallback(() => {
-    gradientState.resetToPalette(current ?? [], colorIds)
-  }, [current, colorIds, gradientState])
-
   const handleExport = useCallback(() => {
     if (activeView === 'gradient') {
       setIsGradientExportDialog(true)
@@ -202,49 +172,13 @@ function App() {
     }
   }, [current, addPickedColor])
 
-  const activePresetId = useMemo(
-    () => PALETTE_PRESETS.find(p => (current?.length ?? 0) > 0 && isPresetActive(current!, p))?.id ?? null,
-    [current]
-  )
-
-  const applyPreset = useCallback((presetId: string) => {
-    const preset = PALETTE_PRESETS.find(p => p.id === presetId)
-    if (!preset) return
-    const newColors = generatePresetPalette(preset)
-    const currentCount = (current ?? []).length
-
-    push(newColors)
-
-    const keepCount = getPresetColorIdKeepCount(currentCount, newColors.length)
-    setColorMeta(prev => {
-      const kept = prev.ids.slice(0, keepCount)
-      while (kept.length < newColors.length) kept.push(crypto.randomUUID())
-      return { locked: new Array(newColors.length).fill(false), ids: kept }
-    })
-  }, [current, push])
-
-  const handlePresetSelect = useCallback((presetId: string) => {
-    if (shouldWarnBeforePreset(current ?? [])) {
-      setPendingPreset(presetId)
-    } else {
-      applyPreset(presetId)
-    }
-  }, [current, applyPreset])
-
-  // Reroll bypasses the warning — user is already in a preset, reroll is expected
-  const rerollPreset = useCallback(() => {
-    if (!activePresetId) return
-    applyPreset(activePresetId)
-  }, [activePresetId, applyPreset])
-
-  const cyclePreset = useCallback(() => {
-    const currentIndex = activePresetId
-      ? PALETTE_PRESETS.findIndex(p => p.id === activePresetId)
-      : -1
-    const nextIndex = (currentIndex + 1) % PALETTE_PRESETS.length
-    handlePresetSelect(PALETTE_PRESETS[nextIndex].id)
-  }, [activePresetId, handlePresetSelect])
-
+  const {
+    activePresetId,
+    applyPreset,
+    handlePresetSelect,
+    rerollPreset,
+    cyclePreset,
+  } = usePresetControl({ current, lockedStates, push, setColorMeta, onNeedsConfirmation: setPendingPreset })
 
   const closeAllDialogs = useCallback(() => {
     setIsOpenDialog(false)
@@ -256,8 +190,7 @@ function App() {
     closeColorEditing()
     closeDocs()
     setShowHistory(false)
-    setShowPreviewOverlay(false)
-    setShowGradientPreviewOverlay(false)
+    closePreviews()
     closeSwapMode()
   }, [])
 
