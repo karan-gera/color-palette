@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
 import { type CVDToggleHandle } from '@/components/CVDToggle'
@@ -31,19 +31,26 @@ import { useColorEditing } from '@/hooks/useColorEditing'
 import { useSwapMode } from '@/hooks/useSwapMode'
 import { usePresetControl } from '@/hooks/usePresetControl'
 import { useViewNavigation } from '@/hooks/useViewNavigation'
-import { getSavedPalettes, savePalette, removePalette, type SavedPalette } from '@/helpers/storage'
+import { useDialogState } from '@/hooks/useDialogState'
+import { savePalette, removePalette, getSavedPalettes } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
 function App() {
-  const [isOpenDialog, setIsOpenDialog] = useState(false)
-  const [savedPalettes, setSavedPalettes] = useState<SavedPalette[]>([])
-  const [isSaveDialog, setIsSaveDialog] = useState(false)
-  const [isExportDialog, setIsExportDialog] = useState(false)
-  const [exportInitialView, setExportInitialView] = useState<'selecting' | 'image'>('selecting')
-  const [pendingPreset, setPendingPreset] = useState<string | null>(null)
-  const [pendingExtractColors, setPendingExtractColors] = useState<string[] | null>(null)
+  const {
+    isOpenDialog, setIsOpenDialog,
+    savedPalettes, setSavedPalettes,
+    isSaveDialog, setIsSaveDialog,
+    isExportDialog, setIsExportDialog,
+    exportInitialView, setExportInitialView,
+    isGradientExportDialog, setIsGradientExportDialog,
+    pendingPreset, setPendingPreset,
+    pendingExtractColors, setPendingExtractColors,
+    handleOpen, handleSave, handleImageExport,
+    isAnyOpen: isAnyDialogStateOpen,
+    closeAll: closeDialogs,
+  } = useDialogState()
   const {
     showHints, showContrast, showDocs, showHistory, showHarmony,
     notification, setNotification, setShowHistory, setShowHarmony,
@@ -99,7 +106,6 @@ function App() {
     handleSwapClick,
     close: closeSwapMode,
   } = useSwapMode({ swapColors, setEditIndex })
-  const [isGradientExportDialog, setIsGradientExportDialog] = useState(false)
   const gradientState = useGradientStops(current ?? [], colorIds)
   const {
     activeView,
@@ -123,19 +129,6 @@ function App() {
     gradientState.syncPaletteColors(palette)
   }, [current, colorIds]) // gradientState.syncPaletteColors is stable
 
-  // Load saved palettes when dialog opens
-  useEffect(() => {
-    if (isOpenDialog) setSavedPalettes(getSavedPalettes())
-  }, [isOpenDialog])
-
-  const handleOpen = useCallback(() => {
-    setIsOpenDialog(true)
-  }, [])
-
-  const handleSave = useCallback(() => {
-    setIsSaveDialog(true)
-  }, [])
-
   const handleShare = useCallback(async () => {
     const colors = current ?? []
     if (colors.length === 0) return
@@ -157,11 +150,6 @@ function App() {
     }
   }, [activeView])
 
-  const handleImageExport = useCallback(() => {
-    setExportInitialView('image')
-    setIsExportDialog(true)
-  }, [])
-
   const handlePickColor = useCallback(async () => {
     if ((current ?? []).length >= MAX_COLORS) return
     if (hasEyeDropper) {
@@ -181,28 +169,18 @@ function App() {
   } = usePresetControl({ current, lockedStates, push, setColorMeta, onNeedsConfirmation: setPendingPreset })
 
   const closeAllDialogs = useCallback(() => {
-    setIsOpenDialog(false)
-    setIsSaveDialog(false)
-    setIsExportDialog(false)
-    setIsGradientExportDialog(false)
-    setPendingPreset(null)
-    setPendingExtractColors(null)
+    closeDialogs()
     closeColorEditing()
     closeDocs()
     setShowHistory(false)
     closePreviews()
     closeSwapMode()
-  }, [])
+  }, [closeDialogs, closeColorEditing, closeDocs, setShowHistory, closePreviews, closeSwapMode])
 
   // Keep this list in sync with closeAllDialogs above.
   // showHistory is intentionally excluded — shortcuts still work while the history panel is open.
   const isAnyDialogOpen =
-    isOpenDialog ||
-    isSaveDialog ||
-    isExportDialog ||
-    isGradientExportDialog ||
-    pendingPreset !== null ||
-    pendingExtractColors !== null ||
+    isAnyDialogStateOpen ||
     isColorEditingOpen ||
     showDocs ||
     showPreviewOverlay ||
