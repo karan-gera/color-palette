@@ -142,7 +142,17 @@ export default function OpenDialog({
 
   // Keyboard nav for list
   const [selectedIndex, setSelectedIndex] = useState(0)
-  useEffect(() => { setSelectedIndex(0) }, [search, activeCollection, activeTagFilters.join(',')])
+  const tagFilterKey = activeTagFilters.join(',')
+  useEffect(() => { setSelectedIndex(0) }, [search, activeCollection, tagFilterKey])
+
+  const handleDelete = useCallback((id: string) => {
+    setFading((prev) => ({ ...prev, [id]: true }))
+    setTimeout(() => {
+      onRemove(id)
+      setFading((prev) => { const next = { ...prev }; delete next[id]; return next })
+      setSelectedIndex((i) => Math.max(0, i > 0 ? i - 1 : 0))
+    }, 200)
+  }, [onRemove])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -166,7 +176,7 @@ export default function OpenDialog({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollection, pendingDeleteCollection])
+  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollection, pendingDeleteCollection, handleDelete, onSelect])
 
   // Scroll selected into view
   useEffect(() => {
@@ -182,15 +192,6 @@ export default function OpenDialog({
     const timer = setTimeout(updateScrollIndicators, 50)
     return () => clearTimeout(timer)
   }, [filtered.length, updateScrollIndicators])
-
-  const handleDelete = useCallback((id: string) => {
-    setFading((prev) => ({ ...prev, [id]: true }))
-    setTimeout(() => {
-      onRemove(id)
-      setFading((prev) => { const next = { ...prev }; delete next[id]; return next })
-      setSelectedIndex((i) => Math.max(0, i > 0 ? i - 1 : 0))
-    }, 200)
-  }, [onRemove])
 
   const handleExportAll = () => { exportAllPalettes() }
   const handleImportClick = () => { fileInputRef.current?.click() }

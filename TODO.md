@@ -456,19 +456,28 @@ A live readout showing how harmonious the current palette is, based on color the
 
 ---
 
-## Palette Collections and Tags
+## ✅ Palette Collections and Tags
 
 Organize saved palettes into collections and tag them for easy retrieval.
 
-- [ ] Add tags when saving a palette (comma-separated or pill input)
-- [ ] Suggested tags: project names, moods (warm, calm, bold), seasons, use cases (UI, illustration, branding)
-- [ ] Filter saved palettes by tag in the Open dialog
-- [ ] Search saved palettes by name or tag
-- [ ] Create/rename/delete collections (optional grouping layer above tags)
-- [ ] Bulk actions: delete multiple, add tag to multiple
-- [ ] Migrate existing saved palettes (add empty tags array, backward compatible)
+- [x] Add tags when saving a palette (comma-separated or pill input)
+- [x] Suggested tags from existing tags with autocomplete dropdown
+- [x] Filter saved palettes by tag in the Open dialog
+- [x] Search saved palettes by name or tag
+- [x] Create/rename/delete collections (tab-based grouping with confirmation dialogs)
+- [x] Inline palette editing (name, tags, collection assignment)
+- [x] Migrate existing saved palettes (add empty tags array, backward compatible)
+- [x] Export/import collections alongside palettes in JSON files
+- [x] Create collections from save dialog (inline "+ new" button)
+- [x] Paste comma-separated tags to split into pills
+- [x] Tag character limit (24), alphabetical sorting, scrollable container
+- [x] Duplicate collection names rejected with notification
+- [x] Clear search (X button), clear tag filters affordance
+- [x] Stale tag filters pruned on collection switch
+- [x] Delete-collection dialog blocks keyboard nav
+- [x] Empty state hides chrome when zero palettes saved
 
-**Implementation:** Extend `SavedPalette` type with `tags: string[]` field. Tag input component with autocomplete from existing tags. Filter UI in `OpenDialog.tsx` — pill-based tag filter bar above the palette list. All stored in localStorage (or IndexedDB when migrated). No breaking changes to existing data — migration adds defaults on first load.
+**Implementation:** `SavedPalette` extended with `tags: string[]` and `collection?: string` (collection name as key, no UUIDs). `PaletteCollection` type: `{ name: string; createdAt: string }`. `TagPillInput.tsx` reusable component with autocomplete, paste splitting, alphabetical sorting, max-height scroll. Collection tabs in `OpenDialog.tsx` with Framer Motion layout animations, scroll indicators, and inline rename (double-click). `SaveDialog.tsx` always shows collection section with inline creation. All stored in localStorage under `color-palette:saved` (palettes) and `color-palette:collections` (collections).
 
 ---
 
@@ -999,7 +1008,7 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 17. ~~**Palette Visualization**~~ ✅ Done! Title design (hero/editorial/poster) + shadcn UI elements mockup + font selector
 18. ~~**Color Harmony Score**~~ ✅ Done! Collapsible row, 0–100 score, hue/sat/lightness metrics, relationship detection, Y key
 19. ~~**Session Palette History** - Solves real reroll regret, low-medium effort~~ ✅ Done!
-20. **Palette Collections and Tags** - Natural save/open evolution, medium effort
+20. ~~**Palette Collections and Tags** - Natural save/open evolution, medium effort~~ ✅ Done!
 21. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
 22. ~~**Extract from Image**~~ ✅ Done! Canvas API + k-means (k=10), drag-to-toggle swatch selection
 23. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!

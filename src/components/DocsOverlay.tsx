@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge } from 'lucide-react'
+import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import AddColor from './AddColor'
@@ -27,26 +27,32 @@ const FEATURES = [
   { icon: Copy, label: 'copy formats', desc: 'hex, rgb, hsl, css, tailwind, scss' },
   { icon: Link, label: 'share via url', desc: 'palettes encoded in shareable links' },
   { icon: Download, label: 'export', desc: 'css, json, tailwind, scss, ase, aco, gpl, procreate, paint.net' },
-  { icon: Eye, label: 'color blindness', desc: 'deuteranopia, protanopia, tritanopia, achromatopsia' },
-  { icon: BarChart3, label: 'contrast checker', desc: 'wcag aa/aaa/aa18 for all color pairs' },
+  { icon: Eye, label: 'color blindness', desc: 'simulate how your palette looks to color blind users' },
+  { icon: BarChart3, label: 'contrast checker', desc: 'wcag aa/aaa compliance for all color pairs' },
   { icon: Sparkles, label: 'presets', desc: 'pastel, neon, earth, jewel, monochrome, warm, cool, muted' },
-  { icon: Type, label: 'color naming', desc: '4,000+ names matched by oklab distance' },
-  { icon: Blend, label: 'variations', desc: 'tints, shades, tones' },
-  { icon: Gauge, label: 'harmony score', desc: 'rates palette cohesion 0–100 across hue spacing, saturation, and lightness' },
-  { icon: Pipette, label: 'color picker', desc: 'eyedropper or os picker' },
-  { icon: Layers, label: 'gradient generator', desc: 'linear gradients with palette-linked stops, css/svg/png/tailwind export' },
-  { icon: LayoutTemplate, label: 'palette preview', desc: 'title design (hero/editorial/poster) + shadcn ui elements mockup + font selector' },
-  { icon: ImageIcon, label: 'extract from image', desc: 'drag-and-drop an image to extract dominant colors via k-means clustering' },
+  { icon: Type, label: 'color naming', desc: 'every color shows its closest name from 4,000+ entries' },
+  { icon: Blend, label: 'variations', desc: 'tints, shades, and tones for any color' },
+  { icon: Gauge, label: 'harmony score', desc: 'rates how well your colors work together (0–100)' },
+  { icon: Pipette, label: 'color picker', desc: 'pick any color from your screen' },
+  { icon: Layers, label: 'gradient generator', desc: 'build gradients from your palette, export to css/svg/png' },
+  { icon: LayoutTemplate, label: 'palette preview', desc: 'see your colors in title layouts, dashboards, and mockups' },
+  { icon: ImageIcon, label: 'extract from image', desc: 'drop an image to pull out its dominant colors' },
+  { icon: FolderOpen, label: 'collections & tags', desc: 'organize saved palettes into groups and tag them for filtering' },
   { icon: Keyboard, label: 'keyboard', desc: 'every action has a shortcut' },
 ]
 
 const COMPETITOR_ROWS = [
-  { feature: 'max colors', us: '10', coolors: '5 free, ∞ pro ($3.49/mo)', colorffy: '5' },
+  { feature: 'max colors', us: '10', coolors: '5 free, ∞ pro ($99)', colorffy: '5' },
   { feature: 'contrast checker', us: true, coolors: 'pro', colorffy: 'pro ($5/mo)' },
   { feature: 'palette variations', us: true, coolors: 'pro', colorffy: 'free (limited)' },
   { feature: 'advanced exports', us: true, coolors: 'pro', colorffy: 'pro' },
+  { feature: 'collections & tags', us: true, coolors: 'pro', colorffy: '3 free, ∞ pro' },
+  { feature: 'palette preview', us: true, coolors: 'pro', colorffy: 'n/a' },
+  { feature: 'harmony score', us: true, coolors: 'n/a', colorffy: 'n/a' },
+  { feature: 'extract from image', us: true, coolors: 'free', colorffy: 'free (limited)' },
+  { feature: 'gradient tools', us: true, coolors: 'free', colorffy: 'free' },
   { feature: 'dark mode', us: true, coolors: 'pro', colorffy: 'free' },
-  { feature: 'unlimited saves', us: true, coolors: 'pro', colorffy: 'pro' },
+  { feature: 'unlimited saves', us: true, coolors: 'pro', colorffy: 'free' },
   { feature: 'cvd simulation', us: true, coolors: 'free', colorffy: 'n/a' },
   { feature: 'color naming', us: true, coolors: 'free', colorffy: 'n/a' },
   { feature: 'keyboard coverage', us: true, coolors: 'partial', colorffy: 'n/a' },
@@ -56,65 +62,61 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.18',
+    title: 'collections & tags',
+    items: [
+      'organize palettes into collections — create, rename, and delete from the open or save dialog',
+      'tag palettes when saving — type, press enter, or paste a comma-separated list',
+      'filter by collection tabs, tag chips, or text search — combine them freely',
+      'edit any saved palette inline: rename, retag, or move between collections',
+      'collections and tags are included when you export or import palettes',
+    ],
+  },
+  {
     version: '0.17',
     title: 'color harmony score',
     items: [
-      'inline score panel below the palette — Y key or click the row to expand',
-      'scores 0–100 based on hue spacing, saturation consistency, and lightness range',
-      'bonus when a named hue relationship is detected (complementary, analogous, triadic, etc.)',
-      'labels: relationship name, high contrast, balanced, varied, inconsistent, or discordant',
-      'needs at least 2 colors',
+      'live harmony score (0–100) below the palette — Y key to expand',
+      'detects complementary, analogous, triadic, and other hue relationships',
+      'scores hue spacing, saturation consistency, and lightness range',
     ],
   },
   {
     version: '0.16',
     title: 'extract from image',
     items: [
-      'drag-and-drop or click to upload any image (png, jpg, gif, webp)',
-      'k-means clustering finds the dominant colors',
-      'click or drag across swatches to toggle selection',
-      '"add N colors to palette" — replaces the whole palette when it\'s already full',
+      'drag-and-drop any image to extract its dominant colors',
+      'click or drag across swatches to pick which colors to keep',
       'X key or tab strip to open the extract view',
     ],
   },
   {
     version: '0.15',
-    title: 'palette preview / title design',
+    title: 'palette preview',
     items: [
-      'full-screen preview overlay — F key or preview button in toolbar',
-      'three modes: mosaic (color bars), title design (typography layouts), ui elements (component mockup)',
-      'title layouts: hero, editorial, poster — click the text to edit inline',
-      'ui elements mode driven by color role pickers (heading, background, accent, muted)',
-      'font selector: inter, playfair display, space grotesk, syne, nunito, jetbrains mono',
-      'fonts load on demand and fade in to avoid flash on switch',
+      'full-screen preview overlay — F key or toolbar button',
+      'three modes: color bars, title design (hero / editorial / poster), and ui mockup',
+      'editable text, color role pickers, and six font choices',
     ],
   },
   {
     version: '0.14',
     title: 'gradient generator',
     items: [
-      'linear gradient view — switch with G key or the tab strip',
-      'interactive stop bar: click to add, drag to move, remove button per stop',
-      'stops can be palette-linked (auto-sync with palette) or custom (fixed color)',
-      'angle control: range slider, +/− buttons, and type-in field (0–360°)',
-      'export to css, tailwind, svg, and png at up to 1920px',
-      'aspect ratio toggle: 16:9, 4:3, 1:1, 4:5, 9:16',
-      'rebuild from palette button re-seeds all stops from current palette',
-      'E key opens gradient export when in gradient view',
-      'gradient state persists across page reloads',
+      'linear gradient view — G key or the tab strip',
+      'click the stop bar to add colors, drag to reposition, hover to remove',
+      'stops sync with your palette or use custom colors',
+      'export to css, tailwind, svg, and png — E key in gradient view',
     ],
   },
   {
     version: '0.13',
-    title: 'image export, oklch picker, polish',
+    title: 'image export & polish',
     items: [
-      'png/svg image export with grid layout and hex labels (⇧⌘E)',
-      'oklch color picker mode — toggle between hsl and perceptually uniform oklch',
-      'rearrange mode (M key) replaces drag-to-reorder',
-      'cvd filter no longer rasterizes ui — applies only to color circles with crossfade',
-      'smooth fade transition when loading saved palettes',
-      'cleaner share urls using hyphen separator',
-      'many bug fixes: keyboard accessibility, zoom overflow, platform-specific issues',
+      'download your palette as png or svg with optional hex / name labels',
+      'oklch color picker mode alongside hsl',
+      'rearrange mode (M key) for reordering colors',
+      'smoother transitions when loading saved palettes',
     ],
   },
   {
@@ -122,85 +124,76 @@ const CHANGELOG = [
     title: 'expand to 10 colors',
     items: [
       'palette now supports up to 10 colors (was 5)',
-      'two-row layout: 3+3, 4+3, 4+4, 5+4, 5+5 split patterns',
-      'position-to-position animations via framer motion',
-      'drag-to-reorder extended to work across both rows',
+      'two-row layout that adapts as you add or remove colors',
+      'drag-to-reorder works across both rows',
       'shortcuts 6–9 and 0 for positions 6–10',
     ],
   },
   {
     version: '0.11',
-    title: 'edit mode & workflow docs',
+    title: 'edit mode & docs',
     items: [
       'dedicated edit mode help page',
-      'agents.md workflow style guide added',
-      'full vitest test suite with 206 tests',
+      'in-app documentation and user guide',
     ],
   },
   {
     version: '0.10',
-    title: 'eyedropper / color picker',
+    title: 'eyedropper',
     items: [
-      'native eyedropper api on chromium browsers',
-      'os color picker fallback on firefox/safari',
-      'pipette icon in edit mode for per-color picking',
-      'I keyboard shortcut',
+      'pick any color from your screen — I key',
+      'chromium: native eyedropper. firefox/safari: os color picker fallback',
+      'pipette also available per-color in edit mode',
     ],
   },
   {
     version: '0.9',
-    title: 'color variations panel',
+    title: 'color variations',
     items: [
-      '9 tints, 9 shades, 9 tones per color',
-      'distinct swatch shapes: rounded squares, diamonds, pentagons',
-      'click to copy, shift+click to replace',
-      'V → 1-9, 0 leader key chord',
+      'tints, shades, and tones for any color — 9 steps each',
+      'click to copy hex, shift+click to replace the palette color',
+      'V key then 1–9, 0 to open variations for a specific color',
     ],
   },
   {
     version: '0.8',
     title: 'color naming',
     items: [
-      'oklab nearest-neighbor lookup from 4,000+ curated names',
-      'css named color tooltip when within threshold',
-      'displayed on each palette item',
+      'every color shows its closest name from 4,000+ curated entries',
+      'css named colors highlighted when nearby',
     ],
   },
   {
     version: '0.7',
-    title: 'quick palette presets',
+    title: 'palette presets',
     items: [
-      '8 preset styles: pastel, neon, earth, jewel, monochrome, warm, cool, muted',
-      'P key to cycle, confirmation dialog only when colors are locked',
-      'preset browser with arrow navigation and reroll',
+      '8 styles: pastel, neon, earth, jewel, monochrome, warm, cool, muted',
+      'P key to cycle through presets, arrows to browse, reroll to regenerate',
     ],
   },
   {
     version: '0.6',
-    title: 'keyboard shortcut overhaul',
+    title: 'keyboard shortcuts',
     items: [
-      'grouped layout with category labels',
-      'os-aware modifier symbols (⇧/⌥ on mac, shift/alt on windows)',
-      'full keyboard coverage: every action reachable',
+      'every action reachable from the keyboard',
+      'grouped hints bar with os-aware modifier symbols',
     ],
   },
   {
     version: '0.5',
     title: 'contrast checker',
     items: [
-      'wcag aa, aaa, aa18 compliance levels',
-      'matrix view for all color pairs',
-      'per-color cards vs theme backgrounds',
-      'tabbed ui with crossfade animation',
+      'wcag aa, aaa, and large text compliance for every color pair',
+      'matrix view and per-color cards vs light/gray/dark backgrounds',
+      'K key to toggle, shift+K to switch tabs',
     ],
   },
   {
     version: '0.4',
     title: 'color blindness preview',
     items: [
-      'deuteranopia, protanopia, tritanopia, achromatopsia',
-      'site-wide svg filter application',
-      'circle wipe transition for theme, horizontal wipe for cvd',
+      'simulate deuteranopia, protanopia, tritanopia, and achromatopsia',
+      'applies to the entire ui so you see exactly what affected users see',
     ],
   },
   {
@@ -351,6 +344,8 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'page', id: 'presets', label: 'presets' },
   { type: 'section', label: 'storage' },
   { type: 'page', id: 'save-open', label: 'save & open' },
+  { type: 'page', id: 'collections', label: 'collections' },
+  { type: 'page', id: 'tags', label: 'tags' },
   { type: 'page', id: 'backup', label: 'import / export palettes' },
   { type: 'section', label: 'copy & share' },
   { type: 'page', id: 'copy-formats', label: 'copy formats' },
@@ -1129,6 +1124,95 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
                 <code className="text-xs bg-muted px-1 rounded">localStorage</code> under <code className="text-xs bg-muted px-1 rounded">color-palette:saved</code>. persists across sessions but browser/domain specific. back up with import/export.
               </p>
             </div>
+          </div>
+        </DocArticle>
+      )
+
+    case 'collections':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              group saved palettes into named collections. think of them as folders — a palette can belong to one collection, or none.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">creating</h3>
+            <p>
+              in the open dialog, click <span className="font-medium text-foreground">+ new</span> next to the collection tabs. type a name and press <Kbd>enter</Kbd>. you can also create collections from the save dialog.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">filtering</h3>
+            <p>
+              click a collection tab to filter palettes. <span className="font-medium text-foreground">all</span> shows everything. <span className="font-medium text-foreground">uncategorized</span> shows palettes with no collection.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">renaming & deleting</h3>
+            <p>
+              double-click a collection tab to rename it. renaming updates all palettes in the collection. click the <span className="font-medium text-foreground">×</span> on a tab to delete — palettes move to uncategorized.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">assigning</h3>
+            <p>
+              when saving, pick a collection from the dropdown. to change later, click the pencil icon on any palette in the open dialog and use the collection dropdown.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              collection names must be unique. duplicate names are rejected with a notification. collections are included in json export/import.
+            </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'tags':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              add tags to palettes for flexible cross-collection filtering. a palette can have many tags.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">adding tags</h3>
+            <p>
+              in the save dialog or inline edit, type a tag and press <Kbd>enter</Kbd> or <Kbd>,</Kbd> to add it. paste comma-separated text to add multiple at once. suggestions appear from existing tags.
+            </p>
+            <p>
+              tags are lowercase, max 24 characters. press <Kbd>backspace</Kbd> on an empty input to remove the last tag.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">filtering by tag</h3>
+            <p>
+              in the open dialog, tag chips appear above the palette list. click a chip to filter — only palettes with that tag are shown. click again to deselect. combine multiple tags for intersection filtering.
+            </p>
+            <p>
+              a <span className="font-medium text-foreground">clear tags</span> chip appears when 2+ tags are active. switching collections automatically prunes tags that don't exist in the new set.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">search</h3>
+            <p>
+              the search bar in the open dialog matches both palette names and tags. use the <span className="font-medium text-foreground">×</span> to clear search text.
+            </p>
+          </div>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              tags are sorted alphabetically in the pill input. they're stored per-palette and included in json export/import.
+            </p>
           </div>
         </DocArticle>
       )
