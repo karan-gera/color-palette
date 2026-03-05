@@ -472,27 +472,27 @@ Organize saved palettes into collections and tag them for easy retrieval.
 
 ---
 
-## Session Palette History
+## Session Palette History ✅
 
 A visual timeline of every palette state generated during the current session. Solves the "that palette from 15 rerolls ago looked great" problem.
 
-- [ ] Thumbnail strip showing recent palette states as small color bars
-- [ ] Appears as a collapsible row above or below the main palette
-- [ ] Click any thumbnail to restore that palette state
-- [ ] Restoring from history pushes to undo stack (non-destructive)
-- [ ] Auto-captures on: reroll, preset apply, add/delete color, edit color, reorder
-- [ ] Deduplication: don't store consecutive identical states
-- [ ] Cap at ~50 entries to keep memory bounded
-- [ ] Session-only — not persisted to localStorage (intentional: keeps it lightweight)
-- [ ] Keyboard shortcut: `G` to toggle history strip visibility
+- [x] Thumbnail strip showing recent palette states as small color bars
+- [x] Appears as a collapsible row above or below the main palette
+- [x] Click any thumbnail to restore that palette state
+- [x] Restoring from history pushes to undo stack (non-destructive)
+- [x] Auto-captures on: reroll, preset apply, add/delete color, edit color, reorder
+- [x] Deduplication: don't store consecutive identical states
+- [x] Cap at ~50 entries to keep memory bounded
+- [x] Session-only — not persisted to localStorage (intentional: keeps it lightweight)
+- [x] Keyboard shortcut: `H` to toggle history strip visibility
 
 ### Display
-- [ ] Each thumbnail: 4-5 thin vertical color bars, ~40px wide
-- [ ] Hover preview: tooltip with hex codes
-- [ ] Current state highlighted with border/ring
-- [ ] Smooth horizontal scroll with overflow
+- [x] Each thumbnail: 4-5 thin vertical color bars, ~40px wide
+- [x] Hover preview: tooltip with hex codes
+- [x] Current state highlighted with border/ring
+- [x] Smooth horizontal scroll with overflow
 
-**Implementation:** Store palette snapshots (hex arrays) in a `useRef` array in `App.tsx`. Render as a horizontal scrollable strip with `overflow-x: auto`. Each thumbnail is a flex row of colored `div`s. Clicking dispatches to `useHistory.replace()`. No persistence, no dependencies.
+**Implementation:** `PaletteHistory.tsx` collapsible strip. Snapshots stored in `App.tsx` state, captured on every palette push. `H` key wired in `useKeyboardShortcuts`.
 
 ---
 
@@ -628,11 +628,11 @@ Replace the edit color modal with inline editing directly on the hex label below
 
 ---
 
-## PalettePort (Paid Feature — Kick the Can)
+## Community Sharing Platform (Deferred — Requires Backend)
 
-The only paid feature. A lightweight social palette gallery where users can browse, share, and discover palettes published by other people. Think "community presets" — not a full social network, just a curated feed of color palettes behind a paywall.
+A lightweight social palette gallery where users can browse, share, and discover palettes published by other people. Think "community presets" — not a full social network, just a curated feed of color palettes, optionally behind a supporter paywall.
 
-**Core philosophy:** PalettePort exists so we have something to offer in exchange for financial support. It does NOT paywall any features. Every tool, every export format, every accessibility feature — free, forever. PalettePort is purely additive. If users organically create a subreddit, Discord, or forum to trade shareable links, that's great — we will not compete with that or take action against it. PalettePort is a thank-you, not a tollbooth.
+**Core philosophy:** This is purely additive — it does NOT paywall any existing features. Every tool, every export format, every accessibility feature — free, forever. If users organically create a subreddit, Discord, or forum to trade shareable links, that's great — we will not compete with that. This is a thank-you for supporters, not a tollbooth.
 
 ### Competitor Pricing (What We're Undercutting)
 
@@ -998,13 +998,13 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 17. ~~**Gradient Generator**~~ ✅ Done! Vertical tab strip, stop bar, palette-linked stops, CSS/SVG/PNG/Tailwind export
 17. ~~**Palette Visualization**~~ ✅ Done! Title design (hero/editorial/poster) + shadcn UI elements mockup + font selector
 18. ~~**Color Harmony Score**~~ ✅ Done! Collapsible row, 0–100 score, hue/sat/lightness metrics, relationship detection, Y key
-19. **Session Palette History** - Solves real reroll regret, low-medium effort
+19. ~~**Session Palette History** - Solves real reroll regret, low-medium effort~~ ✅ Done!
 20. **Palette Collections and Tags** - Natural save/open evolution, medium effort
 21. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
 22. ~~**Extract from Image**~~ ✅ Done! Canvas API + k-means (k=10), drag-to-toggle swatch selection
 23. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
 24. **IndexedDB Migration** - Low priority, not needed yet
-25. **PalettePort** - Only paid feature, requires full backend, kick the can indefinitely
+25. **Community Sharing Platform** - Requires full backend, deferred indefinitely
 
 ---
 
