@@ -527,6 +527,7 @@ function App() {
       <AnimatePresence>
         {showPreviewOverlay && (
           <PalettePreviewOverlay
+            key={(current ?? []).join(',')}
             palette={current ?? []}
             onClose={() => setShowPreviewOverlay(false)}
           />

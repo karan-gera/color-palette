@@ -30,11 +30,9 @@ const TITLE_LAYOUTS: Array<{ id: TitleLayout; label: string }> = [
   { id: 'poster',    label: 'poster'    },
 ]
 
-const ROLES_KEY    = 'color-palette:preview-title-roles'
 const TEXT_KEY     = 'color-palette:preview-title-text'
 const LAYOUT_KEY   = 'color-palette:preview-title-layout'
 const MODE_KEY     = 'color-palette:preview-mode'
-const UI_ROLES_KEY = 'color-palette:preview-ui-roles'
 const FONT_KEY     = 'color-palette:preview-ui-font'
 const RADIUS_KEY   = 'color-palette:preview-ui-radius'
 
@@ -51,23 +49,36 @@ type FontId = typeof FONTS[number]['id']
 
 type RoleIndices = { bg: number; heading: number; accent: number }
 
-function clampRoles(r: RoleIndices, len: number): RoleIndices {
-  const c = (n: number) => Math.max(0, Math.min(n, Math.max(0, len - 1)))
-  return { bg: c(r.bg), heading: c(r.heading), accent: c(r.accent) }
+function autoAssignTitleRoles(palette: string[]): RoleIndices {
+  const n = palette.length
+  if (n === 0) return { bg: 0, heading: 0, accent: 0 }
+  const items = palette.map((hex, i) => ({ i, lum: hexLuminance(hex), sat: hexSaturation(hex) }))
+
+  // bg: darkest if palette leans dark, lightest if palette leans light
+  const avgLum = items.reduce((s, c) => s + c.lum, 0) / items.length
+  const bgItem = avgLum <= 0.5
+    ? items.reduce((best, c) => c.lum < best.lum ? c : best)   // darkest
+    : items.reduce((best, c) => c.lum > best.lum ? c : best)   // lightest
+  const bg = bgItem.i
+
+  // heading: best WCAG contrast vs bg from remaining colors
+  const bgLum = bgItem.lum
+  const rest = items.filter(c => c.i !== bg)
+  const contrast = (lA: number, lB: number) =>
+    (Math.max(lA, lB) + 0.05) / (Math.min(lA, lB) + 0.05)
+  const headingItem = rest.length > 0
+    ? rest.reduce((best, c) => contrast(bgLum, c.lum) > contrast(bgLum, best.lum) ? c : best)
+    : bgItem
+  const heading = headingItem.i
+
+  // accent: most saturated remaining color; fall back to most saturated overall
+  const rest2 = items.filter(c => c.i !== bg && c.i !== heading)
+  const accent = (rest2.length > 0 ? rest2 : items)
+    .reduce((best, c) => c.sat > best.sat ? c : best).i
+
+  return { bg, heading, accent }
 }
 
-function loadRoles(paletteLen: number): RoleIndices {
-  const defaults: RoleIndices = {
-    bg:      Math.max(0, paletteLen - 1),
-    heading: 0,
-    accent:  Math.max(0, Math.floor(paletteLen / 2)),
-  }
-  try {
-    const raw = localStorage.getItem(ROLES_KEY)
-    if (raw) return clampRoles(JSON.parse(raw), paletteLen)
-  } catch { /* ignore */ }
-  return defaults
-}
 
 // ---------------------------------------------------------------------------
 // Mosaic Mode — color bars
@@ -124,15 +135,6 @@ function hexSaturation(hex: string): number {
   return l > 0.5 ? d / (2 - max - min) : d / (max + min)
 }
 
-function clampUIRoles(r: UIRoles, len: number): UIRoles {
-  const c = (n: number) => Math.max(0, Math.min(n, Math.max(0, len - 1)))
-  return {
-    background: c(r.background), foreground: c(r.foreground), card: c(r.card),
-    primary: c(r.primary), accent: c(r.accent), border: c(r.border), muted: c(r.muted),
-    destructive: c(r.destructive),
-  }
-}
-
 function autoAssignUIRoles(palette: string[]): UIRoles {
   if (palette.length === 0) {
     const z = 0
@@ -154,13 +156,6 @@ function autoAssignUIRoles(palette: string[]): UIRoles {
   }
 }
 
-function loadUIRoles(palette: string[]): UIRoles {
-  try {
-    const raw = localStorage.getItem(UI_ROLES_KEY)
-    if (raw) return clampUIRoles(JSON.parse(raw), palette.length)
-  } catch { /* ignore */ }
-  return autoAssignUIRoles(palette)
-}
 
 function buildThemeVars(colors: UIColors): React.CSSProperties {
   const fgOn = (hex: string) => hexLuminance(hex) > 0.35 ? '#000000' : '#ffffff'
@@ -784,20 +779,28 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
     () => localStorage.getItem(TEXT_KEY + ':subtitle') ?? 'color system'
   )
 
-  // Title mode role indices
-  const [roles, setRoles] = useState<RoleIndices>(() => loadRoles(palette.length))
+  // Title mode role indices — always fresh on mount, no cache
+  const [roles, setRoles] = useState<RoleIndices>(() => autoAssignTitleRoles(palette))
 
-  // UI elements mode role indices
-  const [uiRoles, setUIRoles] = useState<UIRoles>(() => loadUIRoles(palette))
-
-  // Persist whenever roles/text/layout change
+  // Clean up stale localStorage keys left by older code versions
   useEffect(() => {
-    localStorage.setItem(ROLES_KEY, JSON.stringify(roles))
-  }, [roles])
+    localStorage.removeItem('color-palette:preview-title-roles')
+    localStorage.removeItem('color-palette:preview-ui-roles')
+  }, [])
 
+  // Re-assign when palette changes by more than 1 color while overlay is open
+  const prevPaletteRef = useRef<string[]>(palette)
   useEffect(() => {
-    localStorage.setItem(UI_ROLES_KEY, JSON.stringify(uiRoles))
-  }, [uiRoles])
+    const prev = prevPaletteRef.current
+    prevPaletteRef.current = palette
+    const changed = prev.length !== palette.length
+      ? palette.length
+      : palette.filter((c, i) => c !== prev[i]).length
+    if (changed > 1) setRoles(autoAssignTitleRoles(palette))
+  }, [palette])
+
+  // UI elements mode role indices — always fresh on mount, no cache
+  const [uiRoles, setUIRoles] = useState<UIRoles>(() => autoAssignUIRoles(palette))
 
   useEffect(() => {
     localStorage.setItem(TEXT_KEY + ':heading', heading)
