@@ -1008,4 +1008,50 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 
 ---
 
+## Landing Page
+
+A standalone marketing page to anchor the launch — lives at the root domain (or a subdomain) and links to the app.
+
+### Goal
+Communicate the value prop in seconds: "the best free color palette tool, no sign-up required." Convert curious visitors into active users.
+
+### Sections
+- [ ] Hero — animated live palette + headline + single CTA ("open the app")
+- [ ] Feature highlights — 4–6 key features with short copy and visual (screenshot or live demo snippet): palette generation, export formats, gradient generator, extract from image, palette preview, harmony score
+- [ ] "Everything free" callout — no sign-up, no paywall, works offline, runs in the browser
+- [ ] Keyboard shortcuts teaser — show 5–6 power-user shortcuts to signal depth
+- [ ] Footer — link to app, GitHub, changelog
+
+### Design direction
+- Monospace throughout (matches app aesthetic)
+- Dark/neutral palette — let the color palette demos supply the color
+- Animated hero: palette circles that cycle through example palettes on load
+- No stock photos, no generic gradients — the tool's own output is the visual
+
+### Technical
+- [ ] Separate repo or `/landing` subfolder — keep it decoupled from the app bundle
+- [ ] Static HTML/CSS/JS or a minimal framework (Astro, Next.js static export)
+- [ ] OG meta tags: title, description, og:image (palette screenshot)
+- [ ] og:image generator — static or dynamic (Vercel OG / Satori)
+- [ ] Analytics (Plausible or simple `umami` — no cookies)
+
+---
+
+---
+
+## Custom Domain (paletteport.com)
+
+When the domain is purchased, wire up the full integration. The first-visit landing flow is already implemented — these are the remaining production steps.
+
+- [ ] **FIRST:** Restore `!isLocal` guard in `index.html` inline script (currently removed for local testing — see `TODO` comment on line ~12)
+- [ ] Add `CNAME` file to repo root with contents `paletteport.com` (GitHub Pages custom domain)
+- [ ] Change `vite.config.ts` `base` from `'/color-palette/'` to `'/'`
+- [ ] Update all 3 CTA `href` values in `public/landing/final.html` from `/color-palette/` to `/`
+- [ ] Update `<title>` in `index.html` from `Color Palette` to `PalettePort`
+- [ ] Update favicon if desired
+
+**Already done:** first-visit detection in `index.html` (redirects new users to `landing/final.html`), localStorage key set on all CTAs, `main.tsx` marks user as visited on app load.
+
+---
+
 *All features are client-side only. No backend, no accounts, no paywalls — except PalettePort.*

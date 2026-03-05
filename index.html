@@ -8,6 +8,16 @@
     <script>
       // Prevent flash of wrong theme/CVD - runs before body renders
       (function() {
+        // First-visit redirect — send new users to the landing page
+        // TODO: restore !isLocal guard before domain switch (see TODO.md § Custom Domain)
+        // Share links (?colors=...) bypass the redirect and don't mark the user as visited,
+        // so their next direct visit still shows the landing page.
+        var visited = localStorage.getItem('paletteport:visited');
+        var isShareLink = location.search.indexOf('colors=') !== -1;
+        if (!visited && !isShareLink) {
+          location.replace('landing/final.html');
+        }
+
         // Theme
         var theme = localStorage.getItem('color-palette:theme');
         if (!theme) {

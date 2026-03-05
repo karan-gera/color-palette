@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PalettePort — Color Palette Generator</title>
+  <meta name="description" content="The free, unlimited color palette generator for designers and developers. Generate, extract, preview, and export beautiful palettes. No sign-up, no limits." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f6f5f1;
+      --bg-dark: #111110;
+      --fg: #111110;
+      --fg-muted: rgba(17,17,16,0.48);
+      --fg-faint: rgba(17,17,16,0.14);
+      --border: rgba(17,17,16,0.1);
+      --font-serif: 'DM Serif Display', Georgia, serif;
+      --font-mono: 'Fragment Mono', ui-monospace, monospace;
+      --c1: #E8A24C;
+      --c2: #C45E48;
+      --c3: #4A8FA3;
+      --c4: #8B5FB3;
+      --c5: #7AB87A;
+      --circle-border: rgba(0,0,0,0.14);
+      --circle-shadow: 0 12px 48px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+      --mini-circle-border: rgba(0,0,0,0.15);
+      --preview-card-bg: #ffffff;
+      --preview-card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141413;
+        --bg-dark: #0a0a09;
+        --fg: #f0efeb;
+        --fg-muted: rgba(240,239,235,0.48);
+        --fg-faint: rgba(240,239,235,0.14);
+        --border: rgba(240,239,235,0.1);
+        --circle-border: rgba(255,255,255,0.12);
+        --circle-shadow: 0 12px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+        --mini-circle-border: rgba(255,255,255,0.12);
+        --preview-card-bg: #242422;
+        --preview-card-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      }
+    }
+
+    html { background: var(--bg); color: var(--fg); scroll-behavior: smooth; }
+    body { font-family: var(--font-mono); overflow-x: hidden; }
+
+    /* ─── STRIP ─── */
+    .strip { height: 5px; display: flex; width: 100%; }
+    .strip span { flex: 1; }
+
+    /* ─── NAV ─── */
+    nav {
+      padding: 20px 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+    .nav-logo em { font-style: italic; opacity: 0.6; }
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.1em;
+      color: var(--fg);
+      text-decoration: none;
+      border-bottom: 1px solid var(--fg);
+      padding-bottom: 1px;
+      transition: opacity 0.15s;
+    }
+    .nav-cta:hover { opacity: 0.55; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: calc(100svh - 65px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 0 56px 56px;
+      gap: 40px;
+    }
+    .hero-copy { max-width: 560px; }
+    .eyebrow {
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      color: var(--fg-muted);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .headline {
+      font-family: var(--font-serif);
+      font-size: clamp(52px, 6.5vw, 90px);
+      line-height: 0.92;
+      letter-spacing: -0.025em;
+      margin-bottom: 28px;
+    }
+    .headline em { font-style: italic; opacity: 0.65; }
+    .sub {
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: var(--fg-muted);
+      max-width: 420px;
+      margin-bottom: 40px;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--fg);
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      padding: 14px 28px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .hero-btn:hover { opacity: 0.82; }
+    .hero-btn-note {
+      display: block;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--fg-muted);
+      letter-spacing: 0.07em;
+    }
+
+    /* ─── CIRCLES ─── */
+    .hero-visual {
+      position: relative;
+      height: min(560px, 60vw);
+      max-height: 560px;
+    }
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px dashed var(--circle-border);
+      box-shadow: var(--circle-shadow);
+    }
+    .circle:nth-child(1) { width:190px;height:190px;background:var(--c1);left:4%;top:5%;animation:d1 12s ease-in-out infinite alternate; }
+    .circle:nth-child(2) { width:160px;height:160px;background:var(--c2);left:38%;top:30%;animation:d2 9s ease-in-out infinite alternate;animation-delay:-3s; }
+    .circle:nth-child(3) { width:220px;height:220px;background:var(--c3);left:12%;top:46%;animation:d3 14s ease-in-out infinite alternate;animation-delay:-6s; }
+    .circle:nth-child(4) { width:140px;height:140px;background:var(--c4);left:58%;top:8%;animation:d4 10s ease-in-out infinite alternate;animation-delay:-1s; }
+    .circle:nth-child(5) { width:170px;height:170px;background:var(--c5);left:52%;top:55%;animation:d5 11s ease-in-out infinite alternate;animation-delay:-8s; }
+    @keyframes d1 { to { transform: translate(14px, 22px); } }
+    @keyframes d2 { to { transform: translate(-20px, -14px); } }
+    @keyframes d3 { to { transform: translate(18px, -20px); } }
+    @keyframes d4 { to { transform: translate(-12px, 24px); } }
+    @keyframes d5 { to { transform: translate(16px, -18px); } }
+
+    /* ─── PAGE ─── */
+    .page { max-width: 1140px; margin: 0 auto; padding: 0 56px; }
+    .rule { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ─── FEATURE SECTIONS ─── */
+    .feature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      padding: 88px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .feature-section:first-of-type { border-top: 1px solid var(--border); }
+    .feature-section.reverse { direction: rtl; }
+    .feature-section.reverse > * { direction: ltr; }
+    .feature-tag {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feature-tag::before { content: ''; width: 20px; height: 1px; background: var(--fg-muted); display: inline-block; }
+    .feature-headline {
+      font-family: var(--font-serif);
+      font-size: clamp(30px, 3.5vw, 46px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .feature-headline em { font-style: italic; opacity: 0.65; }
+    .feature-body { font-size: 13px; line-height: 1.8; color: var(--fg-muted); max-width: 480px; }
+    .feature-body p + p { margin-top: 14px; }
+
+    /* Visual accents */
+    .feature-visual { display: flex; flex-direction: column; gap: 6px; }
+    .palette-row { display: flex; height: 52px; border-radius: 2px; overflow: hidden; }
+    .palette-row span { flex: 1; }
+    .palette-row:nth-child(2) { height: 40px; opacity: 0.7; }
+    .palette-row:nth-child(3) { height: 30px; opacity: 0.45; }
+    .mini-circles { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .mini-circle { border-radius: 50%; border: 2px dashed var(--mini-circle-border); }
+    .export-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .export-tag { font-size: 11px; padding: 6px 12px; border: 1px solid var(--border); color: var(--fg-muted); letter-spacing: 0.06em; }
+    .preview-stack { display: flex; flex-direction: column; gap: 10px; }
+    .preview-card { background: var(--preview-card-bg); border: 1px solid var(--border); padding: 16px 20px; box-shadow: var(--preview-card-shadow); }
+    .preview-card-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 8px; }
+    .preview-card-swatches { display: flex; gap: 6px; }
+    .preview-card-swatches span { height: 28px; flex: 1; border-radius: 50px; }
+
+    /* ─── EXTRAS ─── */
+    .extras { padding: 80px 0; border-bottom: 1px solid var(--border); }
+    .extras-title { font-family: var(--font-serif); font-size: 13px; font-style: italic; color: var(--fg-muted); margin-bottom: 36px; letter-spacing: 0.02em; }
+    .extras-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+    .extra { padding: 22px 24px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .extra-name { font-size: 12.5px; margin-bottom: 4px; }
+    .extra-desc { font-size: 11px; line-height: 1.6; color: var(--fg-muted); }
+
+    /* ─── CLOSING ─── */
+    .closing { background: var(--bg-dark); color: rgba(255,255,255,0.88); padding: 100px 56px; text-align: center; }
+    .closing-kicker { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 24px; }
+    .closing-headline { font-family: var(--font-serif); font-size: clamp(40px, 6vw, 80px); line-height: 1; letter-spacing: -0.025em; max-width: 800px; margin: 0 auto 24px; }
+    .closing-headline em { font-style: italic; opacity: 0.55; }
+    .closing-body { font-size: 13px; line-height: 1.8; color: rgba(255,255,255,0.45); max-width: 520px; margin: 0 auto 44px; }
+    .closing-btn { display: inline-block; padding: 16px 44px; background: rgba(255,255,255,0.92); color: #111110; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-decoration: none; transition: background 0.15s; }
+    .closing-btn:hover { background: #ffffff; }
+    .closing-note { display: block; margin-top: 16px; font-size: 10px; letter-spacing: 0.07em; color: rgba(255,255,255,0.28); }
+
+    /* ─── FOOTER ─── */
+    footer { padding: 20px 56px; display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--fg-muted); border-top: 1px solid var(--border); background: var(--bg); }
+    .footer-logo { font-family: var(--font-serif); font-size: 13px; }
+    .footer-logo em { font-style: italic; opacity: 0.6; }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 900px) {
+      nav, .page, .closing { padding-left: 28px; padding-right: 28px; }
+      .hero { grid-template-columns: 1fr; padding: 32px 28px 48px; min-height: auto; gap: 48px; }
+      .hero-visual { height: 320px; order: -1; }
+      .circle:nth-child(1) { width: 120px; height: 120px; left: 2%; top: 5%; }
+      .circle:nth-child(2) { width: 100px; height: 100px; left: 36%; top: 32%; }
+      .circle:nth-child(3) { width: 140px; height: 140px; left: 8%; top: 50%; }
+      .circle:nth-child(4) { width: 90px; height: 90px; left: 60%; top: 8%; }
+      .circle:nth-child(5) { width: 110px; height: 110px; left: 55%; top: 56%; }
+      .feature-section { grid-template-columns: 1fr; gap: 36px; padding: 56px 0; }
+      .feature-section.reverse { direction: ltr; }
+      .extras-grid { grid-template-columns: 1fr 1fr; }
+      .closing { padding: 72px 28px; }
+      footer { padding: 16px 28px; flex-direction: column; gap: 8px; text-align: center; }
+    }
+    @media (max-width: 560px) {
+      .extras-grid { grid-template-columns: 1fr; }
+      .extra { border-right: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="strip" aria-hidden="true">
+    <span style="background:var(--c1)"></span>
+    <span style="background:var(--c2)"></span>
+    <span style="background:var(--c3)"></span>
+    <span style="background:var(--c4)"></span>
+    <span style="background:var(--c5)"></span>
+  </div>
+
+  <nav>
+    <span class="nav-logo">Palette<em>Port</em></span>
+    <a href="/color-palette/" class="nav-cta" onclick="localStorage.setItem('paletteport:visited','1')">open the tool →</a>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">free. forever.</p>
+      <h1 class="headline">Every color.<br><em>Every format.</em><br>Zero compromises.</h1>
+      <p class="sub">No paywalls. No watermarks. No account required. No tiers. It's all free. And that's not changing.</p>
+      <a href="/color-palette/" class="hero-btn" onclick="localStorage.setItem('paletteport:visited','1')">→ open paletteport</a>
+      <span class="hero-btn-note">no account &nbsp;·&nbsp; no subscription &nbsp;·&nbsp; runs in your browser</span>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="circle"></div>
+      <div class="circle"></div>
+      <div class="circle"></div>
+      <div class="circle"></div>
+      <div class="circle"></div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ─── FEATURES ─── -->
+  <div class="page">
+
+    <!-- Generate -->
+    <div class="feature-section">
+      <div>
+        <p class="feature-tag">generate</p>
+        <h2 class="feature-headline">Start anywhere.<br>Keep something.<br>Make everything.</h2>
+        <div class="feature-body">
+          <p>Roll for a random color, or pick one from something you love. Build out with any color relationship: complementary, triadic, monochromatic, or anything in between. Start from a preset if you'd rather hit the ground running.</p>
+          <p>Lock the colors that land. Reroll or edit the ones that don't. We work at your pace. You bring the flow.</p>
+        </div>
+      </div>
+      <div class="feature-visual">
+        <div class="palette-row">
+          <span style="background:#E8A24C"></span><span style="background:#C45E48"></span>
+          <span style="background:#4A8FA3"></span><span style="background:#8B5FB3"></span>
+          <span style="background:#7AB87A"></span>
+        </div>
+        <div class="palette-row">
+          <span style="background:#FF6B6B"></span><span style="background:#FFA07A"></span>
+          <span style="background:#FFD93D"></span><span style="background:#6BCB77"></span>
+          <span style="background:#4D96FF"></span>
+        </div>
+        <div class="palette-row">
+          <span style="background:#264653"></span><span style="background:#2A9D8F"></span>
+          <span style="background:#E9C46A"></span><span style="background:#F4A261"></span>
+          <span style="background:#E76F51"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extract -->
+    <div class="feature-section reverse">
+      <div>
+        <p class="feature-tag">extract</p>
+        <h2 class="feature-headline">You can't invent<br><em>good taste.</em><br>But you can steal it.</h2>
+        <div class="feature-body">
+          <p>That photo from your Pinterest feed. The poster on your wall. A screenshot from somewhere on the internet at 2am that you just had to save. Inspiration is everywhere: in nature, in architecture, in art you didn't make but can't stop thinking about.</p>
+          <p>Creativity has always been collaborative. Art builds on art. You're not stealing, you're continuing a conversation that started long before you got here. Drop any image into PalettePort. K-means extraction finds the dominant colors automatically. Click swatches to select, or drag across a range. Then make them yours.</p>
+        </div>
+      </div>
+      <div class="feature-visual">
+        <div class="mini-circles">
+          <div class="mini-circle" style="width:88px;height:88px;background:#C45E48"></div>
+          <div class="mini-circle" style="width:72px;height:72px;background:#E8A24C"></div>
+          <div class="mini-circle" style="width:64px;height:64px;background:#7AB87A"></div>
+          <div class="mini-circle" style="width:80px;height:80px;background:#4A8FA3"></div>
+          <div class="mini-circle" style="width:56px;height:56px;background:#8B5FB3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="feature-section">
+      <div>
+        <p class="feature-tag">preview</p>
+        <h2 class="feature-headline">Context<br><em>changes</em><br>everything.</h2>
+        <div class="feature-body">
+          <p>See how your palette looks on a dashboard UI, or what it would feel like as the backbone for your blog or slide deck. Or maybe you just want to check out the pretty mosaic. That's cool too :3</p>
+        </div>
+      </div>
+      <div class="feature-visual">
+        <div class="preview-stack">
+          <div class="preview-card">
+            <div class="preview-card-label">Title Design — Hero</div>
+            <div class="preview-card-swatches">
+              <span style="background:#111110"></span>
+              <span style="background:#E8A24C"></span>
+              <span style="background:#C45E48"></span>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-card-label">UI Elements — Dashboard</div>
+            <div class="preview-card-swatches">
+              <span style="background:#e8e6e0"></span>
+              <span style="background:#4A8FA3"></span>
+              <span style="background:#8B5FB3"></span>
+              <span style="background:#7AB87A"></span>
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-card-label">Title Design — Poster</div>
+            <div class="preview-card-swatches">
+              <span style="background:#0d0d0d"></span>
+              <span style="background:#E8A24C"></span>
+              <span style="background:#e8e6e0"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="feature-section reverse">
+      <div>
+        <p class="feature-tag">export</p>
+        <h2 class="feature-headline">Pick where you're going.<br><em>We'll meet</em><br>you there.</h2>
+        <div class="feature-body">
+          <p>Hex, HSL, RGB, OKLCH, CSS custom properties, Tailwind config, copy any format in a single click. Export a full gradient to CSS, SVG, or PNG at any aspect ratio. Share your entire palette as a URL.</p>
+          <p>PalettePort should be a part of your workflow, not a kink in your muscle memory. If you don't see an export format you need, let us know. We'll try to make it happen !!</p>
+        </div>
+      </div>
+      <div class="feature-visual">
+        <div class="export-tags">
+          <span class="export-tag">hex</span>
+          <span class="export-tag">hsl</span>
+          <span class="export-tag">rgb</span>
+          <span class="export-tag">oklch</span>
+          <span class="export-tag">css vars</span>
+          <span class="export-tag">tailwind</span>
+          <span class="export-tag">svg</span>
+          <span class="export-tag">png</span>
+          <span class="export-tag">share url</span>
+          <span class="export-tag">gradient css</span>
+          <span class="export-tag">gradient svg</span>
+          <span class="export-tag">gradient png</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extras -->
+    <div class="extras">
+      <p class="extras-title">And that's not even everything.</p>
+      <div class="extras-grid">
+        <div class="extra">
+          <div class="extra-name">Harmony Score</div>
+          <div class="extra-desc">Live 0–100 rating across hue spacing, saturation, and lightness. Know if your palette actually works.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">WCAG Contrast</div>
+          <div class="extra-desc">Full contrast matrix for every pair in your palette. AA and AAA at a glance.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Gradient Builder</div>
+          <div class="extra-desc">Build linear gradients from your palette. Palette-linked stops sync automatically as colors change.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Color Blindness</div>
+          <div class="extra-desc">Simulate deuteranopia, protanopia, tritanopia, and achromatopsia with a live wipe preview.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Up to 10 Colors</div>
+          <div class="extra-desc">Build full design systems, not just accent pairs. Add, remove, lock, and reorder any color in your palette.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Keyboard First</div>
+          <div class="extra-desc">Full keyboard shortcut coverage. Reroll, lock, undo, export — everything is one key away.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── CLOSING ─── -->
+  <section class="closing">
+    <p class="closing-kicker">that's it. that's all of it.</p>
+    <h2 class="closing-headline">It's free.<br><em>Stop looking for the catch.</em></h2>
+    <p class="closing-body">There isn't one. No paywall. No watermarks. No three-palette monthly limit. No "your free trial has ended." No account required. No dark patterns. PalettePort is free because good free options should exist. Use it. Tell us what works, tell us what doesn't.</p>
+    <a href="/color-palette/" class="closing-btn" onclick="localStorage.setItem('paletteport:visited','1')">→ fine. open paletteport.</a>
+    <span class="closing-note">no catch &nbsp;·&nbsp; no account &nbsp;·&nbsp; art makes the world go round</span>
+  </section>
+
+  <footer>
+    <span class="footer-logo">Palette<em>Port</em></span>
+    <span>© 2026 PalettePort &nbsp;·&nbsp; cubeTools</span>
+  </footer>
+
+</body>
+</html>
