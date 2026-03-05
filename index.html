@@ -14,8 +14,12 @@
         // so their next direct visit still shows the landing page.
         var visited = localStorage.getItem('paletteport:visited');
         var isShareLink = location.search.indexOf('colors=') !== -1;
-        if (!visited && !isShareLink) {
-          location.replace('landing/final.html');
+        var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        // TODO: remove !isLocal before domain switch (see TODO.md § Custom Domain)
+        // In dev, Vite serves the React app for all routes — landing/ only works on GitHub Pages.
+        // Test the landing page directly at: /color-palette/landing/index.html
+        if (!visited && !isShareLink && !isLocal) {
+          location.replace('landing/');
         }
 
         // Theme
