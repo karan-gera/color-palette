@@ -35,6 +35,25 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
     setShowSuggestions(false)
   }
 
+  const addMany = (raw: string) => {
+    const candidates = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+    const unique = candidates.reduce<string[]>((acc, t) => {
+      if (!tags.includes(t) && !acc.includes(t)) acc.push(t)
+      return acc
+    }, [])
+    if (unique.length > 0) onChange([...tags, ...unique])
+    setInput('')
+    setShowSuggestions(false)
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text')
+    if (text.includes(',')) {
+      e.preventDefault()
+      addMany(text)
+    }
+  }
+
   const removeTag = (tag: string) => {
     onChange(tags.filter((t) => t !== tag))
   }
@@ -92,6 +111,7 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
             setShowSuggestions(true)
           }}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder={tags.length === 0 ? placeholder : ''}
