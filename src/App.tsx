@@ -463,13 +463,13 @@ function App() {
             existingTags={getAllTags()}
             collections={savedCollections}
             onCancel={() => setIsSaveDialog(false)}
-            onSave={(name, tags, collectionId) => {
+            onSave={(name, tags, collection) => {
               if (history.length === 0) {
                 setIsSaveDialog(false)
                 return
               }
               const toSave = (current ?? [])
-              savePalette(toSave, name, tags, collectionId)
+              savePalette(toSave, name, tags, collection)
               setSavedPalettes(getSavedPalettes())
               setIsSaveDialog(false)
             }}

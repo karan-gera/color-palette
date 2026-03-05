@@ -61,21 +61,21 @@ export default function OpenDialog({
 
   // Filter state
   const [search, setSearch] = useState('')
-  const [activeCollectionId, setActiveCollectionId] = useState<string | null>(null) // null = All
+  const [activeCollection, setActiveCollection] = useState<string | null>(null) // null = All
   const [activeTagFilters, setActiveTagFilters] = useState<string[]>([])
 
   // Collection editing state
   const [creatingCollection, setCreatingCollection] = useState(false)
   const [newCollectionName, setNewCollectionName] = useState('')
-  const [renamingCollectionId, setRenamingCollectionId] = useState<string | null>(null)
+  const [renamingCollection, setRenamingCollection] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
-  const [pendingDeleteCollectionId, setPendingDeleteCollectionId] = useState<string | null>(null)
+  const [pendingDeleteCollection, setPendingDeleteCollection] = useState<string | null>(null)
 
   // Palette inline edit state
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editTags, setEditTags] = useState<string[]>([])
-  const [editCollectionId, setEditCollectionId] = useState<string>('')
+  const [editCollection, setEditCollection] = useState<string>('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -96,11 +96,11 @@ export default function OpenDialog({
   // Derived filtered list
   const filtered = palettes.filter((p) => {
     if (fading[p.id]) return false
-    if (activeCollectionId !== null) {
-      if (activeCollectionId === '__none__') {
-        if (p.collectionId) return false
+    if (activeCollection !== null) {
+      if (activeCollection === '__none__') {
+        if (p.collection) return false
       } else {
-        if (p.collectionId !== activeCollectionId) return false
+        if (p.collection !== activeCollection) return false
       }
     }
     if (activeTagFilters.length > 0) {
@@ -119,9 +119,9 @@ export default function OpenDialog({
   const visibleTags = [...new Set(
     palettes
       .filter((p) => {
-        if (activeCollectionId !== null) {
-          if (activeCollectionId === '__none__') return !p.collectionId
-          return p.collectionId === activeCollectionId
+        if (activeCollection !== null) {
+          if (activeCollection === '__none__') return !p.collection
+          return p.collection === activeCollection
         }
         return true
       })
@@ -135,11 +135,11 @@ export default function OpenDialog({
 
   // Keyboard nav for list
   const [selectedIndex, setSelectedIndex] = useState(0)
-  useEffect(() => { setSelectedIndex(0) }, [search, activeCollectionId, activeTagFilters.join(',')])
+  useEffect(() => { setSelectedIndex(0) }, [search, activeCollection, activeTagFilters.join(',')])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showNotification || editingId || creatingCollection || renamingCollectionId) return
+      if (showNotification || editingId || creatingCollection || renamingCollection) return
       const active = document.activeElement
       if (active === searchRef.current) return
       if (active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active?.closest('[data-tag-pill-input]')) return
@@ -159,7 +159,7 @@ export default function OpenDialog({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollectionId])
+  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollection])
 
   // Scroll selected into view
   useEffect(() => {
@@ -213,14 +213,14 @@ export default function OpenDialog({
     setEditingId(p.id)
     setEditName(p.name)
     setEditTags([...p.tags])
-    setEditCollectionId(p.collectionId ?? '')
+    setEditCollection(p.collection ?? '')
   }
 
   const commitEdit = (id: string) => {
     updatePalette(id, {
       ...(editName.trim() ? { name: editName.trim() } : {}),
       tags: editTags,
-      collectionId: editCollectionId || undefined,
+      collection: editCollection || undefined,
     })
     onPalettesUpdated()
     setEditingId(null)
@@ -239,20 +239,25 @@ export default function OpenDialog({
     setNewCollectionName('')
   }
 
-  const commitRename = (id: string) => {
-    const name = renameValue.trim()
-    if (name) { renameCollection(id, name); onCollectionsUpdated() }
-    setRenamingCollectionId(null)
+  const commitRename = (oldName: string) => {
+    const newName = renameValue.trim()
+    if (newName && newName !== oldName) {
+      renameCollection(oldName, newName)
+      onCollectionsUpdated()
+      onPalettesUpdated()
+      if (activeCollection === oldName) setActiveCollection(newName)
+    }
+    setRenamingCollection(null)
     setRenameValue('')
   }
 
   const confirmDeleteCollection = () => {
-    if (!pendingDeleteCollectionId) return
-    removeCollection(pendingDeleteCollectionId)
+    if (!pendingDeleteCollection) return
+    removeCollection(pendingDeleteCollection)
     onCollectionsUpdated()
     onPalettesUpdated()
-    if (activeCollectionId === pendingDeleteCollectionId) setActiveCollectionId(null)
-    setPendingDeleteCollectionId(null)
+    if (activeCollection === pendingDeleteCollection) setActiveCollection(null)
+    setPendingDeleteCollection(null)
   }
 
   const allTags = getAllTags()
@@ -278,9 +283,9 @@ export default function OpenDialog({
           <div className="flex flex-wrap items-center gap-1 -mx-1 px-1">
             {/* All tab */}
             <button
-              onClick={() => setActiveCollectionId(null)}
+              onClick={() => setActiveCollection(null)}
               className={`px-2.5 py-1 rounded-sm font-mono text-xs transition-colors ${
-                activeCollectionId === null
+                activeCollection === null
                   ? 'bg-foreground text-background'
                   : 'hover:bg-accent text-muted-foreground hover:text-foreground'
               }`}
@@ -289,11 +294,11 @@ export default function OpenDialog({
             </button>
 
             {/* Uncategorized tab (only if some palettes have no collection) */}
-            {palettes.some((p) => !p.collectionId) && collections.length > 0 && (
+            {palettes.some((p) => !p.collection) && collections.length > 0 && (
               <button
-                onClick={() => setActiveCollectionId('__none__')}
+                onClick={() => setActiveCollection('__none__')}
                 className={`px-2.5 py-1 rounded-sm font-mono text-xs transition-colors ${
-                  activeCollectionId === '__none__'
+                  activeCollection === '__none__'
                     ? 'bg-foreground text-background'
                     : 'hover:bg-accent text-muted-foreground hover:text-foreground'
                 }`}
@@ -304,25 +309,25 @@ export default function OpenDialog({
 
             {/* Collection tabs */}
             {collections.map((c) => {
-              const isActive = activeCollectionId === c.id
-              return renamingCollectionId === c.id ? (
+              const isActive = activeCollection === c.name
+              return renamingCollection === c.name ? (
                 <input
-                  key={c.id}
+                  key={c.name}
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitRename(c.id) }
-                    if (e.key === 'Escape') { e.stopPropagation(); setRenamingCollectionId(null) }
+                    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitRename(c.name) }
+                    if (e.key === 'Escape') { e.stopPropagation(); setRenamingCollection(null) }
                   }}
-                  onBlur={() => commitRename(c.id)}
+                  onBlur={() => commitRename(c.name)}
                   autoFocus
                   className="px-2 py-1 rounded-sm font-mono text-xs border border-input bg-background outline-none w-24"
                 />
               ) : (
                 <button
-                  key={c.id}
-                  onClick={() => setActiveCollectionId(c.id)}
-                  onDoubleClick={() => { setRenamingCollectionId(c.id); setRenameValue(c.name) }}
+                  key={c.name}
+                  onClick={() => setActiveCollection(c.name)}
+                  onDoubleClick={() => { setRenamingCollection(c.name); setRenameValue(c.name) }}
                   className={`inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-sm font-mono text-xs transition-colors ${
                     isActive
                       ? 'bg-foreground text-background'
@@ -333,7 +338,7 @@ export default function OpenDialog({
                   <span
                     role="button"
                     tabIndex={-1}
-                    onClick={(e) => { e.stopPropagation(); setPendingDeleteCollectionId(c.id) }}
+                    onClick={(e) => { e.stopPropagation(); setPendingDeleteCollection(c.name) }}
                     className={`rounded-sm transition-colors ${
                       isActive
                         ? 'hover:bg-background/20'
@@ -472,13 +477,13 @@ export default function OpenDialog({
                           </div>
                           {collections.length > 0 && (
                             <select
-                              value={editCollectionId}
-                              onChange={(e) => setEditCollectionId(e.target.value)}
+                              value={editCollection}
+                              onChange={(e) => setEditCollection(e.target.value)}
                               className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                             >
                               <option value="">no collection</option>
                               {collections.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
+                                <option key={c.name} value={c.name}>{c.name}</option>
                               ))}
                             </select>
                           )}
@@ -593,23 +598,22 @@ export default function OpenDialog({
         <NotificationModal message={notificationMessage} onClose={() => setShowNotification(false)} />
       )}
 
-      {pendingDeleteCollectionId && (() => {
-        const col = collections.find((c) => c.id === pendingDeleteCollectionId)
-        const count = palettes.filter((p) => p.collectionId === pendingDeleteCollectionId).length
+      {pendingDeleteCollection && (() => {
+        const count = palettes.filter((p) => p.collection === pendingDeleteCollection).length
         return (
-          <Dialog open onOpenChange={(open) => { if (!open) setPendingDeleteCollectionId(null) }}>
+          <Dialog open onOpenChange={(open) => { if (!open) setPendingDeleteCollection(null) }}>
             <DialogContent className="sm:max-w-sm" showCloseButton={false}>
               <DialogHeader>
                 <DialogTitle className="font-mono lowercase">delete collection</DialogTitle>
               </DialogHeader>
               <p className="text-sm font-mono">
                 {count > 0
-                  ? <>delete <strong>{col?.name}</strong>? {count} palette{count !== 1 && 's'} in this collection will be moved to uncategorized.</>
-                  : <>delete <strong>{col?.name}</strong>?</>
+                  ? <>delete <strong>{pendingDeleteCollection}</strong>? {count} palette{count !== 1 && 's'} in this collection will be moved to uncategorized.</>
+                  : <>delete <strong>{pendingDeleteCollection}</strong>?</>
                 }
               </p>
               <DialogFooter>
-                <Button variant="outline" size="sm" onClick={() => setPendingDeleteCollectionId(null)} className="font-mono lowercase">
+                <Button variant="outline" size="sm" onClick={() => setPendingDeleteCollection(null)} className="font-mono lowercase">
                   cancel
                 </Button>
                 <Button variant="destructive" size="sm" onClick={confirmDeleteCollection} className="font-mono lowercase">

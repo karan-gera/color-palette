@@ -17,7 +17,7 @@ type SaveDialogProps = {
   existingTags: string[]
   collections: PaletteCollection[]
   onCancel: () => void
-  onSave: (name?: string, tags?: string[], collectionId?: string) => void
+  onSave: (name?: string, tags?: string[], collection?: string) => void
 }
 
 const HINTS = [
@@ -28,11 +28,11 @@ const HINTS = [
 export default function SaveDialog({ defaultName, existingTags, collections, onCancel, onSave }: SaveDialogProps) {
   const [nameValue, setNameValue] = useState(defaultName ?? '')
   const [tags, setTags] = useState<string[]>([])
-  const [collectionId, setCollectionId] = useState<string>('')
+  const [collection, setCollection] = useState<string>('')
 
   const handleSave = useCallback(() => {
-    onSave(nameValue || undefined, tags.length > 0 ? tags : undefined, collectionId || undefined)
-  }, [nameValue, tags, collectionId, onSave])
+    onSave(nameValue || undefined, tags.length > 0 ? tags : undefined, collection || undefined)
+  }, [nameValue, tags, collection, onSave])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -82,13 +82,13 @@ export default function SaveDialog({ defaultName, existingTags, collections, onC
             <div className="grid gap-2">
               <label className="text-sm font-mono lowercase">collection</label>
               <select
-                value={collectionId}
-                onChange={(e) => setCollectionId(e.target.value)}
+                value={collection}
+                onChange={(e) => setCollection(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">none</option>
                 {collections.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.name} value={c.name}>{c.name}</option>
                 ))}
               </select>
             </div>

@@ -225,8 +225,8 @@ describe('importPalettesFromFile', () => {
     const validExport = {
       version: '1.0',
       exportedAt: '',
-      palettes: [{ id: 'a', name: 'A', colors: ['#ff0000'], savedAt: '', collectionId: 'col1' }],
-      collections: [{ id: 'col1', name: 'Brand', createdAt: '' }],
+      palettes: [{ id: 'a', name: 'A', colors: ['#ff0000'], savedAt: '', collection: 'Brand' }],
+      collections: [{ name: 'Brand', createdAt: '' }],
     }
     const result = await importPalettesFromFile(makeFile(validExport))
     expect(result.collections).toHaveLength(1)

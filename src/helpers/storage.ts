@@ -4,11 +4,10 @@ export type SavedPalette = {
   colors: string[]
   savedAt: string
   tags: string[]
-  collectionId?: string
+  collection?: string
 }
 
 export type PaletteCollection = {
-  id: string
   name: string
   createdAt: string
 }
@@ -50,7 +49,7 @@ export function getSavedPalettes(): SavedPalette[] {
   return read()
 }
 
-export function savePalette(colors: string[], name?: string, tags?: string[], collectionId?: string): SavedPalette {
+export function savePalette(colors: string[], name?: string, tags?: string[], collection?: string): SavedPalette {
   const palettes = read()
   const id = crypto.randomUUID()
   const saved: SavedPalette = {
@@ -59,14 +58,14 @@ export function savePalette(colors: string[], name?: string, tags?: string[], co
     colors: [...colors],
     savedAt: new Date().toISOString(),
     tags: tags ?? [],
-    ...(collectionId ? { collectionId } : {}),
+    ...(collection ? { collection } : {}),
   }
   palettes.push(saved)
   write(palettes)
   return saved
 }
 
-export function updatePalette(id: string, updates: Partial<Pick<SavedPalette, 'name' | 'tags' | 'collectionId'>>): void {
+export function updatePalette(id: string, updates: Partial<Pick<SavedPalette, 'name' | 'tags' | 'collection'>>): void {
   const palettes = read().map((p) =>
     p.id === id ? { ...p, ...updates } : p
   )
@@ -97,7 +96,6 @@ function readCollections(): PaletteCollection[] {
     if (!Array.isArray(parsed)) return []
     return parsed.filter((c) =>
       c && typeof c === 'object' &&
-      typeof (c as PaletteCollection).id === 'string' &&
       typeof (c as PaletteCollection).name === 'string'
     ) as PaletteCollection[]
   } catch {
@@ -117,10 +115,10 @@ export function getCollections(): PaletteCollection[] {
   return readCollections()
 }
 
-export function saveCollection(name: string): PaletteCollection {
+export function saveCollection(name: string): PaletteCollection | null {
   const collections = readCollections()
+  if (collections.some((c) => c.name === name)) return null
   const collection: PaletteCollection = {
-    id: crypto.randomUUID(),
     name,
     createdAt: new Date().toISOString(),
   }
@@ -129,19 +127,22 @@ export function saveCollection(name: string): PaletteCollection {
   return collection
 }
 
-export function renameCollection(id: string, name: string): void {
-  const collections = readCollections().map((c) =>
-    c.id === id ? { ...c, name } : c
+export function renameCollection(oldName: string, newName: string): void {
+  const collections = readCollections()
+  if (collections.some((c) => c.name === newName)) return
+  writeCollections(collections.map((c) =>
+    c.name === oldName ? { ...c, name: newName } : c
+  ))
+  const palettes = read().map((p) =>
+    p.collection === oldName ? { ...p, collection: newName } : p
   )
-  writeCollections(collections)
+  write(palettes)
 }
 
-export function removeCollection(id: string): void {
-  // Remove the collection
-  writeCollections(readCollections().filter((c) => c.id !== id))
-  // Move its palettes to uncategorized
+export function removeCollection(name: string): void {
+  writeCollections(readCollections().filter((c) => c.name !== name))
   const palettes = read().map((p) =>
-    p.collectionId === id ? { ...p, collectionId: undefined } : p
+    p.collection === name ? { ...p, collection: undefined } : p
   )
   write(palettes)
 }
@@ -254,7 +255,6 @@ export function importPalettesFromFile(file: File): Promise<ImportedData> {
           .filter((c) =>
             c &&
             typeof c === 'object' &&
-            typeof (c as PaletteCollection).id === 'string' &&
             typeof (c as PaletteCollection).name === 'string'
           ) as PaletteCollection[]
         
@@ -297,8 +297,8 @@ export function mergePalettes(
   let collectionsImported = 0
   if (importedCollections.length > 0) {
     const existingCollections = readCollections()
-    const existingCollectionIds = new Set(existingCollections.map(c => c.id))
-    const newCollections = importedCollections.filter(c => !existingCollectionIds.has(c.id))
+    const existingNames = new Set(existingCollections.map(c => c.name))
+    const newCollections = importedCollections.filter(c => !existingNames.has(c.name))
     if (newCollections.length > 0) {
       writeCollections([...existingCollections, ...newCollections])
       collectionsImported = newCollections.length
