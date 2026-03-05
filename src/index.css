@@ -1,3 +1,32 @@
+@font-face {
+  font-family: 'Fragment Mono';
+  src: url('/color-palette/fonts/fragment-mono-v6-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fragment Mono';
+  src: url('/color-palette/fonts/fragment-mono-v6-latin-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Serif Display';
+  src: url('/color-palette/fonts/dm-serif-display-v17-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DM Serif Display';
+  src: url('/color-palette/fonts/dm-serif-display-v17-latin-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -5,6 +34,7 @@
    always fit within the viewport. Formula: (100vw - 4rem padding - 5×1.25rem gaps) / 6 */
 :root {
   --circle-size: min(200px, calc((100vw - 10.25rem) / 6));
+  --font-serif: 'DM Serif Display', Georgia, serif;
 }
 
 /* 3-Way Theme System: light / gray / dark */
@@ -82,6 +112,7 @@
 }
 
 @theme inline {
+  --font-mono: 'Fragment Mono', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -121,7 +152,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-family: 'Fragment Mono', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     transition: background-color 0.3s ease, color 0.3s ease;
     text-shadow: var(--text-shadow);
   }

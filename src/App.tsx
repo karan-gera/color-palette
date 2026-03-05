@@ -232,7 +232,7 @@ function App() {
       {/* Wrapper for CVD filter application (Firefox workaround) */}
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-          <Header title="color palette" cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
+          <Header cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
           <AnimatePresence initial={false}>
             {activeView === 'palette' && (
               <motion.div

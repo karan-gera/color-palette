@@ -237,7 +237,9 @@ function AboutTab() {
     <div className="space-y-12">
       {/* hero */}
       <div className="text-center space-y-3">
-        <h2 className="text-3xl font-medium tracking-tight lowercase">color palette generator</h2>
+        <h2 className="text-5xl tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+          PalettePort
+        </h2>
         <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
           free color palette tool. no accounts, no ads, no paywalls. everything runs in your browser
           and stays on your device.
@@ -400,7 +402,7 @@ function Kbd({ children }: { children: React.ReactNode }) {
 function DocArticle({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <article className="space-y-6">
-      <h2 className="text-lg font-medium tracking-tight lowercase">{title}</h2>
+      <h2 className="text-2xl tracking-tight lowercase" style={{ fontFamily: 'var(--font-serif)' }}>{title}</h2>
       {children}
     </article>
   )
@@ -1509,7 +1511,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
     default:
       return (
         <article className="space-y-6">
-          <h2 className="text-lg font-medium tracking-tight lowercase">{title}</h2>
+          <h2 className="text-2xl tracking-tight lowercase" style={{ fontFamily: 'var(--font-serif)' }}>{title}</h2>
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>documentation for this page is coming soon.</p>
           </div>
@@ -1521,7 +1523,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 function DocPageKeyboard() {
   return (
     <article className="space-y-6">
-      <h2 className="text-lg font-medium tracking-tight lowercase">keyboard shortcuts</h2>
+      <h2 className="text-2xl tracking-tight lowercase" style={{ fontFamily: 'var(--font-serif)' }}>keyboard shortcuts</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
         {SHORTCUT_GROUPS.map((group) => (
           <div key={group.label}>

@@ -3,15 +3,16 @@ import ThemeToggle from './ThemeToggle'
 import CVDToggle, { type CVDToggleHandle } from './CVDToggle'
 
 type HeaderProps = {
-  title: string
   cvdRef: React.Ref<CVDToggleHandle>
   onToggleDocs: () => void
 }
 
-export default function Header({ title, cvdRef, onToggleDocs }: HeaderProps) {
+export default function Header({ cvdRef, onToggleDocs }: HeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-4 w-full max-w-2xl">
-      <h1 className="text-2xl font-medium tracking-tight lowercase">{title}</h1>
+    <div className="flex items-center justify-between gap-4 w-full max-w-4xl">
+      <h1 className="text-4xl tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+        Palette<em style={{ fontStyle: 'italic', opacity: 0.65 }}>Port</em>
+      </h1>
       <div className="flex items-center gap-2">
         <button
           type="button"
