@@ -161,7 +161,7 @@ export default function OpenDialog({
         e.preventDefault()
         if (filtered[selectedIndex]) onSelect(filtered[selectedIndex].id)
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (filtered[selectedIndex]) handleDelete(filtered[selectedIndex].id, selectedIndex)
+        if (filtered[selectedIndex]) handleDelete(filtered[selectedIndex].id)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -183,14 +183,14 @@ export default function OpenDialog({
     return () => clearTimeout(timer)
   }, [filtered.length, updateScrollIndicators])
 
-  const handleDelete = useCallback((id: string, index: number) => {
+  const handleDelete = useCallback((id: string) => {
     setFading((prev) => ({ ...prev, [id]: true }))
     setTimeout(() => {
       onRemove(id)
       setFading((prev) => { const next = { ...prev }; delete next[id]; return next })
-      setSelectedIndex((i) => (index >= filtered.length - 1 ? Math.max(0, filtered.length - 2) : i))
+      setSelectedIndex((i) => Math.max(0, i > 0 ? i - 1 : 0))
     }, 200)
-  }, [onRemove, filtered.length])
+  }, [onRemove])
 
   const handleExportAll = () => { exportAllPalettes() }
   const handleImportClick = () => { fileInputRef.current?.click() }
@@ -581,7 +581,7 @@ export default function OpenDialog({
                             <Button
                               variant="outline"
                               size="icon-sm"
-                              onClick={(e) => { e.stopPropagation(); handleDelete(p.id, index) }}
+                              onClick={(e) => { e.stopPropagation(); handleDelete(p.id) }}
                               className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="size-4" />
