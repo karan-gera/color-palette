@@ -94,7 +94,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
         <div className="flex flex-col items-center gap-2">
           <button
             type="button"
-            className={`cvd-color size-[var(--circle-size)] rounded-full border-2 flex items-center justify-center relative cursor-pointer ${isEditing ? '' : 'transition-all duration-500 ease-in-out'}`}
+            className={`cvd-color size-[var(--circle-size)] rounded-full border-2 flex items-center justify-center relative cursor-pointer ${isEditing ? 'editing' : ''}`}
             style={{
               backgroundColor: previewColor,
               borderColor: textColor,

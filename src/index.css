@@ -171,7 +171,13 @@
 /* Color Vision Deficiency (CVD) Simulation Filters */
 /* Applied only to .cvd-color elements (color circles) to avoid rasterizing the entire UI */
 /* Opacity transition for crossfade effect when switching CVD modes */
+/* Background/border/color transitions for smooth reroll fades */
 .cvd-color {
+  transition: opacity 150ms ease, background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+/* Kill color fade during edit mode so preview updates instantly */
+.cvd-color.editing {
   transition: opacity 150ms ease;
 }
 
