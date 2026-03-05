@@ -192,11 +192,13 @@ export default function OpenDialog({
     const file = event.target.files?.[0]
     if (!file) return
     try {
-      const importedPalettes = await importPalettesFromFile(file)
-      const result = mergePalettes(importedPalettes)
+      const imported = await importPalettesFromFile(file)
+      const result = mergePalettes(imported.palettes, imported.collections)
       onPalettesUpdated()
+      if (result.collectionsImported > 0) onCollectionsUpdated()
       let message = 'palettes imported successfully!'
       if (result.duplicates > 0) message += ` (${result.duplicates} duplicate${result.duplicates > 1 ? 's' : ''} skipped)`
+      if (result.collectionsImported > 0) message += ` · ${result.collectionsImported} collection${result.collectionsImported > 1 ? 's' : ''} added`
       setNotificationMessage(message)
       setShowNotification(true)
     } catch (error) {

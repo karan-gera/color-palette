@@ -187,14 +187,17 @@ export type PaletteExportFormat = {
   version: '1.0'
   exportedAt: string
   palettes: SavedPalette[]
+  collections?: PaletteCollection[]
 }
 
 export function exportAllPalettes(): void {
   const palettes = read()
+  const collections = readCollections()
   const exportData: PaletteExportFormat = {
     version: '1.0',
     exportedAt: new Date().toISOString(),
-    palettes
+    palettes,
+    ...(collections.length > 0 ? { collections } : {}),
   }
   
   const dataStr = JSON.stringify(exportData, null, 2)
@@ -209,7 +212,12 @@ export function exportAllPalettes(): void {
   URL.revokeObjectURL(link.href)
 }
 
-export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
+export type ImportedData = {
+  palettes: SavedPalette[]
+  collections: PaletteCollection[]
+}
+
+export function importPalettesFromFile(file: File): Promise<ImportedData> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     
@@ -218,7 +226,6 @@ export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
         const content = event.target?.result as string
         const data = JSON.parse(content) as unknown
         
-        // Validate format
         if (!data || typeof data !== 'object') {
           throw new Error('Invalid file format')
         }
@@ -229,7 +236,6 @@ export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
           throw new Error('Invalid palette file format')
         }
         
-        // Validate each palette + normalize tags for forward-compat
         const validPalettes = exportData.palettes
           .filter((p) =>
             p &&
@@ -243,8 +249,16 @@ export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
             ...p,
             tags: Array.isArray(p.tags) ? p.tags : [],
           })) as SavedPalette[]
+
+        const validCollections = (Array.isArray(exportData.collections) ? exportData.collections : [])
+          .filter((c) =>
+            c &&
+            typeof c === 'object' &&
+            typeof (c as PaletteCollection).id === 'string' &&
+            typeof (c as PaletteCollection).name === 'string'
+          ) as PaletteCollection[]
         
-        resolve(validPalettes)
+        resolve({ palettes: validPalettes, collections: validCollections })
       } catch (error) {
         reject(new Error(`Failed to parse palette file: ${error instanceof Error ? error.message : 'Unknown error'}`))
       }
@@ -258,28 +272,40 @@ export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
   })
 }
 
-export function mergePalettes(importedPalettes: SavedPalette[]): { imported: number; duplicates: number } {
+export function mergePalettes(
+  importedPalettes: SavedPalette[],
+  importedCollections: PaletteCollection[] = [],
+): { imported: number; duplicates: number; collectionsImported: number } {
   const existing = read()
   const existingIds = new Set(existing.map(p => p.id))
   
   let duplicateCount = 0
   let importedCount = 0
   
-  // Filter out duplicates and only import new palettes
   const newPalettes = importedPalettes.filter(palette => {
     if (existingIds.has(palette.id)) {
       duplicateCount++
-      return false // Skip duplicate
+      return false
     } else {
       importedCount++
-      return true // Import new palette
+      return true
     }
   })
   
-  const allPalettes = [...existing, ...newPalettes]
-  write(allPalettes)
+  write([...existing, ...newPalettes])
+
+  let collectionsImported = 0
+  if (importedCollections.length > 0) {
+    const existingCollections = readCollections()
+    const existingCollectionIds = new Set(existingCollections.map(c => c.id))
+    const newCollections = importedCollections.filter(c => !existingCollectionIds.has(c.id))
+    if (newCollections.length > 0) {
+      writeCollections([...existingCollections, ...newCollections])
+      collectionsImported = newCollections.length
+    }
+  }
   
-  return { imported: importedCount, duplicates: duplicateCount }
+  return { imported: importedCount, duplicates: duplicateCount, collectionsImported }
 }
 
 

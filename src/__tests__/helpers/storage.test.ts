@@ -191,8 +191,9 @@ describe('importPalettesFromFile', () => {
       ],
     }
     const result = await importPalettesFromFile(makeFile(validExport))
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe('a')
+    expect(result.palettes).toHaveLength(1)
+    expect(result.palettes[0].id).toBe('a')
+    expect(result.collections).toHaveLength(0)
   })
 
   it('rejects when palettes field is missing', async () => {
@@ -216,8 +217,20 @@ describe('importPalettesFromFile', () => {
       ],
     }
     const result = await importPalettesFromFile(makeFile(validExport))
-    expect(result).toHaveLength(1)
-    expect(result[0].id).toBe('a')
+    expect(result.palettes).toHaveLength(1)
+    expect(result.palettes[0].id).toBe('a')
+  })
+
+  it('imports collections when present in export', async () => {
+    const validExport = {
+      version: '1.0',
+      exportedAt: '',
+      palettes: [{ id: 'a', name: 'A', colors: ['#ff0000'], savedAt: '', collectionId: 'col1' }],
+      collections: [{ id: 'col1', name: 'Brand', createdAt: '' }],
+    }
+    const result = await importPalettesFromFile(makeFile(validExport))
+    expect(result.collections).toHaveLength(1)
+    expect(result.collections[0].name).toBe('Brand')
   })
 })
 
