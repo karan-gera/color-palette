@@ -430,29 +430,29 @@ Raise the palette limit from 5 to 10 colors with a two-row layout and position-t
 
 ---
 
-## Color Harmony Score
+## Color Harmony Score ✅
 
 A live readout showing how harmonious the current palette is, based on color theory fundamentals.
 
-### Metrics
-- [ ] Hue distribution — are hues well-spaced or clustered? (entropy of hue angles)
-- [ ] Saturation balance — consistent saturation or chaotic?
-- [ ] Lightness spread — good contrast range or everything mid-tone?
-- [ ] Relationship detection — does the palette approximate a known harmony (complementary, triadic, etc.)?
+### Metrics ✅
+- [x] Hue distribution — best-fit score against known harmony templates (complementary, triadic, etc.)
+- [x] Saturation balance — standard deviation of saturation values
+- [x] Lightness spread — range of lightness values
+- [x] Relationship detection — pairwise hue angle comparison to known patterns (±15° tolerance)
 
-### Display
-- [ ] Compact badge or gauge near the palette (not a full panel)
-- [ ] Human-readable label: e.g. "balanced", "high contrast", "clustered hues", "monochromatic"
-- [ ] Optional numeric score (0-100) with tooltip breakdown
-- [ ] Updates live as colors change
-- [ ] Keyboard shortcut: `H` to toggle visibility
+### Display ✅
+- [x] Collapsible row below the palette (not a full panel)
+- [x] Human-readable label: "complementary", "analogous", "balanced", "varied", "inconsistent", "discordant"
+- [x] Numeric score (0–100) with per-metric breakdown (hue quality, sat consistency, lightness range)
+- [x] Updates live as colors change
+- [x] Keyboard shortcut: `Y` to toggle visibility
 
-### Edge cases
-- [ ] Single color: hide or show "add more colors"
-- [ ] Two colors: limited analysis (contrast only)
-- [ ] All identical colors: "no variation"
+### Edge cases ✅
+- [x] Single color: shows "—" (score 0, hidden)
+- [x] Two colors: limited analysis (hue + contrast only)
+- [x] All identical colors: score 0 / "—"
 
-**Implementation:** Score function in `colorTheory.ts` operating on HSL arrays. Hue distribution via circular variance, saturation/lightness via standard deviation. Relationship detection by comparing pairwise hue angles to known patterns (±10° tolerance). Lightweight — no heavy math, just stats on 2-5 values.
+**Implementation:** `HarmonyScore.tsx` collapsible row, `calculateHarmonyScore()` in `colorTheory.ts`. `bestFitHueScore()` scores against 6 hue templates (mono, complement, split-complement, triadic, tetradic, analogous). Weights: hue quality 45%, sat consistency 25%, lightness range 30%. +15 bonus when a named relationship is detected (capped at 100). `Y` key wired in `useKeyboardShortcuts`.
 
 ---
 
@@ -997,7 +997,7 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 16. ~~**PNG / Image Export** - Social sharing, mood boards; Canvas API for raster, SVG for vector~~ ✅ Done!
 17. ~~**Gradient Generator**~~ ✅ Done! Vertical tab strip, stop bar, palette-linked stops, CSS/SVG/PNG/Tailwind export
 17. ~~**Palette Visualization**~~ ✅ Done! Title design (hero/editorial/poster) + shadcn UI elements mockup + font selector
-18. **Color Harmony Score** - Unique differentiator, medium effort
+18. ~~**Color Harmony Score**~~ ✅ Done! Collapsible row, 0–100 score, hue/sat/lightness metrics, relationship detection, Y key
 19. **Session Palette History** - Solves real reroll regret, low-medium effort
 20. **Palette Collections and Tags** - Natural save/open evolution, medium effort
 21. ~~**Inline Color Editing** - Replace edit dialog with in-place hex input~~ ✅ Done!
