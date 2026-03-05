@@ -146,7 +146,7 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
     setSelected(prev => {
       const next = new Set(prev)
       dragMode.current = next.has(i) ? 'deselect' : 'select'
-      next.has(i) ? next.delete(i) : next.add(i)
+      if (next.has(i)) { next.delete(i) } else { next.add(i) }
       return next
     })
     const onMouseUp = () => {
@@ -160,7 +160,7 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
     if (dragMode.current === null) return
     setSelected(prev => {
       const next = new Set(prev)
-      dragMode.current === 'select' ? next.add(i) : next.delete(i)
+      if (dragMode.current === 'select') { next.add(i) } else { next.delete(i) }
       return next
     })
   }, [])
