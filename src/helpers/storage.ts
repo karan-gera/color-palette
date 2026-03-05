@@ -127,9 +127,9 @@ export function saveCollection(name: string): PaletteCollection | null {
   return collection
 }
 
-export function renameCollection(oldName: string, newName: string): void {
+export function renameCollection(oldName: string, newName: string): boolean {
   const collections = readCollections()
-  if (collections.some((c) => c.name === newName)) return
+  if (collections.some((c) => c.name === newName)) return false
   writeCollections(collections.map((c) =>
     c.name === oldName ? { ...c, name: newName } : c
   ))
@@ -137,6 +137,7 @@ export function renameCollection(oldName: string, newName: string): void {
     p.collection === oldName ? { ...p, collection: newName } : p
   )
   write(palettes)
+  return true
 }
 
 export function removeCollection(name: string): void {

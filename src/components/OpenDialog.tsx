@@ -232,8 +232,13 @@ export default function OpenDialog({
   const commitNewCollection = () => {
     const name = newCollectionName.trim()
     if (name) {
-      saveCollection(name)
-      onCollectionsUpdated()
+      const result = saveCollection(name)
+      if (result) {
+        onCollectionsUpdated()
+      } else {
+        setNotificationMessage(`collection "${name}" already exists`)
+        setShowNotification(true)
+      }
     }
     setCreatingCollection(false)
     setNewCollectionName('')
@@ -242,10 +247,15 @@ export default function OpenDialog({
   const commitRename = (oldName: string) => {
     const newName = renameValue.trim()
     if (newName && newName !== oldName) {
-      renameCollection(oldName, newName)
-      onCollectionsUpdated()
-      onPalettesUpdated()
-      if (activeCollection === oldName) setActiveCollection(newName)
+      const ok = renameCollection(oldName, newName)
+      if (ok) {
+        onCollectionsUpdated()
+        onPalettesUpdated()
+        if (activeCollection === oldName) setActiveCollection(newName)
+      } else {
+        setNotificationMessage(`collection "${newName}" already exists`)
+        setShowNotification(true)
+      }
     }
     setRenamingCollection(null)
     setRenameValue('')
