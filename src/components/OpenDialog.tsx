@@ -146,7 +146,7 @@ export default function OpenDialog({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showNotification || editingId || creatingCollection || renamingCollection) return
+      if (showNotification || editingId || creatingCollection || renamingCollection || pendingDeleteCollection) return
       const active = document.activeElement
       if (active === searchRef.current) return
       if (active instanceof HTMLInputElement || active instanceof HTMLSelectElement || active?.closest('[data-tag-pill-input]')) return
@@ -166,7 +166,7 @@ export default function OpenDialog({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollection])
+  }, [filtered, selectedIndex, showNotification, editingId, creatingCollection, renamingCollection, pendingDeleteCollection])
 
   // Scroll selected into view
   useEffect(() => {
