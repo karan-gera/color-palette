@@ -287,6 +287,8 @@ export default function OpenDialog({
             <DialogTitle className="font-mono lowercase">open palette</DialogTitle>
           </DialogHeader>
 
+          {palettes.length > 0 && (
+          <>
           {/* Search */}
           <div className="relative">
             <Input
@@ -402,6 +404,8 @@ export default function OpenDialog({
               </button>
             )}
           </div>
+          </>
+          )}
 
           {/* Animated body: tags + palette list */}
           <motion.div
@@ -608,10 +612,12 @@ export default function OpenDialog({
           <DialogFooter className="border-t pt-4 mt-2">
             <div className="flex w-full justify-between">
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleExportAll} className="font-mono lowercase">
-                  <Download className="size-4" />
-                  export
-                </Button>
+                {palettes.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleExportAll} className="font-mono lowercase">
+                    <Download className="size-4" />
+                    export
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={handleImportClick} className="font-mono lowercase">
                   <Upload className="size-4" />
                   import
