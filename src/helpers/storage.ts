@@ -3,9 +3,18 @@ export type SavedPalette = {
   name: string
   colors: string[]
   savedAt: string
+  tags: string[]
+  collectionId?: string
+}
+
+export type PaletteCollection = {
+  id: string
+  name: string
+  createdAt: string
 }
 
 const STORAGE_KEY = 'color-palette:saved'
+const COLLECTIONS_KEY = 'color-palette:collections'
 const HISTORY_KEY = 'color-palette:history'
 const MAX_HISTORY_ENTRIES = 2048
 const SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000
@@ -16,10 +25,13 @@ function read(): SavedPalette[] {
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
-    // Basic structural validation
-    return parsed.filter((p) =>
-      p && typeof p === 'object' && Array.isArray((p as SavedPalette).colors)
-    ) as SavedPalette[]
+    // Basic structural validation + forward-compat migration
+    return parsed
+      .filter((p) => p && typeof p === 'object' && Array.isArray((p as SavedPalette).colors))
+      .map((p) => ({
+        ...(p as SavedPalette),
+        tags: Array.isArray((p as SavedPalette).tags) ? (p as SavedPalette).tags : [],
+      })) as SavedPalette[]
   } catch (e) {
     console.warn('[storage] Failed to read palettes:', e)
     return []
@@ -38,7 +50,7 @@ export function getSavedPalettes(): SavedPalette[] {
   return read()
 }
 
-export function savePalette(colors: string[], name?: string): SavedPalette {
+export function savePalette(colors: string[], name?: string, tags?: string[], collectionId?: string): SavedPalette {
   const palettes = read()
   const id = crypto.randomUUID()
   const saved: SavedPalette = {
@@ -46,10 +58,24 @@ export function savePalette(colors: string[], name?: string): SavedPalette {
     name: name ?? `Palette ${new Date().toLocaleString()}`,
     colors: [...colors],
     savedAt: new Date().toISOString(),
+    tags: tags ?? [],
+    ...(collectionId ? { collectionId } : {}),
   }
   palettes.push(saved)
   write(palettes)
   return saved
+}
+
+export function updatePalette(id: string, updates: Partial<Pick<SavedPalette, 'name' | 'tags' | 'collectionId'>>): void {
+  const palettes = read().map((p) =>
+    p.id === id ? { ...p, ...updates } : p
+  )
+  write(palettes)
+}
+
+export function getAllTags(): string[] {
+  const all = read().flatMap((p) => p.tags)
+  return [...new Set(all)].sort()
 }
 
 export function removePalette(id: string): void {
@@ -59,6 +85,65 @@ export function removePalette(id: string): void {
 
 export function setAllPalettes(next: SavedPalette[]): void {
   write(next)
+}
+
+// ─── Collections ───────────────────────────────────────────────────────────
+
+function readCollections(): PaletteCollection[] {
+  try {
+    const raw = localStorage.getItem(COLLECTIONS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((c) =>
+      c && typeof c === 'object' &&
+      typeof (c as PaletteCollection).id === 'string' &&
+      typeof (c as PaletteCollection).name === 'string'
+    ) as PaletteCollection[]
+  } catch {
+    return []
+  }
+}
+
+function writeCollections(collections: PaletteCollection[]): void {
+  try {
+    localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections))
+  } catch (e) {
+    console.warn('[storage] Failed to write collections:', e)
+  }
+}
+
+export function getCollections(): PaletteCollection[] {
+  return readCollections()
+}
+
+export function saveCollection(name: string): PaletteCollection {
+  const collections = readCollections()
+  const collection: PaletteCollection = {
+    id: crypto.randomUUID(),
+    name,
+    createdAt: new Date().toISOString(),
+  }
+  collections.push(collection)
+  writeCollections(collections)
+  return collection
+}
+
+export function renameCollection(id: string, name: string): void {
+  const collections = readCollections().map((c) =>
+    c.id === id ? { ...c, name } : c
+  )
+  writeCollections(collections)
+}
+
+export function removeCollection(id: string): void {
+  // Remove the collection
+  writeCollections(readCollections().filter((c) => c.id !== id))
+  // Move its palettes to uncategorized
+  const palettes = read().map((p) =>
+    p.collectionId === id ? { ...p, collectionId: undefined } : p
+  )
+  write(palettes)
 }
 
 export function loadPersistedHistory(): { history: string[][]; index: number } | null {
@@ -144,15 +229,20 @@ export function importPalettesFromFile(file: File): Promise<SavedPalette[]> {
           throw new Error('Invalid palette file format')
         }
         
-        // Validate each palette
-        const validPalettes = exportData.palettes.filter((p) =>
-          p && 
-          typeof p === 'object' && 
-          typeof p.id === 'string' &&
-          typeof p.name === 'string' &&
-          Array.isArray(p.colors) &&
-          typeof p.savedAt === 'string'
-        ) as SavedPalette[]
+        // Validate each palette + normalize tags for forward-compat
+        const validPalettes = exportData.palettes
+          .filter((p) =>
+            p &&
+            typeof p === 'object' &&
+            typeof p.id === 'string' &&
+            typeof p.name === 'string' &&
+            Array.isArray(p.colors) &&
+            typeof p.savedAt === 'string'
+          )
+          .map((p) => ({
+            ...p,
+            tags: Array.isArray(p.tags) ? p.tags : [],
+          })) as SavedPalette[]
         
         resolve(validPalettes)
       } catch (error) {

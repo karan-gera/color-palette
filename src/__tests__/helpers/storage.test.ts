@@ -23,6 +23,7 @@ describe('getSavedPalettes', () => {
       name: 'Test',
       colors: ['#ff0000'],
       savedAt: new Date().toISOString(),
+      tags: [],
     }
     localStorage.setItem('color-palette:saved', JSON.stringify([palette]))
     const result = getSavedPalettes()
@@ -128,6 +129,7 @@ describe('setAllPalettes', () => {
       name: 'New',
       colors: ['#ffffff'],
       savedAt: new Date().toISOString(),
+      tags: [],
     }]
     setAllPalettes(newPalettes)
     const result = getSavedPalettes()
@@ -145,8 +147,8 @@ describe('setAllPalettes', () => {
 describe('mergePalettes', () => {
   it('imports all palettes when storage is empty', () => {
     const imported: SavedPalette[] = [
-      { id: 'a', name: 'A', colors: ['#111'], savedAt: '' },
-      { id: 'b', name: 'B', colors: ['#222'], savedAt: '' },
+      { id: 'a', name: 'A', colors: ['#111'], savedAt: '', tags: [] },
+      { id: 'b', name: 'B', colors: ['#222'], savedAt: '', tags: [] },
     ]
     const result = mergePalettes(imported)
     expect(result.imported).toBe(2)
@@ -158,8 +160,8 @@ describe('mergePalettes', () => {
     savePalette(['#111111'], 'Existing')
     const existingId = getSavedPalettes()[0].id
     const imported: SavedPalette[] = [
-      { id: existingId, name: 'Duplicate', colors: ['#111'], savedAt: '' },
-      { id: 'brand-new', name: 'New', colors: ['#222'], savedAt: '' },
+      { id: existingId, name: 'Duplicate', colors: ['#111'], savedAt: '', tags: [] },
+      { id: 'brand-new', name: 'New', colors: ['#222'], savedAt: '', tags: [] },
     ]
     const result = mergePalettes(imported)
     expect(result.imported).toBe(1)

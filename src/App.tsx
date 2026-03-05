@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
 import { type CVDToggleHandle } from '@/components/CVDToggle'
@@ -32,7 +32,8 @@ import { useSwapMode } from '@/hooks/useSwapMode'
 import { usePresetControl } from '@/hooks/usePresetControl'
 import { useViewNavigation } from '@/hooks/useViewNavigation'
 import { useDialogState } from '@/hooks/useDialogState'
-import { savePalette, removePalette, getSavedPalettes } from '@/helpers/storage'
+import { savePalette, removePalette, getSavedPalettes, getCollections, getAllTags } from '@/helpers/storage'
+import type { PaletteCollection } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
@@ -51,6 +52,7 @@ function App() {
     isAnyOpen: isAnyDialogStateOpen,
     closeAll: closeDialogs,
   } = useDialogState()
+  const [savedCollections, setSavedCollections] = useState<PaletteCollection[]>(() => getCollections())
   const {
     showHints, showContrast, showDocs, showHistory, showHarmony,
     notification, setNotification, setShowHistory, setShowHarmony,
@@ -425,6 +427,7 @@ function App() {
         {isOpenDialog ? (
           <OpenDialog
             palettes={savedPalettes}
+            collections={savedCollections}
             onCancel={() => setIsOpenDialog(false)}
             onSelect={(id) => {
               const p = savedPalettes.find((x) => x.id === id)
@@ -448,20 +451,26 @@ function App() {
             onPalettesUpdated={() => {
               setSavedPalettes(getSavedPalettes())
             }}
+            onCollectionsUpdated={() => {
+              setSavedCollections(getCollections())
+            }}
           />
         ) : null}
 
         {isSaveDialog ? (
           <SaveDialog
             defaultName={`Palette ${new Date().toLocaleString()}`}
+            existingTags={getAllTags()}
+            collections={savedCollections}
             onCancel={() => setIsSaveDialog(false)}
-            onSave={(name) => {
+            onSave={(name, tags, collectionId) => {
               if (history.length === 0) {
                 setIsSaveDialog(false)
                 return
               }
               const toSave = (current ?? [])
-              savePalette(toSave, name)
+              savePalette(toSave, name, tags, collectionId)
+              setSavedPalettes(getSavedPalettes())
               setIsSaveDialog(false)
             }}
           />
