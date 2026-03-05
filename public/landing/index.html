@@ -256,11 +256,11 @@
     /* ─── KEYBOARD ─── */
     .keyboard-section { padding: 80px 0; border-bottom: 1px solid var(--border); }
     .keyboard-intro { font-family: var(--font-serif); font-size: clamp(22px, 2.6vw, 32px); font-style: italic; color: var(--fg-muted); margin-bottom: 36px; letter-spacing: -0.01em; }
-    .keyboard-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+    .keyboard-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px; }
     .keyboard-group-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 16px; }
     .keyboard-list { display: flex; flex-direction: column; gap: 10px; }
     .shortcut-row { display: flex; align-items: center; gap: 12px; }
-    .shortcut-keys { display: flex; align-items: center; gap: 4px; flex-shrink: 0; min-width: 120px; }
+    .shortcut-keys { display: flex; align-items: center; gap: 4px; flex-shrink: 0; min-width: 80px; }
     .shortcut-keys kbd {
       display: inline-block;
       font-family: var(--font-mono);
@@ -272,6 +272,9 @@
       background: transparent;
     }
     .shortcut-desc { font-size: 11.5px; color: var(--fg-muted); }
+    @media (max-width: 900px) {
+      .keyboard-cols { grid-template-columns: 1fr 1fr; gap: 32px; }
+    }
     @media (max-width: 560px) {
       .keyboard-cols { grid-template-columns: 1fr; gap: 32px; }
     }
@@ -283,6 +286,23 @@
     .extra { padding: 22px 24px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
     .extra-name { font-size: 12.5px; margin-bottom: 4px; }
     .extra-desc { font-size: 11px; line-height: 1.6; color: var(--fg-muted); }
+
+    /* ─── COMPARE ─── */
+    .compare { padding: 80px 0; border-top: 1px solid var(--border); }
+    .compare-title { font-family: var(--font-serif); font-size: clamp(22px, 2.6vw, 32px); font-style: italic; color: var(--fg-muted); margin-bottom: 36px; letter-spacing: -0.01em; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .compare-table th { font-weight: normal; padding: 10px 14px; text-align: center; color: var(--fg-muted); font-size: 10px; letter-spacing: 0.1em; }
+    .compare-table th:first-child { text-align: left; width: 40%; }
+    .compare-table th.us-col { color: var(--fg); font-weight: 600; }
+    .compare-table td { padding: 10px 14px; text-align: center; color: var(--fg-muted); border-top: 1px solid var(--border); }
+    .compare-table td:first-child { text-align: left; color: var(--fg); }
+    .compare-check { color: #22c55e; }
+    .compare-x { color: #ef4444; opacity: 0.6; }
+    .compare-table .us-col { background: var(--fg-faint); }
+    @media (max-width: 560px) {
+      .compare-table { font-size: 10px; }
+      .compare-table th, .compare-table td { padding: 8px 6px; }
+    }
 
     /* ─── CLOSING ─── */
     .closing { background: var(--bg-dark); color: rgba(255,255,255,0.88); padding: 100px 56px; text-align: center; }
@@ -399,7 +419,7 @@
         <h2 class="feature-headline">You can't invent<br><em>good taste.</em><br>But you can steal it.</h2>
         <div class="feature-body">
           <p>That photo from your Pinterest feed. The poster on your wall. A screenshot from somewhere on the internet at 2am that you just had to save. Inspiration is everywhere: in nature, in architecture, in art you didn't make but can't stop thinking about.</p>
-          <p>Creativity has always been collaborative. Art builds on art. You're not stealing, you're continuing a conversation that started long before you got here. Drop any image into PalettePort. K-means extraction finds the dominant colors automatically. Click swatches to select, or drag across a range. Then make them yours.</p>
+          <p>Creativity has always been collaborative. Art builds on art. You're not stealing, you're continuing a conversation that started long before you got here. Drop any image into PalettePort and we'll pull out the dominant colors automatically. Click swatches to select, or drag across a range. Then make them yours.</p>
         </div>
       </div>
       <div class="feature-visual">
@@ -471,8 +491,15 @@
           <span class="export-tag">oklch</span>
           <span class="export-tag">css vars</span>
           <span class="export-tag">tailwind</span>
+          <span class="export-tag">scss</span>
+          <span class="export-tag">json</span>
           <span class="export-tag">svg</span>
           <span class="export-tag">png</span>
+          <span class="export-tag">ase</span>
+          <span class="export-tag">aco</span>
+          <span class="export-tag">gpl</span>
+          <span class="export-tag">procreate</span>
+          <span class="export-tag">paint.net</span>
           <span class="export-tag">share url</span>
           <span class="export-tag">gradient css</span>
           <span class="export-tag">gradient svg</span>
@@ -481,41 +508,216 @@
       </div>
     </div>
 
+    <!-- Compare -->
+    <div class="compare">
+      <p class="compare-title">What we give free.</p>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>feature</th>
+            <th class="us-col">paletteport</th>
+            <th>coolors</th>
+            <th>colorffy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>max colors</td>
+            <td class="us-col compare-check">10</td>
+            <td>5 free, ∞ pro ($99)</td>
+            <td>5</td>
+          </tr>
+          <tr>
+            <td>contrast checker</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>pro ($5/mo)</td>
+          </tr>
+          <tr>
+            <td>palette variations</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>limited</td>
+          </tr>
+          <tr>
+            <td>advanced exports</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>pro</td>
+          </tr>
+          <tr>
+            <td>collections &amp; tags</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>3 free, ∞ pro</td>
+          </tr>
+          <tr>
+            <td>palette preview</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>harmony score</td>
+            <td class="us-col compare-check">✓</td>
+            <td class="compare-x">✗</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>extract from image</td>
+            <td class="us-col compare-check">✓</td>
+            <td>✓</td>
+            <td>limited</td>
+          </tr>
+          <tr>
+            <td>gradient tools</td>
+            <td class="us-col compare-check">✓</td>
+            <td>✓</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>dark mode</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>unlimited saves</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>✓</td>
+          </tr>
+          <tr>
+            <td>color blindness sim</td>
+            <td class="us-col compare-check">✓</td>
+            <td>✓</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>color naming</td>
+            <td class="us-col compare-check">✓</td>
+            <td>✓</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>keyboard shortcuts</td>
+            <td class="us-col compare-check">✓</td>
+            <td>partial</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>art app exports</td>
+            <td class="us-col compare-check">✓</td>
+            <td class="compare-x">✗</td>
+            <td class="compare-x">✗</td>
+          </tr>
+          <tr>
+            <td>no ads</td>
+            <td class="us-col compare-check">✓</td>
+            <td>pro</td>
+            <td>pro</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Keyboard shortcuts -->
     <div class="keyboard-section">
       <p class="keyboard-intro">keyboard-first. every action has a shortcut.</p>
       <div class="keyboard-cols">
         <div>
-          <p class="keyboard-group-label">simple</p>
+          <p class="keyboard-group-label">palette</p>
           <div class="keyboard-list">
             <div class="shortcut-row">
               <span class="shortcut-keys"><kbd>R</kbd></span>
-              <span class="shortcut-desc">reroll all colors</span>
+              <span class="shortcut-desc">reroll all</span>
             </div>
             <div class="shortcut-row">
               <span class="shortcut-keys"><kbd>A</kbd></span>
-              <span class="shortcut-desc">add a color</span>
+              <span class="shortcut-desc">add color</span>
             </div>
             <div class="shortcut-row">
-              <span class="shortcut-keys"><kbd>Z</kbd></span>
-              <span class="shortcut-desc">undo</span>
+              <span class="shortcut-keys"><kbd>Q</kbd></span>
+              <span class="shortcut-desc">cycle relationship</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>P</kbd></span>
+              <span class="shortcut-desc">cycle preset</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>I</kbd></span>
+              <span class="shortcut-desc">pick color</span>
             </div>
           </div>
         </div>
         <div>
-          <p class="keyboard-group-label">advanced</p>
+          <p class="keyboard-group-label">per-color</p>
           <div class="keyboard-list">
             <div class="shortcut-row">
-              <span class="shortcut-keys"><kbd>V</kbd> <kbd>1–9</kbd></span>
-              <span class="shortcut-desc">variations for color N</span>
+              <span class="shortcut-keys"><kbd>1–9</kbd></span>
+              <span class="shortcut-desc">toggle lock</span>
             </div>
             <div class="shortcut-row">
               <span class="shortcut-keys"><kbd>⌥</kbd> <kbd>1–9</kbd></span>
-              <span class="shortcut-desc">reroll single color</span>
+              <span class="shortcut-desc">reroll one</span>
             </div>
             <div class="shortcut-row">
               <span class="shortcut-keys"><kbd>⇧</kbd> <kbd>⌥</kbd> <kbd>1–9</kbd></span>
-              <span class="shortcut-desc">edit specific color</span>
+              <span class="shortcut-desc">edit color</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>V</kbd> <kbd>1–9</kbd></span>
+              <span class="shortcut-desc">variations</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>⇧</kbd> <kbd>1–9</kbd></span>
+              <span class="shortcut-desc">delete</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="keyboard-group-label">file</p>
+          <div class="keyboard-list">
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>S</kbd></span>
+              <span class="shortcut-desc">save</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>O</kbd></span>
+              <span class="shortcut-desc">open</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>C</kbd></span>
+              <span class="shortcut-desc">copy link</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>E</kbd></span>
+              <span class="shortcut-desc">export</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p class="keyboard-group-label">view</p>
+          <div class="keyboard-list">
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>F</kbd></span>
+              <span class="shortcut-desc">preview mode</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>T</kbd></span>
+              <span class="shortcut-desc">cycle theme</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>K</kbd></span>
+              <span class="shortcut-desc">contrast</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>Y</kbd></span>
+              <span class="shortcut-desc">harmony score</span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-keys"><kbd>Z</kbd></span>
+              <span class="shortcut-desc">undo</span>
             </div>
           </div>
         </div>
@@ -536,7 +738,7 @@
         </div>
         <div class="extra">
           <div class="extra-name">Gradient Builder</div>
-          <div class="extra-desc">Build linear gradients from your palette. Palette-linked stops sync automatically as colors change.</div>
+          <div class="extra-desc">Build linear gradients from your palette. Stops stay linked to your colors, so everything updates together.</div>
         </div>
         <div class="extra">
           <div class="extra-name">Color Blindness</div>
@@ -548,7 +750,19 @@
         </div>
         <div class="extra">
           <div class="extra-name">Color Names</div>
-          <div class="extra-desc">Every color gets a name. Displayed right below the circle, resolved via Oklab distance.</div>
+          <div class="extra-desc">Every color gets a name from a library of 4,000+. Displayed right below the circle, matched to the closest entry.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Collections & Tags</div>
+          <div class="extra-desc">Organize saved palettes into collections and tag them. Filter by group, tag, or search — combine them freely.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">Art App Exports</div>
+          <div class="extra-desc">Export to ASE, ACO, GPL, Procreate .swatches, and Paint.NET — straight into Photoshop, GIMP, or your iPad.</div>
+        </div>
+        <div class="extra">
+          <div class="extra-name">3-Way Dark Mode</div>
+          <div class="extra-desc">Light, gray, or dark. Switch anytime — your eyes, your call.</div>
         </div>
       </div>
     </div>
