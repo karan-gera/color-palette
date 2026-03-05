@@ -216,7 +216,7 @@ export default function OpenDialog({
 
   const commitEdit = (id: string) => {
     updatePalette(id, {
-      name: editName || undefined,
+      ...(editName.trim() ? { name: editName.trim() } : {}),
       tags: editTags,
       collectionId: editCollectionId || undefined,
     })
