@@ -278,13 +278,6 @@ export default function OpenDialog({
   }
 
   const allTags = getAllTags()
-  const hasActiveFilters = search.trim() !== '' || activeCollection !== null || activeTagFilters.length > 0
-
-  const clearAllFilters = () => {
-    setSearch('')
-    setActiveCollection(null)
-    setActiveTagFilters([])
-  }
 
   return (
     <>
@@ -301,14 +294,14 @@ export default function OpenDialog({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="search by name or tag"
-              className="font-mono text-sm pr-16"
+              className={`font-mono text-sm ${search ? 'pr-8' : ''}`}
             />
-            {hasActiveFilters && (
+            {search && (
               <button
-                onClick={clearAllFilters}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-sm font-mono text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                clear all
+                <XIcon className="size-3.5" />
               </button>
             )}
           </div>
@@ -440,6 +433,14 @@ export default function OpenDialog({
                     </button>
                   )
                 })}
+                {activeTagFilters.length > 1 && (
+                  <button
+                    onClick={() => setActiveTagFilters([])}
+                    className="px-2 py-0.5 rounded-sm font-mono text-xs border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                  >
+                    clear tags
+                  </button>
+                )}
               </div>
             )}
 
