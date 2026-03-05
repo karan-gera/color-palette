@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
 
+const MAX_TAG_LENGTH = 24
+
 type TagPillInputProps = {
   tags: string[]
   onChange: (tags: string[]) => void
@@ -14,6 +16,9 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const sorted = [...tags].sort((a, b) => a.localeCompare(b))
 
   const filteredSuggestions = suggestions.filter(
     (s) => s.toLowerCase().includes(input.toLowerCase()) && !tags.includes(s)
@@ -23,8 +28,14 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
     setHighlightedIndex(-1)
   }, [input])
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [tags.length])
+
   const addTag = (value: string) => {
-    const trimmed = value.trim().toLowerCase()
+    const trimmed = value.trim().toLowerCase().slice(0, MAX_TAG_LENGTH)
     if (!trimmed || tags.includes(trimmed)) {
       setInput('')
       setShowSuggestions(false)
@@ -36,7 +47,7 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
   }
 
   const addMany = (raw: string) => {
-    const candidates = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+    const candidates = raw.split(',').map((s) => s.trim().toLowerCase().slice(0, MAX_TAG_LENGTH)).filter(Boolean)
     const unique = candidates.reduce<string[]>((acc, t) => {
       if (!tags.includes(t) && !acc.includes(t)) acc.push(t)
       return acc
@@ -83,19 +94,20 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
 
   return (
     <div
-      className="flex flex-wrap gap-1.5 p-2 min-h-9 rounded-md border border-input bg-transparent cursor-text focus-within:ring-1 focus-within:ring-ring"
+      ref={scrollRef}
+      className="flex flex-wrap content-start gap-1.5 p-2 min-h-9 max-h-24 overflow-y-auto rounded-md border border-input bg-transparent cursor-text focus-within:ring-1 focus-within:ring-ring"
       onClick={() => inputRef.current?.focus()}
     >
-      {tags.map((tag) => (
+      {sorted.map((tag) => (
         <span
           key={tag}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground font-mono text-xs"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary text-secondary-foreground font-mono text-xs max-w-[180px]"
         >
-          {tag}
+          <span className="truncate">{tag}</span>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); removeTag(tag) }}
-            className="opacity-50 hover:opacity-100 transition-opacity"
+            className="opacity-50 hover:opacity-100 transition-opacity shrink-0"
             tabIndex={-1}
           >
             <X className="size-2.5" />
@@ -115,6 +127,7 @@ export default function TagPillInput({ tags, onChange, suggestions = [], placeho
           onFocus={() => setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           placeholder={tags.length === 0 ? placeholder : ''}
+          maxLength={MAX_TAG_LENGTH}
           autoFocus={autoFocus}
           className="w-full bg-transparent font-mono text-xs outline-none placeholder:text-muted-foreground py-0.5"
         />
