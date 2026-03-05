@@ -125,9 +125,20 @@ export function usePaletteColors(): UsePaletteColorsReturn {
     if (base.length === 0) return
     if (base.every((_, i) => lockedStates[i])) return
     const lockedColors = base.filter((_, i) => lockedStates[i])
-    const next = base.map((color, index) =>
-      lockedStates[index] ? color : generateRelatedColor(lockedColors, globalRelationship, color)
-    )
+    const needsSeed = lockedColors.length === 0 && globalRelationship !== 'random'
+    const seed = needsSeed
+      ? '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
+      : null
+    const ref = seed ? [seed] : lockedColors
+    let seedPlaced = false
+    const next = base.map((color, index) => {
+      if (lockedStates[index]) return color
+      if (seed && !seedPlaced) {
+        seedPlaced = true
+        return seed
+      }
+      return generateRelatedColor(ref, globalRelationship, color)
+    })
     push(next)
   }, [current, globalRelationship, lockedStates, push])
 
@@ -200,9 +211,20 @@ export function usePaletteColors(): UsePaletteColorsReturn {
     const base = current ?? []
     if (base.length > 0) {
       const lockedColors = base.filter((_, i) => lockedStates[i])
-      const next = base.map((color, index) =>
-        lockedStates[index] ? color : generateRelatedColor(lockedColors, relationship, color)
-      )
+      const needsSeed = lockedColors.length === 0 && relationship !== 'random'
+      const seed = needsSeed
+        ? '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
+        : null
+      const ref = seed ? [seed] : lockedColors
+      let seedPlaced = false
+      const next = base.map((color, index) => {
+        if (lockedStates[index]) return color
+        if (seed && !seedPlaced) {
+          seedPlaced = true
+          return seed
+        }
+        return generateRelatedColor(ref, relationship, color)
+      })
       push(next)
     }
   }, [current, lockedStates, push])

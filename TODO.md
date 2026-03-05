@@ -26,6 +26,30 @@ Features we're making free that competitors paywall.
 
 ---
 
+## Pre-Release Polish
+
+### Color transition fades lost on reroll
+
+Somewhere during recent work, the smooth color-to-color fade transitions when rerolling the palette stopped working. Colors now snap instantly instead of crossfading. Need to trace where the transition CSS or Framer Motion animation was dropped and restore it.
+
+- [ ] Identify which component/commit broke the fade (likely in `AnimatedPaletteItem.tsx` or the Framer `motion.div` transition props)
+- [ ] Restore smooth background-color transition on reroll
+- [ ] Verify fades work for: reroll all, reroll single, preset apply, relationship apply
+
+### ✅ Relationship reroll with fully unlocked palette
+
+When no colors are locked, selecting a color relationship (e.g. complementary) produces essentially random results — the relationship is computed relative to the last locked color, but with nothing locked there's no anchor.
+
+- [x] Detect "all unlocked" state when applying a relationship
+- [x] Generate a random seed color
+- [x] Derive the remaining palette colors from the seed using the selected relationship
+- [x] Seed is used as shared reference, not placed in any specific position
+- [x] Alternative considered: disable relationships until something is locked (rejected — worse UX)
+
+**Implementation:** In `usePaletteColors.ts`, both `rerollAll` and `handleRelationshipChange` now generate a random hex seed when `lockedColors` is empty and the relationship is not `random`. All unlocked colors derive from this shared seed, producing a cohesive palette.
+
+---
+
 ## Copy in Multiple Formats ✅
 
 Let users click a color and copy in various formats:
