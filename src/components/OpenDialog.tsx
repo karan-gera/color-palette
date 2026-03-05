@@ -133,6 +133,13 @@ export default function OpenDialog({
       .flatMap((p) => p.tags)
   )].sort()
 
+  // Prune stale tag filters when switching collections
+  useEffect(() => {
+    if (activeTagFilters.length === 0) return
+    const pruned = activeTagFilters.filter((t) => visibleTags.includes(t))
+    if (pruned.length !== activeTagFilters.length) setActiveTagFilters(pruned)
+  }, [activeCollection]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keyboard nav for list
   const [selectedIndex, setSelectedIndex] = useState(0)
   useEffect(() => { setSelectedIndex(0) }, [search, activeCollection, activeTagFilters.join(',')])
@@ -271,6 +278,13 @@ export default function OpenDialog({
   }
 
   const allTags = getAllTags()
+  const hasActiveFilters = search.trim() !== '' || activeCollection !== null || activeTagFilters.length > 0
+
+  const clearAllFilters = () => {
+    setSearch('')
+    setActiveCollection(null)
+    setActiveTagFilters([])
+  }
 
   return (
     <>
@@ -281,13 +295,23 @@ export default function OpenDialog({
           </DialogHeader>
 
           {/* Search */}
-          <Input
-            ref={searchRef}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="search by name or tag"
-            className="font-mono text-sm"
-          />
+          <div className="relative">
+            <Input
+              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="search by name or tag"
+              className="font-mono text-sm pr-16"
+            />
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-sm font-mono text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+              >
+                clear all
+              </button>
+            )}
+          </div>
 
           {/* Collection tabs */}
           <div className="flex flex-wrap items-center gap-1 -mx-1 px-1">

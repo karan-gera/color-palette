@@ -473,6 +473,7 @@ function App() {
               setSavedPalettes(getSavedPalettes())
               setIsSaveDialog(false)
             }}
+            onCollectionsUpdated={() => setSavedCollections(getCollections())}
           />
         ) : null}
 
