@@ -510,13 +510,13 @@ function App() {
           onCancel={() => setPendingPreset(null)}
         />
 
-        {/* Spacer to clear fixed keyboard hints overlay */}
-        <div className="h-52" aria-hidden="true" />
+        {/* Spacer to clear fixed keyboard hints overlay — taller when panel is open */}
+        <div className={`transition-all duration-300 ${showHints ? 'h-[340px]' : 'h-52'}`} aria-hidden="true" />
       </div>
 
       {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
       <div
-        className="fixed bottom-0 left-0 right-0 h-56 bg-background pointer-events-none z-40 transition-colors duration-300"
+        className={`fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 ${showHints ? 'h-[340px]' : 'h-56'}`}
         style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
         aria-hidden="true"
       />
