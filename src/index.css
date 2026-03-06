@@ -31,9 +31,9 @@
 @import "tw-animate-css";
 
 /* Fluid circle sizing — caps at 200px, scales down so 6 items (5 circles + add button)
-   always fit within the viewport. Formula: (100vw - 4rem padding - 5×1.25rem gaps) / 6 */
+   always fit within the viewport. Formula: (100vw - 4rem padding - 5×1.25rem gaps - 0.5rem buffer) / 6 */
 :root {
-  --circle-size: min(200px, calc((100vw - 10.25rem) / 6));
+  --circle-size: min(200px, calc((100vw - 10.75rem) / 6));
   --font-serif: 'DM Serif Display', Georgia, serif;
 }
 

@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import MobileInterstitial from './components/MobileInterstitial.tsx'
 
 // Mark this user as having visited the app — skips landing page on future loads.
 // Skip for share links (?colors=...) so the recipient still sees the landing page
@@ -12,6 +13,8 @@ if (!new URLSearchParams(window.location.search).has('colors')) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <MobileInterstitial>
+      <App />
+    </MobileInterstitial>
   </StrictMode>,
 )

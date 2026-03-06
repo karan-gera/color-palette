@@ -1093,6 +1093,70 @@ Full-screen overlay with About, Help, and Changelog tabs. Accessible from Circle
 23. ~~**Documentation Pages** - About, user guide, changelog — static, no backend~~ ✅ Done!
 24. **IndexedDB Migration** - Low priority, not needed yet
 25. **Community Sharing Platform** - Requires full backend, deferred indefinitely
+26. **Mobile Frontend** - Full ground-up rethink of UI/UX for touch; see section below
+
+---
+
+## Mobile Frontend (Future — Ground-Up Rethink)
+
+The desktop app is feature-complete, but the layout and interaction model is fundamentally desktop-first (Framer Motion drag, keyboard shortcuts, hover states, dense toolbar, etc.). Mobile isn't a responsive tweak — it needs a separate UI built around touch.
+
+**The good news:** none of the logic needs to be rewritten. All color theory, storage, history, gradient, extract, harmony, and export logic lives in `src/helpers/` and `src/hooks/` and is fully portable. Only the UI layer needs to be rebuilt.
+
+### Strategy
+
+Build a separate frontend that imports and reuses all existing helpers and hooks directly. This is not a new app — it's a new shell around the same engine.
+
+Options:
+- **Same repo, separate entry point** (`src/mobile/main.tsx`) — shares helpers/hooks, separate component tree, separate Vite build target
+- **Separate repo** (like `color-palette-mobile`) — cleaner isolation, but duplicates any helper changes
+
+Recommended: same repo, separate entry point. Helpers stay in sync automatically.
+
+### What changes for mobile
+
+| Desktop | Mobile equivalent |
+|---------|------------------|
+| Framer Motion drag-to-reorder | Long-press + drag (or up/down arrows) |
+| Hover to reveal color actions | Tap to select, persistent action row below |
+| Keyboard shortcuts for everything | None (or OS-level accessibility only) |
+| Dense Controls toolbar | Bottom sheet or swipe-up action tray |
+| Click to add/remove colors | Large tap targets, bottom-anchored add button |
+| Palette circles in a row | Vertical stack or swipeable card layout |
+| Gradient stop bar (drag handles) | Simplified — tap to select stop, slider for position |
+| View tab strip (palette/gradient/extract) | Bottom nav bar |
+| Dialogs (save, open, export) | Native-feeling bottom sheets (already have `ResponsiveDialog`) |
+| ContrastChecker / HarmonyScore panels | Full-screen sheets, not inline rows |
+| ColorVariations panel | Full-screen modal |
+
+### What stays the same
+
+- All color math (`colorTheory.ts`, `contrast.ts`)
+- All storage (`storage.ts`, `useHistory.ts`)
+- All export logic
+- All color naming
+- Gradient stop state management (`useGradientStops.ts`)
+- Extract-from-image logic (k-means in `colorTheory.ts`)
+- Theme system (`useTheme.ts`)
+- CVD filters (`CVDFilters.tsx` — just a SVG defs block)
+
+### Current state
+
+- **Mobile interstitial** is live: mobile users see a "not optimized yet" screen with an option to proceed to the desktop version anyway. This buys time before a proper mobile frontend exists.
+
+### TODOs
+
+- [ ] Decide: same repo (separate entry) vs separate repo — lean toward same repo
+- [ ] Define bottom nav structure: palette / gradient / extract / settings
+- [ ] Design touch-first palette view: color cards, tap-to-select, action row
+- [ ] Build `MobileApp.tsx` shell that mirrors `App.tsx` state but uses mobile components
+- [ ] Reuse `useHistory`, `usePaletteColors`, `useGradientStops`, `useTheme` as-is
+- [ ] Port dialogs to bottom sheets (extend `ResponsiveDialog` pattern already in codebase)
+- [ ] Touch-friendly gradient stop editor (slider-based, not drag-on-bar)
+- [ ] Swipe gesture for undo/redo (or shake — configurable)
+- [ ] Ensure extract-from-image works with camera roll / photo picker on mobile
+- [ ] QA on iOS Safari and Android Chrome (key rendering differences)
+- [ ] Once shipped, remove `MobileInterstitial` from `main.tsx`
 
 ---
 

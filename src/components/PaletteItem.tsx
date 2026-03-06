@@ -91,7 +91,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
   return (
     <TooltipProvider>
       <LayoutGroup>
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 w-[var(--circle-size)]">
           <button
             type="button"
             className={`cvd-color size-[var(--circle-size)] rounded-full border-2 flex items-center justify-center relative cursor-pointer ${isEditing ? 'editing' : ''}`}
