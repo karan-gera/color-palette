@@ -855,8 +855,8 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
       transition={{ duration: 0.18 }}
     >
 
-      {/* Top bar */}
-      <div className="shrink-0 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+      {/* Top bar — relative z-10 so role-picker popovers render above the content area */}
+      <div className="shrink-0 border-b border-border/50 bg-background/80 backdrop-blur-sm relative z-10">
         <div className="h-12 flex items-center px-4 gap-2">
 
           {/* View mode switcher */}
