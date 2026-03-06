@@ -50,6 +50,73 @@ When no colors are locked, selecting a color relationship (e.g. complementary) p
 
 ---
 
+## OG Images / Social Embeds (Cloudflare Worker)
+
+When someone shares a palette URL on Discord, Slack, Twitter/X, iMessage, WhatsApp, Telegram, LinkedIn, Reddit, Bluesky, Teams, or any Open Graph-aware platform, they should see a rich preview card showing the actual palette colors — not a blank card or generic app icon.
+
+**Why this needs a server:** Crawlers (Discordbot, Twitterbot, Slackbot, iMessage link preview, etc.) don't execute JavaScript. A static SPA's `<meta og:image>` is always the same regardless of the `?colors=` URL param. We need something to intercept the HTML and rewrite the tags per-URL, and an endpoint to generate the palette image dynamically.
+
+**Architecture:** Cloudflare Worker on the free tier ($0/mo), sitting in front of GitHub Pages as a transparent proxy. Human visitors pass straight through to GitHub Pages untouched. Only bot/crawler user-agents get intercepted.
+
+### Part 1: Meta tag injection (HTMLRewriter)
+
+The Worker detects crawler user-agents and uses Cloudflare's `HTMLRewriter` API to inject palette-specific OG meta tags into the HTML response before the crawler sees it.
+
+- [ ] Set up Cloudflare Worker project (Wrangler CLI)
+- [ ] Bot detection: match known crawler user-agents (Discordbot, Twitterbot, Slackbot, facebookexternalhit, LinkedInBot, WhatsApp, TelegramBot, iMessage/Apple, Googlebot, etc.)
+- [ ] For bot requests with `?colors=` param: fetch the SPA HTML from GitHub Pages origin
+- [ ] Use `HTMLRewriter` to inject/replace `<meta>` tags in `<head>`:
+  - `og:title` — e.g. "palette — #ff5733, #3498db, #2ecc71"
+  - `og:description` — e.g. "5-color palette on PalettePort"
+  - `og:image` — URL to the Worker's own `/api/og?colors=...` endpoint
+  - `og:url` — the canonical palette URL
+  - `twitter:card` — `summary_large_image`
+- [ ] For non-bot requests or requests without `?colors=`: pass through to GitHub Pages unchanged
+- [ ] Test with Discord, Twitter, Slack link preview debuggers
+
+### Part 2: PNG image generation (pure JS, no WASM)
+
+A `/api/og` endpoint on the same Worker that generates a 1200×630 PNG of colored rectangles. No Satori, no resvg, no WASM — just raw pixel buffer manipulation and the built-in `CompressionStream` API. This keeps CPU time under the free tier's 10ms limit.
+
+- [ ] Parse `?colors=` param into array of hex values (1–10 colors)
+- [ ] Calculate grid layout: vertical strips for ≤5 colors, 2-row grid for 6–10 (matching the app's `getRowSplit` logic)
+- [ ] Fill a 1200×630 RGBA pixel buffer with solid color rectangles
+- [ ] Encode as PNG: IHDR chunk + IDAT chunk (deflate via `CompressionStream`) + IEND chunk
+- [ ] Return with `Content-Type: image/png` and aggressive `Cache-Control` headers
+- [ ] Cache generated images via Cloudflare Cache API (key = sorted color string) — most subsequent requests served from cache at 0 CPU cost
+- [ ] Fallback: if no `?colors=` param, serve a static default OG image (app branding)
+
+### Part 3: Deployment & DNS
+
+- [ ] Deploy Worker via Wrangler (`wrangler deploy`)
+- [ ] Configure Cloudflare DNS to proxy the domain through the Worker
+- [ ] Verify: human visitors see no difference (pass-through to GitHub Pages)
+- [ ] Verify: bot crawlers receive rewritten HTML with correct OG tags
+- [ ] Test with real services: paste a palette URL into Discord, Twitter, Slack, iMessage
+
+### Part 4: Integration with the app
+
+- [ ] Ensure the app's share URL (`C` key / copy link) produces a URL that the Worker can parse
+- [ ] Confirm `?colors=` param format is stable and matches what the Worker expects
+- [ ] Add static fallback OG meta tags to `index.html` for when the Worker is bypassed or down
+
+### Cost
+
+$0/mo on Cloudflare Workers free tier:
+- 100K requests/day (bot crawlers are a tiny fraction of traffic)
+- 10ms CPU/request (meta tag injection: ~1ms, PNG generation: ~3-5ms for solid color blocks)
+- Cache API: free, unlimited — repeat requests for the same palette cost 0 CPU
+- When/if we move to Vercel for PalettePort, the image generation logic ports directly to `@vercel/og` with minimal changes. The Worker gets turned off.
+
+### Design
+
+1200×630 PNG. Bold color blocks, no text, no labels. Grid adapts to color count:
+- 1–5 colors: full-height vertical strips
+- 6–10 colors: 2-row grid matching the app's `getRowSplit` layout
+- Fallback (no colors param): static branded image
+
+---
+
 ## Copy in Multiple Formats ✅
 
 Let users click a color and copy in various formats:
@@ -938,21 +1005,9 @@ Assuming 60% choose one-time, 40% choose monthly. One-time amortized over ~18 mo
 
 **Don't launch until:** 5K+ MAU minimum, and ideally users are actively requesting community features.
 
-### Social Embeds / OG Images (ships with PalettePort)
+### ~~Social Embeds / OG Images~~ → Decoupled from PalettePort
 
-When someone shares a palette URL on Discord, Slack, Twitter, or any Open Graph-aware platform, they should see a rich preview showing the actual palette — not a blank card.
-
-**Design:** Mosaic grid of color swatches. Grid layout adapts to color count (1–10). When the color count leaves an odd cell, that cell shows the app name/logo instead. Clean, no hex labels — just bold color blocks.
-
-**Why this can't ship on GitHub Pages:** Discord's crawler doesn't execute JavaScript, so OG meta tags in a static SPA's `index.html` are always the same regardless of the `?colors=` URL param. Palette-specific embeds require server-side meta tag injection (Edge Middleware) and a dynamic image generation endpoint (`/api/og`). Both require a server — the same server PalettePort needs anyway.
-
-**Implementation plan (when the time comes):**
-- Deploy to Vercel (or equivalent) instead of GitHub Pages
-- `middleware.ts` — intercepts requests with `?colors=` and injects palette-specific `og:image`, `og:title`, `og:description`, `twitter:card` tags
-- `api/og.ts` — Vercel Edge Function using `@vercel/og` (Satori) to render a mosaic JSX component to a 1200×630 PNG
-- Mosaic layout: calculate optimal grid (cols = `ceil(sqrt(n))`), fill cells with color blocks, last cell = app name/logo if n doesn't fill the grid evenly
-
-**Infeasible on static hosting. Ship when PalettePort ships.**
+**Moved up to its own section: "OG Images / Social Embeds (Cloudflare Worker)"** — ships independently on Cloudflare Workers free tier, no Vercel migration needed. See the dedicated plan above.
 
 ---
 
