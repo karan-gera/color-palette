@@ -109,6 +109,7 @@ function App() {
     close: closeSwapMode,
   } = useSwapMode({ swapColors, setEditIndex })
   const gradientState = useGradientStops(current ?? [], colorIds)
+  const { syncPaletteColors } = gradientState
   const {
     activeView,
     showPreviewOverlay,
@@ -128,8 +129,8 @@ function App() {
   // Always keep palette-linked stops in sync with the current palette colors
   useEffect(() => {
     const palette = (current ?? []).map((hex, i) => ({ id: colorIds[i], hex }))
-    gradientState.syncPaletteColors(palette)
-  }, [current, colorIds]) // gradientState.syncPaletteColors is stable
+    syncPaletteColors(palette)
+  }, [current, colorIds, syncPaletteColors])
 
   const handleShare = useCallback(async () => {
     const colors = current ?? []
@@ -141,7 +142,7 @@ function App() {
     } else {
       setNotification('Failed to copy link')
     }
-  }, [current, lockedStates])
+  }, [current, lockedStates, setNotification])
 
   const handleExport = useCallback(() => {
     if (activeView === 'gradient') {
@@ -150,7 +151,7 @@ function App() {
       setExportInitialView('selecting')
       setIsExportDialog(true)
     }
-  }, [activeView])
+  }, [activeView, setExportInitialView, setIsExportDialog, setIsGradientExportDialog])
 
   const handlePickColor = useCallback(async () => {
     if ((current ?? []).length >= MAX_COLORS) return
