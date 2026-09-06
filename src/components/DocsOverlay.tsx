@@ -1520,7 +1520,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             </p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">fonts</h3>
-            <p>six fonts available in title and ui modes: system, inter, playfair display, space grotesk, nunito, jetbrains mono. fonts load lazily via google fonts on first use.</p>
+            <p>six fonts are available in ui elements mode: system, inter, playfair display, space grotesk, nunito, and jetbrains mono. the five custom families are bundled with paletteport and load from the app on first use.</p>
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">gradient preview</h3>
             <p>
