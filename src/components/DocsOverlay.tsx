@@ -62,6 +62,16 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.19',
+    title: 'accessibility & local fonts',
+    items: [
+      'overlays now manage keyboard focus and expose clear dialog semantics',
+      'icon controls and form fields have descriptive accessible names',
+      'preview fonts are bundled locally with no runtime google fonts requests',
+      'preset selection is fully reachable from the keyboard',
+    ],
+  },
+  {
     version: '0.18',
     title: 'collections & tags',
     items: [
