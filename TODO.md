@@ -28,6 +28,17 @@ Features we're making free that competitors paywall.
 
 ## Pre-Release Polish
 
+### ✅ Core accessibility foundations
+
+- [x] Remove the closed documentation overlay from the tab order and accessibility tree
+- [x] Add modal semantics, escape handling, focus containment, and focus restoration to custom overlays
+- [x] Add accessible names to icon-only header, preset, palette, editing, undo, redo, and delete controls
+- [x] Associate save/open and gradient labels with their controls
+- [x] Add required Radix dialog descriptions
+- [x] Remove duplicate CVD SVG filter IDs
+
+**Implementation:** The documentation and gradient export overlays now expose dialog semantics and manage focus explicitly. Closed documentation is inert and hidden from assistive technology. Save/open dialogs have associated labels and descriptions, preset selection is keyboard-operable, icon actions have contextual names, and CVD filter definitions now have unique document IDs.
+
 ### Color transition fades lost on reroll
 
 Somewhere during recent work, the smooth color-to-color fade transitions when rerolling the palette stopped working. Colors now snap instantly instead of crossfading. Need to trace where the transition CSS or Framer Motion animation was dropped and restore it.

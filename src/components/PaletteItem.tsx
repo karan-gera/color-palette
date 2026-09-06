@@ -102,7 +102,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
               color: textColor,
               boxShadow: showSwapHoverRing ? `0 0 0 3px ${BLUEPRINT_COLOR}40` : undefined,
             }}
-            aria-label={swapMode ? `Select color ${color} to rearrange` : `${isLocked ? 'Unlock' : 'Lock'} color ${color}`}
+            aria-label={swapMode ? `select color ${color} to rearrange` : `${isLocked ? 'unlock' : 'lock'} color ${color}`}
             onClick={handleCircleClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -129,7 +129,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
               >
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onEditStart}>
+                  <Button variant="ghost" size="icon-sm" onClick={onEditStart} aria-label={`edit color ${color}`}>
                     <Pencil className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -145,6 +145,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                     size="icon-sm"
                     onClick={onReroll}
                     disabled={isLocked}
+                    aria-label={`reroll color ${color}`}
                     className={isLocked ? 'opacity-40' : ''}
                   >
                     <RefreshCw className="size-4" />
@@ -157,7 +158,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onDelete} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="icon-sm" onClick={onDelete} aria-label={`delete color ${color}`} className="text-destructive hover:text-destructive">
                     <Trash2 className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -168,7 +169,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onViewVariations}>
+                  <Button variant="ghost" size="icon-sm" onClick={onViewVariations} aria-label={`view variations for ${color}`}>
                     <Blend className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -204,6 +205,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                     const hex = await pickColorNative()
                     if (hex) setEditValue(hex.replace('#', ''))
                   }}
+                  aria-label="pick color from screen"
                   className="text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                 >
                   <Pipette className="size-3" />
@@ -214,6 +216,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                   <button
                     type="button"
                     onMouseDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+                    aria-label="open color picker"
                     className="font-mono text-base leading-none text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
                   >
                     •
@@ -255,6 +258,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                       onEditCancel()
                     })
                   }}
+                  aria-label={`hex value for ${color}`}
                   className="font-mono text-xs text-muted-foreground uppercase bg-transparent outline-none w-[6ch] p-0 border-0"
                   maxLength={6}
                 />
@@ -270,6 +274,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={onEditCancel}
+                aria-label="cancel color edit"
                 className="text-muted-foreground hover:text-destructive transition-colors p-0.5 cursor-pointer"
               >
                 <X className="size-3" />
@@ -278,6 +283,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={handleConfirm}
+                aria-label="save color edit"
                 className="text-muted-foreground hover:text-foreground transition-colors p-0.5 cursor-pointer"
               >
                 <Check className="size-3" />

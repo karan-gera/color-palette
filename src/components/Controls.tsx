@@ -213,6 +213,7 @@ export default function Controls({
                 size="icon-sm"
                 onClick={onUndo}
                 disabled={!canUndo}
+                aria-label="undo"
                 className="font-mono"
               >
                 <Undo2 className="size-4" />
@@ -230,6 +231,7 @@ export default function Controls({
                 size="icon-sm"
                 onClick={onRedo}
                 disabled={!canRedo}
+                aria-label="redo"
                 className="font-mono"
               >
                 <Redo2 className="size-4" />

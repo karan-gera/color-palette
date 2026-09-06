@@ -23,6 +23,7 @@ const CVDToggle = forwardRef<CVDToggleHandle>(function CVDToggle(_, ref) {
     <TooltipProvider>
       <ToggleGroup
         type="single"
+        aria-label="color vision simulation"
         value={cvd}
         onValueChange={(value) => value && setCVD(value as CVDType)}
         variant="outline"
@@ -33,7 +34,7 @@ const CVDToggle = forwardRef<CVDToggleHandle>(function CVDToggle(_, ref) {
             <TooltipTrigger asChild>
               <ToggleGroupItem 
                 value={option.value} 
-                aria-label={option.label}
+                aria-label={option.label.toLowerCase()}
                 className={`font-mono text-xs ${cvd === option.value ? 'bg-accent text-accent-foreground' : ''}`}
               >
                 {option.value === 'normal' ? (
