@@ -36,6 +36,7 @@ export default function ThemeToggle() {
     <TooltipProvider>
       <ToggleGroup
         type="single"
+        aria-label="theme"
         value={theme}
         // Don't use onValueChange - we handle clicks manually for coordinates
         variant="outline"

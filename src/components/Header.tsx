@@ -17,6 +17,7 @@ export default function Header({ cvdRef, onToggleDocs }: HeaderProps) {
         <button
           type="button"
           onClick={onToggleDocs}
+          aria-label="open documentation"
           className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
           <CircleHelp className="size-4" />

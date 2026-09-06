@@ -126,6 +126,7 @@ export default function GradientView({
       <div className="flex items-center gap-3 justify-end">
         {ASPECT_RATIOS.map(({ label, ratio }) => (
           <button
+            type="button"
             key={label}
             onClick={() => onPreviewRatioChange(ratio)}
             className={[
@@ -193,11 +194,16 @@ export default function GradientView({
 
       {/* Angle control */}
       <div className="flex items-center gap-4">
-        <label className="font-mono text-xs text-muted-foreground lowercase w-10 shrink-0">
+        <label
+          htmlFor="gradient-angle"
+          className="font-mono text-xs text-muted-foreground lowercase w-10 shrink-0"
+        >
           angle
         </label>
         <input
+          id="gradient-angle"
           type="range"
+          aria-label="gradient angle"
           min={0}
           max={360}
           value={angle}
@@ -206,6 +212,7 @@ export default function GradientView({
         />
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setAngle(angle - 1)}
             className="w-6 h-6 flex items-center justify-center rounded border border-border font-mono text-sm leading-none text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
             aria-label="decrease angle"
@@ -215,6 +222,7 @@ export default function GradientView({
           <div className="relative">
             <input
               type="number"
+              aria-label="gradient angle in degrees"
               min={0}
               max={360}
               value={angleInputValue}
@@ -226,6 +234,7 @@ export default function GradientView({
             <span className="absolute right-1.5 top-1/2 -translate-y-1/2 font-mono text-xs text-muted-foreground pointer-events-none select-none">°</span>
           </div>
           <button
+            type="button"
             onClick={() => setAngle(angle + 1)}
             className="w-6 h-6 flex items-center justify-center rounded border border-border font-mono text-sm leading-none text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
             aria-label="increase angle"
@@ -238,6 +247,7 @@ export default function GradientView({
       {/* Actions row */}
       <div className="flex items-center gap-2">
         <Button
+          type="button"
           variant="outline"
           size="sm"
           className="font-mono lowercase text-xs gap-1.5"
@@ -248,6 +258,7 @@ export default function GradientView({
         </Button>
 
         <Button
+          type="button"
           variant="outline"
           size="sm"
           className="font-mono lowercase text-xs gap-1.5 ml-auto"

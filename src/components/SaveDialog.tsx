@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -59,11 +60,15 @@ export default function SaveDialog({ defaultName, existingTags, collections, onC
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-mono lowercase">save palette</DialogTitle>
+          <DialogDescription className="sr-only">
+            name and organize this palette before saving it.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
-            <label className="text-sm font-mono lowercase">name</label>
+            <label htmlFor="save-palette-name" className="text-sm font-mono lowercase">name</label>
             <Input
+              id="save-palette-name"
               value={nameValue}
               onChange={(e) => setNameValue(e.target.value)}
               placeholder="optional"
@@ -72,8 +77,8 @@ export default function SaveDialog({ defaultName, existingTags, collections, onC
             />
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-mono lowercase">tags</label>
-            <div data-tag-pill-input>
+            <span id="save-palette-tags-label" className="text-sm font-mono lowercase">tags</span>
+            <div role="group" aria-labelledby="save-palette-tags-label" data-tag-pill-input>
               <TagPillInput
                 tags={tags}
                 onChange={setTags}
@@ -84,9 +89,10 @@ export default function SaveDialog({ defaultName, existingTags, collections, onC
             <p className="text-xs text-muted-foreground font-mono">press enter or comma to add a tag</p>
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-mono lowercase">collection</label>
+            <label htmlFor="save-palette-collection" className="text-sm font-mono lowercase">collection</label>
             <div className="flex gap-2">
               <select
+                id="save-palette-collection"
                 value={collection}
                 onChange={(e) => setCollection(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -111,6 +117,7 @@ export default function SaveDialog({ defaultName, existingTags, collections, onC
             {creatingCollection && (
               <div className="flex gap-2">
                 <Input
+                  aria-label="new collection name"
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   onKeyDown={(e) => {

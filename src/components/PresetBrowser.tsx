@@ -47,6 +47,7 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
         variant="outline"
         size="icon-sm"
         onClick={handlePrev}
+        aria-label="previous preset"
         className="rounded-r-none border-r-0 font-mono"
       >
         <ChevronLeft className="size-3.5" />
@@ -54,18 +55,22 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
 
       <DropdownMenu open={isDropdownOpen} onOpenChange={(open) => { setIsDropdownOpen(open); if (!open) setIsHovered(false) }}>
         <div
-          className="relative h-8 w-[13ch] flex items-center justify-center border border-border bg-background px-2"
+          className="group relative h-8 w-[13ch] flex items-center justify-center border border-border bg-background px-2"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Invisible full-width trigger — anchors dropdown to widget center */}
+          {/* Full-width trigger keeps the preset menu keyboard-accessible. */}
           <DropdownMenuTrigger asChild>
-            <div className="absolute inset-0 pointer-events-none" aria-hidden="true" />
+            <button
+              type="button"
+              className="absolute inset-0 z-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              aria-label="choose preset"
+            />
           </DropdownMenuTrigger>
 
           {/* Label — visible when not hovered */}
           <span
-            className={`font-mono text-sm lowercase select-none transition-opacity duration-150 ${
+            className={`font-mono text-sm lowercase select-none transition-opacity duration-150 group-focus-within:opacity-0 ${
               showHover ? 'opacity-0' : 'opacity-100'
             }`}
           >
@@ -74,13 +79,14 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
 
           {/* Hover controls — visible when hovered */}
           <div
-            className={`absolute inset-0 flex items-center justify-center gap-1 transition-opacity duration-150 ${
+            className={`absolute inset-0 z-10 flex items-center justify-center gap-1 transition-opacity duration-150 group-focus-within:opacity-100 group-focus-within:pointer-events-auto ${
               showHover ? 'opacity-100' : 'opacity-0 pointer-events-none'
             }`}
           >
             <button
               type="button"
               onClick={() => setIsDropdownOpen(true)}
+              aria-label="open preset list"
               className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer rounded-sm hover:bg-accent"
             >
               <ChevronDown className="size-3.5" />
@@ -90,6 +96,7 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
               type="button"
               onClick={onReroll}
               disabled={!activePresetId}
+              aria-label="reroll active preset"
               className={`p-1 transition-colors cursor-pointer rounded-sm ${
                 activePresetId
                   ? 'text-muted-foreground hover:text-foreground hover:bg-accent'
@@ -119,6 +126,7 @@ export default function PresetBrowser({ activePresetId, onSelect, onReroll }: Pr
         variant="outline"
         size="icon-sm"
         onClick={handleNext}
+        aria-label="next preset"
         className="rounded-l-none border-l-0 font-mono"
       >
         <ChevronRight className="size-3.5" />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
@@ -381,7 +381,11 @@ function Demo({ children, label }: { children: React.ReactNode; label?: string }
       {label && (
         <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 block">{label}</span>
       )}
-      <div className="flex justify-center items-center pointer-events-none select-none">
+      <div
+        aria-hidden="true"
+        inert
+        className="flex justify-center items-center pointer-events-none select-none"
+      >
         {children}
       </div>
     </div>
@@ -1703,9 +1707,84 @@ function ChangelogTab() {
 
 export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const overlay = overlayRef.current
+
+    if (!visible) {
+      if (previousFocusRef.current?.isConnected) {
+        previousFocusRef.current.focus()
+      }
+      previousFocusRef.current = null
+      return
+    }
+
+    if (!overlay) return
+
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement && !overlay.contains(activeElement)) {
+      previousFocusRef.current = activeElement
+    }
+
+    const focusInitialControl = window.requestAnimationFrame(() => {
+      const activeTabButton = overlay.querySelector<HTMLElement>('[data-docs-active="true"]')
+      ;(activeTabButton ?? overlay).focus()
+    })
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        event.stopPropagation()
+        onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const focusableElements = Array.from(
+        overlay.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.getClientRects().length > 0)
+
+      if (focusableElements.length === 0) {
+        event.preventDefault()
+        overlay.focus()
+        return
+      }
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+      const focusIsOutsideOverlay = !overlay.contains(document.activeElement)
+
+      if (event.shiftKey && (document.activeElement === firstElement || focusIsOutsideOverlay)) {
+        event.preventDefault()
+        lastElement.focus()
+      } else if (!event.shiftKey && (document.activeElement === lastElement || focusIsOutsideOverlay)) {
+        event.preventDefault()
+        firstElement.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.cancelAnimationFrame(focusInitialControl)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [visible, onClose])
 
   return (
     <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal={visible ? true : undefined}
+      aria-label="paletteport documentation"
+      aria-hidden={!visible}
+      inert={!visible}
+      tabIndex={-1}
       className={`fixed inset-0 z-[9997] bg-background transition-all duration-300 ease-out ${
         visible
           ? 'opacity-100 translate-y-0'
@@ -1720,6 +1799,8 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+              data-docs-active={activeTab === tab.id}
               className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
                 activeTab === tab.id
                   ? 'bg-card text-foreground'
@@ -1733,9 +1814,10 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
         <button
           type="button"
           onClick={onClose}
+          aria-label="close documentation"
           className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
-          <X className="size-4" />
+          <X className="size-4" aria-hidden="true" />
         </button>
       </div>
 

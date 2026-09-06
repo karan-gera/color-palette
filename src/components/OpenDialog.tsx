@@ -4,6 +4,7 @@ import { Trash2, Download, Upload, Pencil, Check, Plus, XIcon, ChevronUp, Chevro
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -286,6 +287,9 @@ export default function OpenDialog({
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="font-mono lowercase">open palette</DialogTitle>
+            <DialogDescription className="sr-only">
+              search, filter, edit, import, or load a saved palette.
+            </DialogDescription>
           </DialogHeader>
 
           {palettes.length > 0 && (
@@ -294,6 +298,7 @@ export default function OpenDialog({
           <div className="relative">
             <Input
               ref={searchRef}
+              aria-label="search palettes"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="search by name or tag"
@@ -301,6 +306,8 @@ export default function OpenDialog({
             />
             {search && (
               <button
+                type="button"
+                aria-label="clear search"
                 onClick={() => setSearch('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -313,6 +320,8 @@ export default function OpenDialog({
           <div className="flex flex-wrap items-center gap-1 -mx-1 px-1">
             {/* All tab */}
             <button
+              type="button"
+              aria-pressed={activeCollection === null}
               onClick={() => setActiveCollection(null)}
               className={`px-2.5 py-1 rounded-sm font-mono text-xs transition-colors ${
                 activeCollection === null
@@ -326,6 +335,8 @@ export default function OpenDialog({
             {/* Uncategorized tab (only if some palettes have no collection) */}
             {palettes.some((p) => !p.collection) && collections.length > 0 && (
               <button
+                type="button"
+                aria-pressed={activeCollection === '__none__'}
                 onClick={() => setActiveCollection('__none__')}
                 className={`px-2.5 py-1 rounded-sm font-mono text-xs transition-colors ${
                   activeCollection === '__none__'
@@ -343,6 +354,7 @@ export default function OpenDialog({
               return renamingCollection === c.name ? (
                 <input
                   key={c.name}
+                  aria-label={`rename ${c.name} collection`}
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -354,36 +366,43 @@ export default function OpenDialog({
                   className="px-2 py-1 rounded-sm font-mono text-xs border border-input bg-background outline-none w-24"
                 />
               ) : (
-                <button
+                <span
                   key={c.name}
-                  onClick={() => setActiveCollection(c.name)}
-                  onDoubleClick={() => { setRenamingCollection(c.name); setRenameValue(c.name) }}
-                  className={`inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 rounded-sm font-mono text-xs transition-colors ${
+                  className={`inline-flex items-stretch rounded-sm font-mono text-xs transition-colors ${
                     isActive
                       ? 'bg-foreground text-background'
                       : 'hover:bg-accent text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {c.name}
-                  <span
-                    role="button"
-                    tabIndex={-1}
+                  <button
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setActiveCollection(c.name)}
+                    onDoubleClick={() => { setRenamingCollection(c.name); setRenameValue(c.name) }}
+                    className="pl-2.5 pr-1 py-1 rounded-l-sm"
+                  >
+                    {c.name}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`delete ${c.name} collection`}
                     onClick={(e) => { e.stopPropagation(); setPendingDeleteCollection(c.name) }}
-                    className={`rounded-sm transition-colors ${
+                    className={`pl-1 pr-1.5 py-1 rounded-r-sm transition-colors ${
                       isActive
                         ? 'hover:bg-background/20'
                         : 'hover:bg-foreground/10'
                     }`}
                   >
                     <XIcon className="size-3.5" />
-                  </span>
-                </button>
+                  </button>
+                </span>
               )
             })}
 
             {/* New collection */}
             {creatingCollection ? (
               <input
+                aria-label="new collection name"
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
                 onKeyDown={(e) => {
@@ -397,6 +416,7 @@ export default function OpenDialog({
               />
             ) : (
               <button
+                type="button"
                 onClick={() => setCreatingCollection(true)}
                 className="px-2 py-1 rounded-sm font-mono text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors flex items-center gap-1"
               >
@@ -422,6 +442,8 @@ export default function OpenDialog({
                   return (
                     <button
                       key={tag}
+                      type="button"
+                      aria-pressed={active}
                       onClick={() =>
                         setActiveTagFilters((prev) =>
                           active ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -440,6 +462,7 @@ export default function OpenDialog({
                 })}
                 {activeTagFilters.length > 1 && (
                   <button
+                    type="button"
                     onClick={() => setActiveTagFilters([])}
                     className="px-2 py-0.5 rounded-sm font-mono text-xs border border-dashed border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
                   >
@@ -501,13 +524,14 @@ export default function OpenDialog({
                         /* Inline edit mode */
                         <div className="p-3 grid gap-2" onClick={(e) => e.stopPropagation()}>
                           <Input
+                            aria-label={`name for ${p.name}`}
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             placeholder="palette name"
                             className="font-mono text-sm h-8"
                             autoFocus
                           />
-                          <div data-tag-pill-input>
+                          <div role="group" aria-label={`tags for ${p.name}`} data-tag-pill-input>
                             <TagPillInput
                               tags={editTags}
                               onChange={setEditTags}
@@ -517,6 +541,7 @@ export default function OpenDialog({
                           </div>
                           {collections.length > 0 && (
                             <select
+                              aria-label={`collection for ${p.name}`}
                               value={editCollection}
                               onChange={(e) => setEditCollection(e.target.value)}
                               className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs font-mono shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -570,6 +595,7 @@ export default function OpenDialog({
                               variant="outline"
                               size="icon-sm"
                               onClick={(e) => { e.stopPropagation(); startEdit(p) }}
+                              aria-label={`edit ${p.name}`}
                               className="text-muted-foreground hover:text-foreground"
                               title="edit"
                             >
@@ -587,6 +613,7 @@ export default function OpenDialog({
                               variant="outline"
                               size="icon-sm"
                               onClick={(e) => { e.stopPropagation(); handleDelete(p.id) }}
+                              aria-label={`delete ${p.name}`}
                               className="text-destructive hover:text-destructive"
                             >
                               <Trash2 className="size-4" />
@@ -647,13 +674,13 @@ export default function OpenDialog({
             <DialogContent className="sm:max-w-sm" showCloseButton={false}>
               <DialogHeader>
                 <DialogTitle className="font-mono lowercase">delete collection</DialogTitle>
+                <DialogDescription className="text-sm font-mono text-foreground">
+                  {count > 0
+                    ? <>delete <strong>{pendingDeleteCollection}</strong>? {count} palette{count !== 1 && 's'} in this collection will be moved to uncategorized.</>
+                    : <>delete <strong>{pendingDeleteCollection}</strong>?</>
+                  }
+                </DialogDescription>
               </DialogHeader>
-              <p className="text-sm font-mono">
-                {count > 0
-                  ? <>delete <strong>{pendingDeleteCollection}</strong>? {count} palette{count !== 1 && 's'} in this collection will be moved to uncategorized.</>
-                  : <>delete <strong>{pendingDeleteCollection}</strong>?</>
-                }
-              </p>
               <DialogFooter>
                 <Button variant="outline" size="sm" onClick={() => setPendingDeleteCollection(null)} className="font-mono lowercase">
                   cancel
