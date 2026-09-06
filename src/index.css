@@ -27,6 +27,51 @@
   font-display: swap;
 }
 
+/* Self-hosted preview fonts. These are the Latin variable WOFF2 files distributed by
+   Google Fonts, stored locally so the preview never contacts a third party. */
+@font-face {
+  font-family: 'Inter';
+  src: url('/color-palette/fonts/preview/inter-latin-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/color-palette/fonts/preview/playfair-display-latin-variable.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/color-palette/fonts/preview/playfair-display-latin-italic-variable.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/color-palette/fonts/preview/space-grotesk-latin-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/color-palette/fonts/preview/nunito-latin-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/color-palette/fonts/preview/jetbrains-mono-latin-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 @import "tw-animate-css";
 

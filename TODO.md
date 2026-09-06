@@ -39,6 +39,15 @@ Features we're making free that competitors paywall.
 
 **Implementation:** The documentation and gradient export overlays now expose dialog semantics and manage focus explicitly. Closed documentation is inert and hidden from assistive technology. Save/open dialogs have associated labels and descriptions, preset selection is keyboard-operable, icon actions have contextual names, and CVD filter definitions now have unique document IDs.
 
+### ✅ Self-host preview fonts
+
+- [x] Download and install Inter, Playfair Display, Space Grotesk, Nunito, and JetBrains Mono locally
+- [x] Bundle Latin variable WOFF2 files and OFL licenses with the application
+- [x] Remove runtime Google Fonts stylesheet and font requests
+- [x] Verify every packaged font URL and smoke-test each preview family
+
+**Implementation:** Six official Google Fonts variable WOFF2 files are served from `public/fonts/preview`, with a separate italic face for Playfair Display. `PalettePreviewOverlay.tsx` waits on the local `document.fonts` face rather than injecting a third-party stylesheet, keeping preview typography available without sending runtime requests to Google.
+
 ### Color transition fades lost on reroll
 
 Somewhere during recent work, the smooth color-to-color fade transitions when rerolling the palette stopped working. Colors now snap instantly instead of crossfading. Need to trace where the transition CSS or Framer Motion animation was dropped and restore it.
@@ -460,11 +469,10 @@ Live dashboard mockup driven by palette color roles.
 - [x] All surfaces driven by role assignments as CSS custom properties — updates live
 - [x] No real data, no external assets — all placeholder shapes and text
 
-**Font selector** ✅ (lazy-loaded via Google Fonts at runtime)
-- [x] `Inter` — neutral/modern (default)
+**Font selector** ✅ (self-hosted and loaded on demand)
+- [x] `Inter` — neutral/modern
 - [x] `Playfair Display` — editorial/luxury (serif, magazine)
 - [x] `Space Grotesk` — tech/geometric (startup)
-- [x] `Syne` — bold/expressive (display/statement)
 - [x] `Nunito` — friendly/rounded (consumer apps)
 - [x] `JetBrains Mono` — dev/technical (terminal aesthetic)
 - [x] Fade transition after font loads (avoids FOUT flicker)
@@ -476,7 +484,7 @@ Live dashboard mockup driven by palette color roles.
 - [x] Color role pickers in top bar (heading, background, accent) with direction="down" popover
 - [x] Layout persists in localStorage
 
-**Implementation:** Canvas API for mosaic. CSS custom properties for UI elements live theming. Google Fonts `<link>` injected at runtime for font switching (applied to mockup only, not the rest of the app).
+**Implementation:** Canvas API for mosaic. CSS custom properties for UI elements live theming. Preview font files are bundled under `public/fonts/preview` and applied to the UI mockup only.
 
 ---
 

@@ -37,12 +37,12 @@ const FONT_KEY     = 'color-palette:preview-ui-font'
 const RADIUS_KEY   = 'color-palette:preview-ui-radius'
 
 const FONTS = [
-  { id: 'system',        label: 'system',         family: 'ui-monospace, monospace',          scale: 1.15, url: null },
-  { id: 'inter',         label: 'inter',          family: '"Inter", sans-serif',              scale: 1.15, url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' },
-  { id: 'playfair',      label: 'playfair',       family: '"Playfair Display", serif',        scale: 1.25, url: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap' },
-  { id: 'space-grotesk', label: 'space grotesk',  family: '"Space Grotesk", sans-serif',      scale: 1.15, url: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap' },
-  { id: 'nunito',        label: 'nunito',         family: '"Nunito", sans-serif',             scale: 1.15, url: 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap' },
-  { id: 'jetbrains',     label: 'jetbrains mono', family: '"JetBrains Mono", monospace',      scale: 1.15, url: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap' },
+  { id: 'system',        label: 'system',         family: 'ui-monospace, monospace',      scale: 1.15 },
+  { id: 'inter',         label: 'inter',          family: '"Inter", sans-serif',          scale: 1.15 },
+  { id: 'playfair',      label: 'playfair',       family: '"Playfair Display", serif',    scale: 1.25 },
+  { id: 'space-grotesk', label: 'space grotesk',  family: '"Space Grotesk", sans-serif',  scale: 1.15 },
+  { id: 'nunito',        label: 'nunito',         family: '"Nunito", sans-serif',         scale: 1.15 },
+  { id: 'jetbrains',     label: 'jetbrains mono', family: '"JetBrains Mono", monospace',  scale: 1.15 },
 ] as const
 
 type FontId = typeof FONTS[number]['id']
@@ -396,23 +396,23 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
     localStorage.setItem(RADIUS_KEY, String(radius))
   }, [radius])
 
-  // Inject / remove Google Fonts <link>, fade in once loaded
+  // Fade the preview in after the selected self-hosted font is ready.
   useEffect(() => {
     const font = FONTS.find(f => f.id === fontId)
-    document.getElementById('preview-font-link')?.remove()
-    if (font?.url) {
-      setFontReady(false)
-      const link = document.createElement('link')
-      link.id = 'preview-font-link'
-      link.rel = 'stylesheet'
-      link.href = font.url
-      document.head.appendChild(link)
-      const familyName = font.family.split(',')[0].replace(/"/g, '').trim()
-      document.fonts.load(`400 16px ${familyName}`).then(() => setFontReady(true))
-    } else {
+    if (!font || font.id === 'system') {
       setFontReady(true)
+      return
     }
-    return () => { document.getElementById('preview-font-link')?.remove() }
+
+    let active = true
+    setFontReady(false)
+    const familyName = font.family.split(',')[0].replace(/"/g, '').trim()
+    document.fonts.load(`400 16px "${familyName}"`).then(
+      () => { if (active) setFontReady(true) },
+      () => { if (active) setFontReady(true) },
+    )
+
+    return () => { active = false }
   }, [fontId])
 
   const font = FONTS.find(f => f.id === fontId)
