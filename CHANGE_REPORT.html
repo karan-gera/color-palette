@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>paletteport changes — engineering review</title>
+    <style>
+      @font-face { font-family: "fragment mono"; src: url("./public/fonts/fragment-mono-v6-latin-regular.woff2") format("woff2"); font-display: swap; }
+      @font-face { font-family: "inter preview"; src: url("./public/fonts/preview/inter-latin-variable.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+      @font-face { font-family: "playfair preview"; src: url("./public/fonts/preview/playfair-display-latin-variable.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+      @font-face { font-family: "space preview"; src: url("./public/fonts/preview/space-grotesk-latin-variable.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+      @font-face { font-family: "nunito preview"; src: url("./public/fonts/preview/nunito-latin-variable.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+      @font-face { font-family: "jetbrains preview"; src: url("./public/fonts/preview/jetbrains-mono-latin-variable.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+      :root {
+        color-scheme: dark;
+        --bg: #000;
+        --text: #fff;
+        --dim: #a3a3a3;
+        --line: #333;
+        --panel: #0b0b0b;
+        --green: #8fff00;
+        --yellow: #ffd84d;
+        --blue: #70a7ff;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 "fragment mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+      button, input, select { font: inherit; }
+      a { color: var(--text); }
+      a:hover { color: var(--green); }
+      :focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+      .skip { position: fixed; left: 12px; top: 12px; z-index: 100; padding: 7px 10px; color: #000; background: var(--green); transform: translateY(-180%); }
+      .skip:focus { transform: none; }
+      .wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      header { position: sticky; top: 0; z-index: 20; background: rgba(0, 0, 0, .96); border-bottom: 1px solid var(--line); }
+      .header-row { min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      nav { display: flex; flex-wrap: wrap; gap: 16px; }
+      nav a { color: var(--dim); text-decoration: none; }
+      main { padding-bottom: 80px; }
+      section { padding: 54px 0; border-bottom: 1px solid var(--line); scroll-margin-top: 52px; }
+      .intro { padding-top: 72px; }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { max-width: 820px; margin-bottom: 16px; font-size: clamp(30px, 5vw, 58px); line-height: 1.08; letter-spacing: -.04em; }
+      h2 { margin-bottom: 24px; font-size: 22px; line-height: 1.25; }
+      h3 { margin-bottom: 12px; font-size: 15px; }
+      .lede { max-width: 880px; color: var(--dim); font-size: 16px; }
+      .label { display: block; margin-bottom: 8px; color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+      code { color: var(--blue); }
+      .state-grid, .pr-list { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .state-grid { grid-template-columns: repeat(4, 1fr); margin-top: 36px; }
+      .state { padding: 18px; background: var(--panel); }
+      .state strong { display: block; margin-top: 4px; font-size: 18px; }
+      .pass { color: var(--green); }
+      .warn { color: var(--yellow); }
+
+      .plain-table { width: 100%; border-collapse: collapse; }
+      .plain-table th, .plain-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+      .plain-table th { color: var(--dim); font-size: 11px; font-weight: 400; text-transform: uppercase; }
+      .plain-table tbody tr:last-child td { border-bottom: 0; }
+      .plain-table .status { width: 96px; color: var(--green); }
+
+      .demo-block { margin-top: 30px; }
+      .demo-head { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; margin-bottom: 10px; }
+      .demo-head h3 { margin: 0; }
+      .demo-head span { color: var(--dim); font-size: 12px; }
+      .demo { position: relative; min-height: 280px; overflow: hidden; border: 1px solid #555; background: #f4f2ed; color: #161616; }
+      .demo-toolbar { min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid #bbb; background: #fff; }
+      .demo-toolbar .spacer { flex: 1; }
+      .app-button { min-height: 32px; padding: 6px 11px; border: 1px solid #aaa; border-radius: 5px; color: #161616; background: #fff; cursor: pointer; }
+      .app-button:hover { background: #e8e8e8; }
+      .app-button.primary { color: #fff; border-color: #161616; background: #161616; }
+      .icon-button { width: 34px; padding-inline: 0; }
+      .demo-note { padding: 9px 14px; color: #444; border-top: 1px solid #bbb; background: #fff; font-size: 12px; }
+
+      .overlay { position: absolute; inset: 48px 0 0; padding: 20px; color: #161616; background: #f4f2ed; }
+      .overlay[hidden], .modal-shade[hidden], .preset-menu[hidden] { display: none; }
+      .overlay-top { display: flex; align-items: center; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid #bbb; }
+      .overlay-top strong { margin-right: auto; }
+      .tabs { display: flex; gap: 6px; }
+      .tab { padding: 5px 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; }
+      .tab[aria-current="page"] { border-color: #aaa; background: #fff; }
+      .overlay-content { display: grid; grid-template-columns: 180px 1fr; gap: 24px; padding-top: 24px; }
+      .fake-lines { display: grid; gap: 10px; }
+      .fake-line { height: 9px; background: #d5d2ca; }
+      .fake-line.short { width: 62%; }
+
+      .modal-shade { position: absolute; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(0, 0, 0, .48); }
+      .modal { width: min(380px, 100%); color: #161616; border: 1px solid #888; border-radius: 10px; background: #fff; box-shadow: 0 14px 44px rgba(0,0,0,.3); }
+      .modal-title { display: flex; align-items: center; padding: 15px 18px; border-bottom: 1px solid #ddd; }
+      .modal-title strong { margin-right: auto; }
+      .modal-body { padding: 10px; }
+      .format { width: 100%; padding: 11px; display: block; color: #161616; text-align: left; border: 0; border-radius: 6px; background: #fff; cursor: pointer; }
+      .format:hover, .format:focus { background: #ececec; }
+      .format small { display: block; margin-top: 2px; color: #666; }
+
+      .palette-stage { display: grid; place-items: center; min-height: 230px; padding: 26px; }
+      .palette-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+      .swatch { text-align: center; }
+      .color-circle { width: 104px; height: 104px; border: 2px dashed #161616; border-radius: 50%; background: var(--swatch); cursor: pointer; }
+      .color-actions { margin-top: 9px; display: flex; justify-content: center; gap: 4px; }
+      .color-actions button { width: 31px; height: 31px; border: 1px solid #aaa; border-radius: 5px; background: #fff; cursor: pointer; }
+      .announcement { min-height: 22px; margin-top: 8px; color: #444; font-size: 12px; }
+
+      .preset-demo { min-height: 230px; display: grid; place-items: center; }
+      .preset { display: flex; }
+      .preset > button, .preset-center { height: 34px; border: 1px solid #aaa; background: #fff; color: #161616; }
+      .preset > button { width: 36px; cursor: pointer; }
+      .preset-center { position: relative; width: 180px; display: grid; place-items: center; border-inline: 0; }
+      .preset-trigger { position: absolute; inset: 0; border: 0; background: transparent; cursor: pointer; }
+      .preset-menu { position: absolute; z-index: 4; top: calc(100% + 5px); left: 0; width: 100%; padding: 5px; border: 1px solid #999; background: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
+      .preset-menu button { width: 100%; padding: 7px; border: 0; background: #fff; text-align: left; cursor: pointer; }
+      .preset-menu button:hover { background: #eee; }
+
+      .form-demo { padding: 28px; }
+      .form-card { width: min(430px, 100%); margin: auto; padding: 20px; border: 1px solid #aaa; border-radius: 9px; background: #fff; }
+      .field { display: grid; gap: 6px; margin-bottom: 15px; }
+      .field input, .field select { width: 100%; min-height: 36px; padding: 6px 9px; border: 1px solid #aaa; border-radius: 5px; color: #161616; background: #fff; }
+      .field-row { display: grid; grid-template-columns: 1fr 90px; gap: 12px; }
+      .range-row { display: grid; grid-template-columns: 1fr 72px; gap: 10px; align-items: center; }
+
+      .flow { display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr; align-items: stretch; }
+      .flow-node { min-height: 104px; padding: 16px; border: 1px solid var(--line); background: var(--panel); }
+      .flow-node strong { display: block; margin-bottom: 6px; }
+      .arrow { display: grid; place-items: center; color: var(--dim); font-size: 20px; }
+      .font-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+      .font-box { min-height: 130px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; background: var(--panel); }
+      .font-box strong { font-size: 34px; }
+      .inter { font-family: "inter preview", sans-serif; }
+      .playfair { font-family: "playfair preview", serif; }
+      .space { font-family: "space preview", sans-serif; }
+      .nunito { font-family: "nunito preview", sans-serif; }
+      .jetbrains { font-family: "jetbrains preview", monospace; }
+      .request-line { margin-top: 18px; padding: 14px; color: var(--green); border: 1px solid var(--line); background: var(--panel); }
+
+      .pr-list { margin-top: 20px; }
+      .pr { display: grid; grid-template-columns: 62px minmax(0, 1fr) 220px; gap: 20px; padding: 20px; background: var(--panel); }
+      .pr-id, .files { color: var(--dim); }
+      .pr h3 { margin-bottom: 6px; }
+      .files { margin: 10px 0 0; font-size: 12px; }
+      .copy { align-self: start; padding: 8px 10px; color: var(--text); border: 1px solid #666; background: #111; cursor: pointer; }
+      .copy:hover { border-color: var(--green); }
+      .remaining { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+      .remaining li { display: grid; grid-template-columns: 110px 1fr; gap: 18px; padding: 13px 8px; border-bottom: 1px solid var(--line); }
+      .remaining .priority { color: var(--yellow); }
+      details { border-bottom: 1px solid var(--line); }
+      summary { padding: 13px 8px; cursor: pointer; }
+      details p { max-width: 900px; padding: 0 8px 16px; color: var(--dim); }
+      footer { padding: 28px 0 50px; color: var(--dim); }
+
+      @media (max-width: 800px) {
+        .state-grid { grid-template-columns: 1fr 1fr; }
+        .font-grid { grid-template-columns: 1fr 1fr; }
+        .pr { grid-template-columns: 46px 1fr; }
+        .pr .copy { grid-column: 2; }
+        .flow { grid-template-columns: 1fr; }
+        .arrow { min-height: 34px; transform: rotate(90deg); }
+      }
+      @media (max-width: 560px) {
+        .header-row { align-items: flex-start; flex-direction: column; padding: 10px 0; }
+        section { scroll-margin-top: 102px; }
+        nav { gap: 8px 14px; }
+        .state-grid, .font-grid { grid-template-columns: 1fr; }
+        .plain-table, .plain-table tbody, .plain-table tr, .plain-table td { display: block; }
+        .plain-table thead { display: none; }
+        .plain-table tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .plain-table td { padding: 4px 8px; border: 0; }
+        .plain-table .status { width: auto; }
+        .demo-head { align-items: flex-start; flex-direction: column; gap: 2px; }
+        .overlay-content { grid-template-columns: 1fr; }
+        .tabs { flex-wrap: wrap; }
+        .palette-row { gap: 12px; }
+        .color-circle { width: 86px; height: 86px; }
+        .field-row { grid-template-columns: 1fr; }
+        .pr { grid-template-columns: 1fr; }
+        .pr .copy { grid-column: 1; }
+        .remaining li { grid-template-columns: 1fr; gap: 4px; }
+      }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">skip to report</a>
+    <header>
+      <div class="wrap header-row">
+        <strong>paletteport / change review</strong>
+        <nav aria-label="report sections"><a href="#summary">summary</a><a href="#demos">demos</a><a href="#fonts">fonts</a><a href="#prs">PRs</a><a href="#remaining">remaining</a></nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="intro">
+        <div class="wrap">
+          <span class="label">post-merge review / september 6, 2026</span>
+          <h1>Merged changes and current release status.</h1>
+          <p class="lede">This page covers the accessibility fixes, local font packaging, persisted audit, and competitor research. The controls below are small standalone mocks of the changed behavior; they do not import application code.</p>
+          <div class="state-grid" aria-label="verification summary">
+            <div class="state"><span class="label">build</span><strong class="pass">pass</strong></div>
+            <div class="state"><span class="label">tests</span><strong class="pass">289 pass</strong></div>
+            <div class="state"><span class="label">lint</span><strong class="warn">1 allowed warning</strong></div>
+            <div class="state"><span class="label">pull requests</span><strong class="pass">4 merged</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="summary">
+        <div class="wrap">
+          <h2>1. Changed behavior</h2>
+          <table class="plain-table">
+            <thead><tr><th>area</th><th>before</th><th>now</th><th>status</th></tr></thead>
+            <tbody>
+              <tr><td>docs overlay</td><td>closed content stayed in the tab order; no focus handling</td><td>closed content is inert; open content traps focus, closes on Escape, and returns focus</td><td class="status">done</td></tr>
+              <tr><td>gradient export</td><td>custom fixed div with incomplete keyboard behavior</td><td>named modal dialog with initial focus, Tab loop, Escape close, and focus return</td><td class="status">done</td></tr>
+              <tr><td>icon buttons</td><td>several buttons had no accessible name</td><td>undo, redo, palette actions, header controls, and editing actions have names</td><td class="status">done</td></tr>
+              <tr><td>forms</td><td>some visible labels were not connected to inputs</td><td>save, open, collection, tag, and gradient fields have explicit labels or names</td><td class="status">done</td></tr>
+              <tr><td>preset browser</td><td>the center control depended on hover and could not receive keyboard focus</td><td>the center is a real button and the list can be opened from the keyboard</td><td class="status">done</td></tr>
+              <tr><td>CVD filters</td><td>four SVG IDs were defined twice</td><td>each filter ID is defined once</td><td class="status">done</td></tr>
+              <tr><td>preview fonts</td><td>selecting a font injected a Google Fonts stylesheet</td><td>six WOFF2 files load from <code>public/fonts/preview</code></td><td class="status">done</td></tr>
+            </tbody>
+          </table>
+          <details open>
+            <summary>Files changed</summary>
+            <table class="plain-table">
+              <thead><tr><th>file</th><th>change</th></tr></thead>
+              <tbody>
+                <tr><td><code>index.html</code></td><td>Remove the second copy of the four CVD SVG filters.</td></tr>
+                <tr><td><code>CVDToggle.tsx</code></td><td>Name the toggle group and make option names lowercase.</td></tr>
+                <tr><td><code>Controls.tsx</code></td><td>Name the undo and redo icon buttons.</td></tr>
+                <tr><td><code>DocsOverlay.tsx</code></td><td>Add dialog semantics, inert state while closed, initial focus, Tab containment, Escape handling, focus return, button names, and changelog entry.</td></tr>
+                <tr><td><code>GradientExportDialog.tsx</code></td><td>Add modal semantics and complete keyboard focus handling. Memoize format definitions to remove its hook warning.</td></tr>
+                <tr><td><code>GradientView.tsx</code></td><td>Connect the angle label to its range control and name both angle inputs.</td></tr>
+                <tr><td><code>Header.tsx</code></td><td>Name an icon-only header control.</td></tr>
+                <tr><td><code>OpenDialog.tsx</code></td><td>Connect search, edit, tag, collection, and delete controls to names and descriptions.</td></tr>
+                <tr><td><code>PaletteItem.tsx</code></td><td>Add color-specific names to lock, edit, reroll, delete, variation, picker, cancel, and save controls.</td></tr>
+                <tr><td><code>PalettePreviewOverlay.tsx</code></td><td>Remove Google Fonts link injection and wait for local font faces.</td></tr>
+                <tr><td><code>PresetBrowser.tsx</code></td><td>Replace the non-focusable center target with a button and name all preset actions.</td></tr>
+                <tr><td><code>SaveDialog.tsx</code></td><td>Connect name, tag, collection, and new-collection fields to labels and add a dialog description.</td></tr>
+                <tr><td><code>ThemeToggle.tsx</code></td><td>Name the theme group.</td></tr>
+                <tr><td><code>src/index.css</code></td><td>Declare six local preview font files.</td></tr>
+                <tr><td><code>public/fonts/preview</code></td><td>Add six WOFF2 files and five OFL license files.</td></tr>
+                <tr><td><code>TODO.md</code></td><td>Record the completed accessibility and font work.</td></tr>
+                <tr><td><code>AUDIT.md</code></td><td>Save the full desktop release audit.</td></tr>
+                <tr><td><code>COMPETITOR_RESEARCH.md</code></td><td>Save current competitor checks and source links.</td></tr>
+              </tbody>
+            </table>
+          </details>
+        </div>
+      </section>
+
+      <section id="demos">
+        <div class="wrap">
+          <h2>2. Behavior demos</h2>
+          <p class="lede">Use Tab and Shift+Tab in the overlay and gradient demos. Press Escape to close them. Focus should return to the button that opened the demo.</p>
+
+          <div class="demo-block">
+            <div class="demo-head"><h3>Docs overlay</h3><span><code>DocsOverlay.tsx</code></span></div>
+            <div class="demo" id="docs-demo">
+              <div class="demo-toolbar"><span>paletteport</span><span class="spacer"></span><button class="app-button" id="open-docs" type="button">open docs</button></div>
+              <div class="palette-stage"><p>The closed overlay is not focusable or exposed to assistive technology.</p></div>
+              <div class="overlay" id="docs-overlay" role="dialog" aria-modal="true" aria-label="paletteport documentation" hidden>
+                <div class="overlay-top"><strong>documentation</strong><div class="tabs" aria-label="documentation tabs"><button class="tab" type="button" aria-current="page">about</button><button class="tab" type="button">help</button><button class="tab" type="button">changelog</button></div><button class="app-button icon-button" id="close-docs" type="button" aria-label="close documentation">×</button></div>
+                <div class="overlay-content"><div class="fake-lines"><div class="fake-line"></div><div class="fake-line short"></div><div class="fake-line"></div></div><div><h3>about paletteport</h3><p>A keyboard-operable full-screen dialog. Tab stays inside it; Escape closes it.</p><button class="app-button" type="button">example action</button></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-head"><h3>Gradient export dialog</h3><span><code>GradientExportDialog.tsx</code></span></div>
+            <div class="demo" id="gradient-demo">
+              <div class="demo-toolbar"><span>linear gradient</span><span class="spacer"></span><button class="app-button primary" id="open-export" type="button">export</button></div>
+              <div class="palette-stage" style="background: linear-gradient(125deg, #ff7357, #723bff, #15d7c0)"></div>
+              <div class="modal-shade" id="export-shade" hidden><div class="modal" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title" tabindex="-1"><div class="modal-title"><strong id="export-title">export gradient</strong><button class="app-button icon-button" id="close-export" type="button" aria-label="close">×</button></div><div class="modal-body"><button class="format" type="button" data-initial-focus>copy css<small>background: linear-gradient(...)</small></button><button class="format" type="button">copy tailwind<small>bg-gradient-to-r from-[...]</small></button><button class="format" type="button">download svg<small>vector, scales without loss</small></button><button class="format" type="button">download png<small>raster image</small></button></div></div></div>
+            </div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-head"><h3>Named palette actions</h3><span><code>PaletteItem.tsx</code> / <code>Controls.tsx</code></span></div>
+            <div class="demo">
+              <div class="demo-toolbar"><button class="app-button icon-button" type="button" aria-label="undo">↶</button><button class="app-button icon-button" type="button" aria-label="redo">↷</button><span class="spacer"></span><span>Focus a button to see its accessible name below.</span></div>
+              <div class="palette-stage"><div><div class="palette-row"><div class="swatch"><button class="color-circle" style="--swatch:#ff7357" type="button" aria-label="lock color #ff7357"></button><div class="color-actions"><button type="button" aria-label="edit color #ff7357">✎</button><button type="button" aria-label="reroll color #ff7357">↻</button><button type="button" aria-label="delete color #ff7357">×</button></div></div><div class="swatch"><button class="color-circle" style="--swatch:#723bff" type="button" aria-label="unlock color #723bff"></button><div class="color-actions"><button type="button" aria-label="edit color #723bff">✎</button><button type="button" aria-label="reroll color #723bff">↻</button><button type="button" aria-label="view variations for #723bff">≋</button></div></div></div><div class="announcement" id="focus-name" aria-live="polite">accessible name: —</div></div></div>
+            </div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-head"><h3>Keyboard-accessible preset control</h3><span><code>PresetBrowser.tsx</code></span></div>
+            <div class="demo"><div class="preset-demo"><div class="preset"><button type="button" aria-label="previous preset">←</button><div class="preset-center"><span id="preset-label">analogous</span><button class="preset-trigger" id="preset-trigger" type="button" aria-label="choose preset" aria-expanded="false"></button><div class="preset-menu" id="preset-menu" hidden><button type="button">analogous</button><button type="button">complementary</button><button type="button">triadic</button><button type="button">monochromatic</button></div></div><button type="button" aria-label="next preset">→</button></div></div><div class="demo-note">Tab to “choose preset,” then press Enter or Space.</div></div>
+          </div>
+
+          <div class="demo-block">
+            <div class="demo-head"><h3>Connected form labels</h3><span><code>SaveDialog.tsx</code> / <code>GradientView.tsx</code></span></div>
+            <div class="demo form-demo"><div class="form-card"><div class="field"><label for="mock-name">name</label><input id="mock-name" value="warm evening" /></div><div class="field-row"><div class="field"><label for="mock-collection">collection</label><select id="mock-collection"><option>uncategorized</option><option>client work</option></select></div><div class="field"><label for="mock-angle-number">angle</label><input id="mock-angle-number" type="number" value="125" /></div></div><div class="field"><label for="mock-angle-range">gradient angle</label><div class="range-row"><input id="mock-angle-range" type="range" min="0" max="360" value="125" aria-label="gradient angle" /><output id="mock-angle-output" for="mock-angle-range">125°</output></div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="fonts">
+        <div class="wrap">
+          <h2>3. Local font files</h2>
+          <p class="lede">The samples below use the packaged WOFF2 files. They do not depend on fonts installed on this computer.</p>
+          <div class="font-grid"><div class="font-box inter"><strong>Aa 0123</strong><span>Inter</span></div><div class="font-box playfair"><strong>Aa 0123</strong><span>Playfair Display</span></div><div class="font-box space"><strong>Aa 0123</strong><span>Space Grotesk</span></div><div class="font-box nunito"><strong>Aa 0123</strong><span>Nunito</span></div><div class="font-box jetbrains"><strong>Aa 0123</strong><span>JetBrains Mono</span></div></div>
+          <div class="flow" style="margin-top:22px"><div class="flow-node"><strong>before</strong><span>font selection creates a request to <code>fonts.googleapis.com</code></span></div><div class="arrow" aria-hidden="true">→</div><div class="flow-node"><strong>change</strong><span><code>PalettePreviewOverlay.tsx</code> waits for a local face from <code>src/index.css</code></span></div><div class="arrow" aria-hidden="true">→</div><div class="flow-node"><strong>now</strong><span>the browser requests <code>/fonts/preview/*.woff2</code> from the app</span></div></div>
+          <div class="request-line">checked: 6 WOFF2 files return HTTP 200 as font/woff2; 0 Google font requests</div>
+        </div>
+      </section>
+
+      <section id="prs">
+        <div class="wrap">
+          <h2>4. Pull request split</h2>
+          <p class="lede">The work was split by concern and merged in dependency order. Each implementation branch was rebased on the preceding merge, checked locally, and approved by the review agent.</p>
+          <div class="pr-list">
+            <article class="pr"><div class="pr-id">PR 1</div><div><h3>core accessibility</h3><p>Add dialog focus handling, control names, connected labels, keyboard navigation, regression tests, and unique CVD filter IDs.</p><p class="files">15 files; merged into main</p></div><a class="copy" href="https://github.com/karan-gera/color-palette/pull/1">open PR</a></article>
+            <article class="pr"><div class="pr-id">PR 2</div><div><h3>hook dependencies</h3><p>Remove the three unexpected <code>App.tsx</code> dependency warnings without changing callback behavior.</p><p class="files">1 file; merged into main</p></div><a class="copy" href="https://github.com/karan-gera/color-palette/pull/2">open PR</a></article>
+            <article class="pr"><div class="pr-id">PR 3</div><div><h3>local preview fonts</h3><p>Remove Google Fonts injection and add local WOFF2 files, license text, fallback behavior, and corrected help text.</p><p class="files">15 files; merged into main</p></div><a class="copy" href="https://github.com/karan-gera/color-palette/pull/3">open PR</a></article>
+            <article class="pr"><div class="pr-id">PR 4</div><div><h3>audit and competitor research</h3><p>Persist the release audit, source-checked competitor notes, engineering report, and combined changelog entry.</p><p class="files">AUDIT.md; COMPETITOR_RESEARCH.md; CHANGE_REPORT.html; DocsOverlay changelog entry</p></div><a class="copy" href="https://github.com/karan-gera/color-palette/pull/4">open PR</a></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="remaining">
+        <div class="wrap">
+          <h2>5. Still open from the audit</h2>
+          <h3>Before release</h3>
+          <ol class="remaining">
+            <li><span class="priority">1</span><span>Fix the unreachable Shift+Cmd/Ctrl+E image export shortcut and test it.</span></li>
+            <li><span class="priority">2</span><span>Replace the placeholder <code>github.com/your-repo/issues</code> request link.</span></li>
+            <li><span class="priority">3</span><span>Either add and test offline boot caching or change the “works offline” claim.</span></li>
+            <li><span class="priority">4</span><span>Add an MIT <code>LICENSE</code> file and make the package and in-app versions agree.</span></li>
+            <li><span class="priority">5</span><span>Triage dependency findings: the audit found 16 total and 6 high findings in production dependencies.</span></li>
+            <li><span class="priority">6</span><span>Run build, lint, and tests before deployment. The current Pages workflow runs only install and build.</span></li>
+            <li><span class="priority">7</span><span>Choose the production URL. A move to <code>paletteport.com</code> also requires DNS, CNAME, base-path, canonical, OG, and landing-link changes.</span></li>
+          </ol>
+          <h3 style="margin-top:32px">Docs and product copy</h3>
+          <ol class="remaining">
+            <li><span>1</span><span>Fix the share-link example: the code uses hyphens, while the docs show commas.</span></li>
+            <li><span>2</span><span>Replace or date-stamp the stale in-app competitor table using <code>COMPETITOR_RESEARCH.md</code>.</span></li>
+            <li><span>3</span><span>Fix remaining user-visible text that violates the lowercase UI rule.</span></li>
+            <li><span>4</span><span>Give the About-page request and donation links real destinations or remove them.</span></li>
+            <li><span>5</span><span>Rewrite <code>TODO.md</code>. It still has 141 unchecked items and several stale or contradictory entries.</span></li>
+          </ol>
+          <h3 style="margin-top:32px">Tests and runtime</h3>
+          <ol class="remaining">
+            <li><span>1</span><span>Convert TODO tests for features that already ship into real tests.</span></li>
+            <li><span>2</span><span>Add tests for keyboard shortcuts, storage and migrations, image work, collections, theme and dialog state, editing, and palette state.</span></li>
+            <li><span>3</span><span>Raise helper coverage. The audit baseline was 74.6% statements and 64.8% branches; storage was about 54% lines.</span></li>
+            <li><span>4</span><span>Add a desktop error boundary.</span></li>
+            <li><span>5</span><span>Lazy-load large optional screens. The baseline production bundle was 1.318 MB minified / 384 KB gzip in one chunk.</span></li>
+            <li><span>6</span><span>Pin or document the supported Node version. Local uses Node 24 while CI uses Node 20.</span></li>
+          </ol>
+          <details><summary>Test details</summary><p><code>npm run build</code> passes. All 289 active Vitest tests pass; 71 existing future tests remain marked TODO. Lint exits successfully with only the accepted warning in <code>CircleWipeOverlay.tsx</code>.</p></details>
+          <details><summary>Browser checks</summary><p>Verified focus entry, Tab containment, Escape close, and focus return in the docs and gradient dialogs. Verified one instance of each CVD filter ID, no unnamed active buttons in the tested palette state, local font responses, and no Google Fonts requests.</p></details>
+          <details><summary>Competitor research</summary><p><code>COMPETITOR_RESEARCH.md</code> checks 33 first-party sources. The current Coolors and Colorffy claims in the app are stale. The research includes replacement wording, but the public comparison has not been changed.</p></details>
+          <details><summary>Mobile work</summary><p>Mobile UI and responsive redesign are not part of this review. They remain deferred until after the desktop release.</p></details>
+        </div>
+      </section>
+    </main>
+
+    <footer><div class="wrap">source: <a href="./AUDIT.md">AUDIT.md</a> · competitor notes: <a href="./COMPETITOR_RESEARCH.md">COMPETITOR_RESEARCH.md</a> · branch: main</div></footer>
+
+    <script>
+      function setupDialog(openButton, dialog, closeButton) {
+        let previousFocus = null;
+        const focusables = () => [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+        const close = () => { dialog.hidden = true; previousFocus?.focus(); };
+        openButton.addEventListener("click", () => {
+          previousFocus = document.activeElement;
+          dialog.hidden = false;
+          requestAnimationFrame(() => {
+            const initialControl = dialog.querySelector("[data-initial-focus]") || focusables()[0];
+            initialControl?.focus();
+          });
+        });
+        closeButton.addEventListener("click", close);
+        dialog.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") { event.preventDefault(); close(); return; }
+          if (event.key !== "Tab") return;
+          const items = focusables();
+          const first = items[0];
+          const last = items[items.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+      }
+      setupDialog(document.querySelector("#open-docs"), document.querySelector("#docs-overlay"), document.querySelector("#close-docs"));
+      setupDialog(document.querySelector("#open-export"), document.querySelector("#export-shade"), document.querySelector("#close-export"));
+
+      const focusName = document.querySelector("#focus-name");
+      document.querySelectorAll("#demos [aria-label]").forEach((control) => { control.addEventListener("focus", () => { focusName.textContent = `accessible name: ${control.getAttribute("aria-label")}`; }); });
+
+      const presetTrigger = document.querySelector("#preset-trigger");
+      const presetMenu = document.querySelector("#preset-menu");
+      presetTrigger.addEventListener("click", () => { presetMenu.hidden = !presetMenu.hidden; presetTrigger.setAttribute("aria-expanded", String(!presetMenu.hidden)); if (!presetMenu.hidden) presetMenu.querySelector("button")?.focus(); });
+      presetMenu.querySelectorAll("button").forEach((button) => { button.addEventListener("click", () => { document.querySelector("#preset-label").textContent = button.textContent; presetMenu.hidden = true; presetTrigger.setAttribute("aria-expanded", "false"); presetTrigger.focus(); }); });
+
+      const angleRange = document.querySelector("#mock-angle-range");
+      const angleNumber = document.querySelector("#mock-angle-number");
+      const angleOutput = document.querySelector("#mock-angle-output");
+      const syncAngle = (value) => { angleRange.value = value; angleNumber.value = value; angleOutput.value = `${value}°`; };
+      angleRange.addEventListener("input", () => syncAngle(angleRange.value));
+      angleNumber.addEventListener("input", () => syncAngle(angleNumber.value));
+
+      async function copyText(value) {
+        if (navigator.clipboard?.writeText && window.isSecureContext) { try { await navigator.clipboard.writeText(value); return true; } catch {} }
+        const input = document.createElement("textarea");
+        input.value = value;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.append(input);
+        input.select();
+        const copied = document.execCommand("copy");
+        input.remove();
+        return copied;
+      }
+      document.querySelectorAll("[data-copy]").forEach((button) => { button.addEventListener("click", async () => { const original = button.textContent; button.textContent = await copyText(button.dataset.copy) ? "copied" : "copy failed"; setTimeout(() => { button.textContent = original; }, 1200); }); });
+    </script>
+  </body>
+</html>
