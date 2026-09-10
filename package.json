@@ -1,7 +1,8 @@
 {
   "name": "color-palette",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.21.0-alpha.1",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",

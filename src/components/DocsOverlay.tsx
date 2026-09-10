@@ -62,6 +62,15 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: __APP_VERSION__,
+    title: 'public alpha release identity',
+    items: [
+      `the public alpha is identified as ${__APP_VERSION__}`,
+      'package metadata and in-app version now share one source',
+      'paletteport is licensed under the mit license',
+    ],
+  },
+  {
     version: '0.20',
     title: 'test coverage & image export shortcut',
     items: [
@@ -258,6 +267,9 @@ function AboutTab() {
         <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
           free color palette tool. no accounts, no ads, no paywalls. everything runs in your browser
           and stays on your device.
+        </p>
+        <p className="text-muted-foreground text-xs">
+          v{__APP_VERSION__} · public alpha · mit licensed
         </p>
         <p className="text-muted-foreground/50 text-[10px]">missing something? request it.</p>
       </div>
