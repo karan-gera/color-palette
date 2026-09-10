@@ -2,61 +2,10 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { quantizeImagePixels } from '@/helpers/extractFromImage'
 
 type ExtractViewProps = {
   onAddColors: (colors: string[]) => void
-}
-
-// ---------------------------------------------------------------------------
-// Color extraction — Canvas API + k-means clustering
-// ---------------------------------------------------------------------------
-
-type RGB = [number, number, number]
-
-function dist2(a: RGB, b: RGB): number {
-  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
-}
-
-function kmeans(pixels: RGB[], k: number, maxIter = 20): RGB[] {
-  if (pixels.length === 0) return []
-  const n = Math.min(k, pixels.length)
-  const step = Math.floor(pixels.length / n)
-  let centroids: RGB[] = Array.from({ length: n }, (_, i) => [...pixels[i * step]] as RGB)
-
-  for (let iter = 0; iter < maxIter; iter++) {
-    const sums: RGB[] = Array.from({ length: n }, () => [0, 0, 0])
-    const counts = new Array<number>(n).fill(0)
-
-    for (const px of pixels) {
-      let best = 0, bestDist = Infinity
-      for (let c = 0; c < n; c++) {
-        const d = dist2(px, centroids[c])
-        if (d < bestDist) { bestDist = d; best = c }
-      }
-      sums[best][0] += px[0]
-      sums[best][1] += px[1]
-      sums[best][2] += px[2]
-      counts[best]++
-    }
-
-    let moved = false
-    const next: RGB[] = centroids.map((c, i) => {
-      if (counts[i] === 0) return c
-      const nr = Math.round(sums[i][0] / counts[i])
-      const ng = Math.round(sums[i][1] / counts[i])
-      const nb = Math.round(sums[i][2] / counts[i])
-      if (nr !== c[0] || ng !== c[1] || nb !== c[2]) moved = true
-      return [nr, ng, nb] as RGB
-    })
-    centroids = next
-    if (!moved) break
-  }
-
-  return centroids
-}
-
-function rgbToHex([r, g, b]: RGB): string {
-  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')
 }
 
 function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
@@ -74,11 +23,11 @@ function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
       if (!ctx) { resolve([]); return }
       ctx.drawImage(img, 0, 0, w, h)
       const data = ctx.getImageData(0, 0, w, h).data
-      const pixels: RGB[] = []
+      const sampledPixels: number[] = []
       for (let i = 0; i < data.length; i += 4 * 3) {
-        if (data[i + 3] > 128) pixels.push([data[i], data[i + 1], data[i + 2]])
+        sampledPixels.push(data[i], data[i + 1], data[i + 2], data[i + 3])
       }
-      resolve(kmeans(pixels, k).map(rgbToHex))
+      resolve(quantizeImagePixels(sampledPixels, k))
     }
     img.onerror = () => reject(new Error('could not load image'))
     img.src = src
