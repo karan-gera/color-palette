@@ -1,6 +1,6 @@
 # PalettePort release TODO
 
-Last updated: 2026-09-06
+Last updated: 2026-09-10
 
 This file is the active release backlog. `AUDIT.md`, `PERFORMANCE_AUDIT.md`,
 `TESTING.md`, and `COMPETITOR_RESEARCH.md` contain the evidence behind it.
@@ -34,12 +34,12 @@ Update this file when work lands; do not add duplicate speculative plans here.
 
 ### Test baseline
 
-- 398 active tests pass.
-- 54 TODO tests remain: 4 real future gradient cases and 50 stale cases for
+- 419 active tests pass.
+- 42 TODO tests remain: 4 real future gradient cases and 38 stale cases for
   shipped behavior.
-- Coverage: 81.70% statements, 76.03% branches, 77.62% functions, 82.40% lines.
+- Coverage: 81.98% statements, 76.00% branches, 78.49% functions, 82.73% lines.
 - Storage is 96.42% covered by line; image export is 99.18%; image extraction is
-  still untested.
+  88.00% covered by line.
 - Build passes. Lint passes with the accepted `CircleWipeOverlay.tsx` warning.
 
 ### Performance baseline
@@ -71,7 +71,7 @@ CLS and no long tasks. The constraint is the app startup path, not the base CSS.
 - Share-link colors are applied after the empty first render and cause a layout
   spring. Font swaps also move the keyboard-hints region.
 - Roughly 100 motion/transition sites ignore `prefers-reduced-motion`.
-- Image extraction blocks the main thread and can emit duplicate centroids.
+- Image extraction still blocks the main thread; worker migration remains B-05.
 - There is no service worker. “works offline” is currently a false claim.
 - `ExportDialog.tsx` contains a placeholder GitHub issue URL.
 - The repository lacks an MIT `LICENSE`; package version `0.0.0` disagrees with
@@ -160,12 +160,15 @@ release issue remains.
   - Dynamically import `PalettePreviewOverlay` so Recharts/D3 leave the initial chunk.
   - Keep the closed documentation subtree out of the DOM.
   - Record before/after gzip size, initial transfer, and DOM count.
-- [ ] **A-11 P0 — cover and fix image-extraction correctness.**
+- [x] **A-11 P0 — cover and fix image-extraction correctness. ✅**
   - Extract quantization into a directly testable module.
   - Activate the stale extraction tests, including transparency and determinism.
   - Deduplicate centroids and handle requests larger than the distinct-color count.
   - Worker migration is a beta performance task unless the alpha implementation
     remains visibly blocking in the 6x CPU check.
+  - Implemented a deterministic, weighted k-means helper that ignores transparent
+    pixels, returns unique colors, and caps output at the distinct-color count.
+  - Activated 21 pixel-level tests; extraction now has 88.00% line coverage.
 
 ### Alpha verification
 

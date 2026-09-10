@@ -62,6 +62,15 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.21',
+    title: 'image extraction correctness',
+    items: [
+      'image extraction now returns deterministic palettes without duplicate swatches',
+      'transparent pixels are excluded from extracted colors',
+      'images with fewer distinct colors return only the colors available',
+    ],
+  },
+  {
     version: '0.20',
     title: 'test coverage & image export shortcut',
     items: [
@@ -1576,7 +1585,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
             <h3 className="text-sm font-medium text-foreground lowercase mt-4">how it works</h3>
             <p>
-              the canvas api scales the image down and samples every 3rd opaque pixel. k-means clustering (k=10, 20 iterations) groups sampled pixels into clusters. the centroid of each cluster becomes a candidate color.
+              the canvas api scales the image to at most 150 pixels on its longest side and samples every third pixel. samples with alpha values of 128 or lower are ignored, then deterministic k-means clustering groups the remaining colors into up to 10 weighted clusters. duplicate centroids are removed, so flat or limited-color images show only the distinct colors available.
             </p>
           </div>
         </DocArticle>
