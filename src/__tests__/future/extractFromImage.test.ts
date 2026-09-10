@@ -1,10 +1,10 @@
 import { describe, it } from 'vitest'
 
-// Extract from Image — planned feature (see TODO.md)
+// Extract from Image — shipped test debt (see TESTING.md)
 // Drag-and-drop image → extract dominant colors via Canvas API + color quantization.
-// Fully client-side (k-means or median cut). Activate when implemented.
+// The logic currently lives inside ExtractView; extract and reconcile it before activation.
 
-describe('extractFromImage (future)', () => {
+describe('extractFromImage (test debt)', () => {
   it.todo('returns correct number of colors (default 5 dominant colors)')
   it.todo('returns correct count when a custom count is specified')
   it.todo('all returned values are valid hex strings matching /^#[0-9a-f]{6}$/')

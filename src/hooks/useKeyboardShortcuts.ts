@@ -117,6 +117,17 @@ export function useKeyboardShortcuts({
     const key = event.key.toLowerCase()
     const hasModifier = event.ctrlKey || event.metaKey
 
+    // Image export is the one file shortcut that intentionally combines a
+    // command/control modifier with Shift. Handle it before the general
+    // modifier guard below.
+    if (key === 'e' && event.shiftKey && hasModifier) {
+      if (isPaletteView && colorCount > 0) {
+        event.preventDefault()
+        onImageExport()
+      }
+      return
+    }
+
     // Undo/redo: palette view only
     if (key === 'z' && !event.shiftKey) {
       if (!isPaletteView) return
@@ -200,11 +211,7 @@ export function useKeyboardShortcuts({
           onExport()
         } else if (colorCount > 0) {
           event.preventDefault()
-          if (event.shiftKey && hasModifier) {
-            onImageExport()
-          } else {
-            onExport()
-          }
+          onExport()
         }
         break
       case 'r':

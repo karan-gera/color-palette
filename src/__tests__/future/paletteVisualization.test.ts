@@ -1,10 +1,10 @@
 import { describe, it } from 'vitest'
 
-// Palette Visualization — planned feature (see TODO.md)
+// Palette Visualization — shipped test debt (see TESTING.md)
 // Auto-assigns palette colors to UI slots (primary, secondary, accent, background, text)
-// based on luminance and saturation. Activate when implemented.
+// inside PalettePreviewOverlay. Extract and reconcile this contract before activation.
 
-describe('paletteVisualization (future)', () => {
+describe('paletteVisualization (test debt)', () => {
   it.todo('auto-assignment: darkest color is assigned to "text" or "primary" slot')
   it.todo('auto-assignment: lightest color is assigned to "background" slot')
   it.todo('auto-assignment: most saturated color is assigned to "accent" slot')

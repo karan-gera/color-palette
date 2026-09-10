@@ -126,7 +126,7 @@ export async function exportPng(
 
   // Draw colors
   colors.forEach((color, i) => {
-    const { x, y } = getItemPosition(i, layout, dims)
+    const { x, y } = getItemPosition(i, layout, dims, hasLabels)
     const label = labels === 'hex' ? color.toUpperCase() : (colorNames?.[i] || color.toUpperCase())
     
     if (layout === 'circles') {
@@ -146,9 +146,10 @@ export async function exportPng(
 function getItemPosition(
   index: number,
   layout: ImageLayout,
-  dims: { itemWidth: number; itemHeight: number; cols: number }
+  dims: { itemWidth: number; itemHeight: number; cols: number },
+  hasLabels: boolean,
 ): { x: number; y: number } {
-  const labelSpace = LABEL_HEIGHT
+  const labelSpace = hasLabels || layout === 'grid' ? LABEL_HEIGHT : 0
 
   switch (layout) {
     case 'horizontal':
@@ -255,7 +256,7 @@ export function exportSvg(
   const elements: string[] = []
 
   colors.forEach((color, i) => {
-    const { x, y } = getItemPosition(i, layout, dims)
+    const { x, y } = getItemPosition(i, layout, dims, hasLabels)
     const label = labels === 'hex' ? color.toUpperCase() : (colorNames?.[i] || color.toUpperCase())
     
     if (layout === 'circles') {

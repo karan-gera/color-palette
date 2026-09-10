@@ -1,10 +1,10 @@
 import { describe, it } from 'vitest'
 
-// Session Palette History — planned feature (see TODO.md)
-// A useSessionHistory hook that captures palette snapshots during a session.
-// Session-only (no localStorage persistence). Activate when implemented.
+// Palette History — shipped test debt (see TESTING.md)
+// The product now persists useHistory/usePaletteColors snapshots. These old
+// session-only assumptions must be rewritten around the current contract.
 
-describe('useSessionHistory (future)', () => {
+describe('paletteHistory (test debt)', () => {
   it.todo('initial state: returns an empty snapshots array')
   it.todo('push: captures a new palette state as a snapshot')
   it.todo('push: deduplicates consecutive identical states (same hex array does not create a duplicate entry)')
