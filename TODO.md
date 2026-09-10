@@ -1,6 +1,6 @@
 # PalettePort release TODO
 
-Last updated: 2026-09-06
+Last updated: 2026-09-10
 
 This file is the active release backlog. `AUDIT.md`, `PERFORMANCE_AUDIT.md`,
 `TESTING.md`, and `COMPETITOR_RESEARCH.md` contain the evidence behind it.
@@ -124,9 +124,11 @@ release issue remains.
   - Locate the regression in the animated palette path.
   - Verify reroll-all, reroll-one, preset, and relationship changes.
   - Verify reduced-motion mode is immediate rather than animated.
-- [ ] **A-03 P0 — add release identity and license.**
+- [x] **A-03 P0 — add release identity and license.**
   - Add the actual MIT `LICENSE` file.
   - Choose a SemVer prerelease and align `package.json`, docs, and changelog.
+  - Release identity is `0.21.0-alpha.1`; Vite injects the package version into
+    the About page and changelog so the displayed value stays aligned.
 - [ ] **A-04 P0 — replace or remove dead external actions.**
   - Replace `https://github.com/your-repo/issues` with the real issue tracker.
   - Give About-page feature-request and donation controls real destinations or

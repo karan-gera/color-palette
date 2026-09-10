@@ -4,6 +4,8 @@ Free color palette tool. No accounts, no ads, no paywalls. Everything runs in yo
 
 **[Try it live →](https://karan-gera.github.io/color-palette/)**
 
+Current release: **0.21.0-alpha.1** (public alpha)
+
 ## What it does
 
 - Generate colors using color theory relationships (complementary, analogous, triadic, etc.)
@@ -55,4 +57,4 @@ Your palettes stay on your device. No accounts, no analytics, no server. Data li
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 Kaydigit LLC
