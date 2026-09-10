@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
@@ -11,7 +12,6 @@ import { generateTints, generateShades, generateTones, COLOR_RELATIONSHIPS, PALE
 import { EXPORT_FORMATS } from '@/helpers/exportFormats'
 
 type DocsOverlayProps = {
-  visible: boolean
   onClose: () => void
 }
 
@@ -1727,22 +1727,25 @@ function ChangelogTab() {
   )
 }
 
-export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
+export default function DocsOverlay({ onClose }: DocsOverlayProps) {
   const [activeTab, setActiveTab] = useState<Tab>('about')
   const overlayRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
+  const restorePreviousFocus = useCallback(() => {
+    if (previousFocusRef.current?.isConnected) {
+      previousFocusRef.current.focus()
+    }
+    previousFocusRef.current = null
+  }, [])
+
+  const handleClose = useCallback(() => {
+    onClose()
+    restorePreviousFocus()
+  }, [onClose, restorePreviousFocus])
+
   useEffect(() => {
     const overlay = overlayRef.current
-
-    if (!visible) {
-      if (previousFocusRef.current?.isConnected) {
-        previousFocusRef.current.focus()
-      }
-      previousFocusRef.current = null
-      return
-    }
-
     if (!overlay) return
 
     const activeElement = document.activeElement
@@ -1759,7 +1762,7 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
       if (event.key === 'Escape') {
         event.preventDefault()
         event.stopPropagation()
-        onClose()
+        handleClose()
         return
       }
 
@@ -1795,23 +1798,22 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
     return () => {
       window.cancelAnimationFrame(focusInitialControl)
       document.removeEventListener('keydown', handleKeyDown)
+      restorePreviousFocus()
     }
-  }, [visible, onClose])
+  }, [handleClose, restorePreviousFocus])
 
   return (
-    <div
+    <motion.div
       ref={overlayRef}
       role="dialog"
-      aria-modal={visible ? true : undefined}
+      aria-modal="true"
       aria-label="paletteport documentation"
-      aria-hidden={!visible}
-      inert={!visible}
       tabIndex={-1}
-      className={`fixed inset-0 z-[9997] bg-background transition-all duration-300 ease-out ${
-        visible
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-4 pointer-events-none'
-      }`}
+      className="fixed inset-0 z-[9997] bg-background"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {/* top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -1835,7 +1837,7 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="close documentation"
           className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
@@ -1863,6 +1865,6 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
