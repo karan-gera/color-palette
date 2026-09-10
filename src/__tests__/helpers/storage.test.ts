@@ -2,8 +2,16 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   getSavedPalettes,
   savePalette,
+  updatePalette,
+  getAllTags,
   removePalette,
   setAllPalettes,
+  getCollections,
+  saveCollection,
+  renameCollection,
+  removeCollection,
+  loadPersistedHistory,
+  persistHistory,
   mergePalettes,
   importPalettesFromFile,
   exportAllPalettes,
@@ -51,6 +59,14 @@ describe('getSavedPalettes', () => {
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('valid')
   })
+
+  it('migrates palettes without tags to an empty tag list', () => {
+    localStorage.setItem('color-palette:saved', JSON.stringify([
+      { id: 'legacy', name: 'Legacy', colors: ['#fff'], savedAt: '' },
+    ]))
+
+    expect(getSavedPalettes()[0].tags).toEqual([])
+  })
 })
 
 describe('savePalette', () => {
@@ -94,6 +110,152 @@ describe('savePalette', () => {
     const saved = savePalette(colors)
     colors.push('#00ff00')
     expect(saved.colors).toHaveLength(1)
+  })
+
+  it('persists tags and a collection when provided', () => {
+    const saved = savePalette(['#ff0000'], 'Brand', ['ui', 'warm'], 'Client')
+
+    expect(saved.tags).toEqual(['ui', 'warm'])
+    expect(saved.collection).toBe('Client')
+    expect(getSavedPalettes()[0]).toEqual(saved)
+  })
+})
+
+describe('palette metadata', () => {
+  it('updates only the matching palette', () => {
+    const first = savePalette(['#111111'], 'First')
+    const second = savePalette(['#222222'], 'Second')
+
+    updatePalette(first.id, { name: 'Updated', tags: ['ui'], collection: 'Work' })
+
+    const palettes = getSavedPalettes()
+    expect(palettes.find(palette => palette.id === first.id)).toMatchObject({
+      name: 'Updated',
+      tags: ['ui'],
+      collection: 'Work',
+    })
+    expect(palettes.find(palette => palette.id === second.id)?.name).toBe('Second')
+  })
+
+  it('returns unique tags in sorted order', () => {
+    savePalette(['#111111'], 'First', ['warm', 'ui'])
+    savePalette(['#222222'], 'Second', ['brand', 'ui'])
+
+    expect(getAllTags()).toEqual(['brand', 'ui', 'warm'])
+  })
+})
+
+describe('collections', () => {
+  it('starts empty and ignores malformed collection storage', () => {
+    expect(getCollections()).toEqual([])
+
+    localStorage.setItem('color-palette:collections', '{broken')
+    expect(getCollections()).toEqual([])
+
+    localStorage.setItem('color-palette:collections', JSON.stringify([
+      { name: 'Valid', createdAt: '' },
+      { createdAt: '', invalid: true },
+    ]))
+    expect(getCollections()).toEqual([{ name: 'Valid', createdAt: '' }])
+  })
+
+  it('saves a collection and rejects an exact duplicate name', () => {
+    const saved = saveCollection('Client')
+
+    expect(saved).toMatchObject({ name: 'Client' })
+    expect(getCollections()).toEqual([saved])
+    expect(saveCollection('Client')).toBeNull()
+    expect(getCollections()).toHaveLength(1)
+  })
+
+  it('renames a collection and updates assigned palettes', () => {
+    saveCollection('Old')
+    const palette = savePalette(['#111111'], 'Palette', [], 'Old')
+
+    expect(renameCollection('Old', 'New')).toBe(true)
+
+    expect(getCollections().map(collection => collection.name)).toEqual(['New'])
+    expect(getSavedPalettes().find(item => item.id === palette.id)?.collection).toBe('New')
+  })
+
+  it('does not overwrite an existing collection during rename', () => {
+    saveCollection('First')
+    saveCollection('Second')
+
+    expect(renameCollection('First', 'Second')).toBe(false)
+    expect(getCollections().map(collection => collection.name)).toEqual(['First', 'Second'])
+  })
+
+  it('removes a collection and moves its palettes to uncategorized', () => {
+    saveCollection('Client')
+    const palette = savePalette(['#111111'], 'Palette', [], 'Client')
+
+    removeCollection('Client')
+
+    expect(getCollections()).toEqual([])
+    expect(getSavedPalettes().find(item => item.id === palette.id)?.collection).toBeUndefined()
+  })
+})
+
+describe('persisted history', () => {
+  it('returns null for absent or malformed history', () => {
+    expect(loadPersistedHistory()).toBeNull()
+
+    localStorage.setItem('color-palette:history', JSON.stringify({ history: 'nope', index: 0 }))
+    expect(loadPersistedHistory()).toBeNull()
+  })
+
+  it('filters invalid entries and clamps the active index', () => {
+    localStorage.setItem('color-palette:history', JSON.stringify({
+      history: [['#111111'], [42], ['#222222']],
+      index: 99,
+      savedAt: Date.now(),
+    }))
+
+    expect(loadPersistedHistory()).toEqual({
+      history: [['#111111'], ['#222222']],
+      index: 1,
+    })
+  })
+
+  it('keeps expired history but resets its active index', () => {
+    localStorage.setItem('color-palette:history', JSON.stringify({
+      history: [['#111111']],
+      index: 0,
+      savedAt: Date.now() - 9 * 60 * 60 * 1000,
+    }))
+
+    expect(loadPersistedHistory()).toEqual({ history: [['#111111']], index: -1 })
+  })
+
+  it('persists history with a timestamp and active index', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(123456)
+
+    persistHistory([['#111111'], ['#222222']], 1)
+
+    expect(JSON.parse(localStorage.getItem('color-palette:history') ?? '')).toEqual({
+      history: [['#111111'], ['#222222']],
+      index: 1,
+      savedAt: 123456,
+    })
+    vi.restoreAllMocks()
+  })
+
+  it('does not write empty history', () => {
+    persistHistory([], -1)
+
+    expect(localStorage.getItem('color-palette:history')).toBeNull()
+  })
+
+  it('caps persisted history at 2048 entries and adjusts its index', () => {
+    const history = Array.from({ length: 2050 }, (_, index) => [`#${index.toString(16).padStart(6, '0')}`])
+
+    persistHistory(history, 2049)
+
+    const stored = JSON.parse(localStorage.getItem('color-palette:history') ?? '')
+    expect(stored.history).toHaveLength(2048)
+    expect(stored.history[0]).toEqual(history[2])
+    expect(stored.index).toBe(2047)
   })
 })
 
@@ -175,6 +337,18 @@ describe('mergePalettes', () => {
     expect(result.imported).toBe(0)
     expect(result.duplicates).toBe(1)
   })
+
+  it('merges only collections whose names do not already exist', () => {
+    saveCollection('Existing')
+
+    const result = mergePalettes([], [
+      { name: 'Existing', createdAt: 'old' },
+      { name: 'Imported', createdAt: 'new' },
+    ])
+
+    expect(result.collectionsImported).toBe(1)
+    expect(getCollections().map(collection => collection.name)).toEqual(['Existing', 'Imported'])
+  })
 })
 
 describe('importPalettesFromFile', () => {
@@ -206,6 +380,24 @@ describe('importPalettesFromFile', () => {
     await expect(importPalettesFromFile(file)).rejects.toThrow()
   })
 
+  it('rejects when FileReader cannot read the file', async () => {
+    class FailingFileReader {
+      onload: ((event: ProgressEvent<FileReader>) => void) | null = null
+      onerror: (() => void) | null = null
+
+      readAsText() {
+        this.onerror?.()
+      }
+    }
+    vi.stubGlobal('FileReader', FailingFileReader)
+
+    try {
+      await expect(importPalettesFromFile(makeFile({}))).rejects.toThrow('Failed to read file')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('filters out palette entries missing required fields', async () => {
     const validExport = {
       version: '1.0',
@@ -231,6 +423,18 @@ describe('importPalettesFromFile', () => {
     const result = await importPalettesFromFile(makeFile(validExport))
     expect(result.collections).toHaveLength(1)
     expect(result.collections[0].name).toBe('Brand')
+  })
+
+  it('migrates missing tags and filters invalid collections', async () => {
+    const result = await importPalettesFromFile(makeFile({
+      version: '1.0',
+      exportedAt: '',
+      palettes: [{ id: 'a', name: 'A', colors: ['#ff0000'], savedAt: '' }],
+      collections: [{ name: 'Valid', createdAt: '' }, { createdAt: '' }],
+    }))
+
+    expect(result.palettes[0].tags).toEqual([])
+    expect(result.collections).toEqual([{ name: 'Valid', createdAt: '' }])
   })
 })
 

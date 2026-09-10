@@ -27,6 +27,12 @@ npm run test:watch    # Watch mode for development
 npm run test:coverage # V8 coverage report in coverage/
 ```
 
+### Browser policy
+
+Use isolated or headless Chromium for browser checks by default. Start the app with `npm run dev`, then verify the changed workflow with real keyboard and pointer input. Use **Helium** only when the task genuinely requires an existing browser session, login, extension, or other personal-browser state that is unavailable in isolation. Never use or interact with Waterfox unless the user explicitly overrides this policy in the current request.
+
+The minimum release smoke covers adding a color, keyboard routing, save/open, palette export, image export, and one undo/redo round trip. Record any browser that could not be exercised instead of treating a server response as a UI pass.
+
 ### Philosophy
 
 Tests focus on **pure functions and state logic** — the mathematical and algorithmic core that the UI depends on. A bug in `hslToHex` or `contrastRatio` affects every feature silently and produces no runtime error. A test catches it immediately and pinpoints the cause.
@@ -379,20 +385,19 @@ Increments index; no-op at end; enables `canUndo`.
 
 ---
 
-## 4. Future Test Stubs
+## 4. Remaining TODO test specifications
 
-The following files exist with `it.todo()` markers. They document the expected behavior of planned features. When a feature lands, replace `it.todo('...')` with full implementations.
+The following files still contain `it.todo()` markers. Four cases describe genuinely planned radial/conic gradient work. The other 50 cases are stale test debt for features that already ship; their assumptions must be checked against the current implementation before activation.
 
-| File | Feature | Waiting on |
-|------|---------|-----------|
-| `future/colorHarmony.test.ts` | Color Harmony Score | Score function in `colorTheory.ts` |
-| `future/gradientGenerator.test.ts` | Gradient Generator | `generateLinearGradient` etc. |
-| `future/paletteVisualization.test.ts` | Palette Visualization | Slot assignment logic |
-| `future/sessionHistory.test.ts` | Session Palette History | `useSessionHistory` hook |
-| `future/paletteCollections.test.ts` | Collections & Tags | Extended `SavedPalette` type + filters |
-| `future/extractFromImage.test.ts` | Extract from Image | Canvas-based quantization function |
+| File | Status | Next action |
+|------|--------|-------------|
+| `future/gradientGenerator.test.ts` | Planned | Activate when radial and conic gradients are implemented; linear gradients already have active tests. |
+| `future/paletteVisualization.test.ts` | Shipped / test debt | Extract role assignment from `PalettePreviewOverlay.tsx`, reconcile the old assumptions, and test the helper. |
+| `future/sessionHistory.test.ts` | Shipped / test debt | Rewrite the old session-only assumptions around the persisted `useHistory` / `usePaletteColors` behavior. |
+| `future/paletteCollections.test.ts` | Shipped / test debt | Move current tag and collection cases into storage/UI tests; remove assumptions the product no longer uses. |
+| `future/extractFromImage.test.ts` | Shipped / test debt | Extract quantization from `ExtractView.tsx`, then activate deterministic pixel-level tests. |
 
-**Protocol:** When implementing a future feature, activate and pass the corresponding stubs **before** marking the feature complete. The stubs document the contract the implementation must satisfy.
+**Protocol:** Planned behavior gets activated before its feature is marked complete. Stale cases are not authoritative specs: first compare them with the shipped behavior, then rewrite and activate or delete them explicitly.
 
 ---
 
@@ -432,7 +437,7 @@ Coverage is a floor, not a ceiling. The goal is tests that catch regressions lik
 
 ### Out of Scope
 
-- React component rendering (`App.tsx`, `PaletteItem.tsx`, etc.)
+- Broad React component rendering (`App.tsx`, `PaletteItem.tsx`, etc.); focused DOM regression tests are allowed when semantics or focus are the behavior under test
 - Visual regression testing
 - End-to-end browser tests (Playwright/Cypress)
 - `navigator.clipboard` API (requires secure context)
@@ -460,6 +465,62 @@ Coverage is a floor, not a ceiling. The goal is tests that catch regressions lik
 4. The test is now a regression guard
 
 The h=360 bug is the canonical example: `hslToHex({ h: 360, s: 100, l: 50 })` and its test should be read together as a matched pair.
+
+---
+
+## 8. Current baseline and test-first plan
+
+Coverage counts every file under `src/helpers`, `src/hooks`, and `src/lib`, including files with no tests. Components remain outside the global percentage because this project's default is browser verification for UI, with focused component regression tests used only when DOM behavior is the contract.
+
+As of 2026-09-06:
+
+- 398 active tests pass; 4 deferred future tests and 50 stale TODO cases remain.
+- Statements: 81.70%.
+- Branches: 76.03%.
+- Functions: 77.62%.
+- Lines: 82.40%.
+- `storage.ts`: 96.42% lines.
+- `imageExport.ts`: 99.18% lines.
+- `useKeyboardShortcuts.ts`, `useTheme.ts`, `useCVD.ts`, and `useDialogState.ts`: 100% lines.
+
+The coverage command enforces the rounded-down baseline. Thresholds should only move upward unless a PR explains why a lower threshold is correct.
+
+### TDD loop
+
+1. Write one failing test that describes the external contract.
+2. Run only that test file and confirm it fails for the intended reason.
+3. Make the smallest production change that passes it.
+4. Add boundary and negative cases.
+5. Run coverage, lint, and the production build.
+6. Raise coverage thresholds when the baseline crosses the next whole percentage point.
+
+Prefer observable state, serialized output, focus, storage, or rendered behavior. A callback invocation alone is useful only when routing to that callback is the public contract.
+
+### Coverage backlog
+
+Work in risk order:
+
+1. Image extraction logic: currently represented only by stale TODO tests and responsible for turning user files into palettes.
+2. `useColorEditing`, `usePresetControl`, `useSwapMode`, `useUIPanels`, and `useViewNavigation`: currently 0% and small enough to cover directly.
+3. `usePaletteColors`: cover locks, full palettes, expired history, URL loading, relationship rerolls, and row-split ID replacement.
+4. `gradientGenerator.ts`: cover SVG encoding, invalid dimensions, and Tailwind fallbacks.
+5. Replace stale `future` files for shipped collections, visualization, and session-history behavior with real tests. Keep only genuinely unimplemented gradient types as `it.todo`.
+6. Add a small Playwright suite for critical browser workflows after the unit and hook contracts are stable.
+
+### Spec-driven development pilot
+
+Pilot [OpenSpec](https://github.com/Fission-AI/OpenSpec) on the offline-start/cache decision before adopting it project-wide. It is designed for existing codebases, stores plain Markdown in the repository, installs through npm, supports Codex, and is lighter than GitHub Spec Kit.
+
+Do not install it as part of this test-only change. The pilot should require:
+
+- a short problem statement and explicit non-goals;
+- requirements written as observable scenarios;
+- a design note only when architecture changes;
+- tasks where each behavior starts with its failing test;
+- links from each requirement to its Vitest or Playwright acceptance test;
+- final verification of the implementation against the spec.
+
+After one feature, keep it only if the artifacts materially improve implementation and review. If they merely repeat tests and issues, remove the tool and retain the scenario/test conventions.
 
 ---
 

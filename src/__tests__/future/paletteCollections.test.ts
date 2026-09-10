@@ -1,10 +1,10 @@
 import { describe, it } from 'vitest'
 
-// Palette Collections and Tags — planned feature (see TODO.md)
-// Extends SavedPalette with tags: string[] and adds filtering/search.
-// Activate when implemented.
+// Palette Collections and Tags — shipped test debt (see TESTING.md)
+// Tags and collections now exist, but these old assumptions have not all been
+// reconciled with the current storage and UI contracts.
 
-describe('paletteCollections (future)', () => {
+describe('paletteCollections (test debt)', () => {
   it.todo('SavedPalette with tags field: loads correctly from storage')
   it.todo('SavedPalette without tags field: backward-compatible load returns tags=[]')
   it.todo('savePalette with tags: tags are persisted correctly')

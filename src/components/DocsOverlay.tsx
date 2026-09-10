@@ -62,6 +62,18 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.20',
+    title: 'test coverage & image export shortcut',
+    items: [
+      'shift+command/control+e now opens image export as documented',
+      'keyboard, palette, theme, cvd, dialog, storage, harmony, and image export now have regression coverage',
+      'unlabeled vertical and circle exports no longer leave hidden label gaps between rows',
+      'export dialogs now expose descriptions to assistive technology without console warnings',
+      'coverage now counts every helper and hook, including untested files',
+      'pull requests and deployment run lint, coverage, tests, and the production build',
+    ],
+  },
+  {
     version: '0.19',
     title: 'accessibility & local fonts',
     items: [

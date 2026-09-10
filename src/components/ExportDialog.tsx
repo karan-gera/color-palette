@@ -4,6 +4,7 @@ import { Copy, Download, Check, ChevronDown, ChevronUp, Image } from 'lucide-rea
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -55,6 +56,14 @@ type DialogView =
 export default function ExportDialog({ colors, onCancel, onCopied, initialView = 'selecting' }: ExportDialogProps) {
   const [view, setView] = useState<DialogView>({ type: initialView })
 
+  const dialogDescription = view.type === 'selecting'
+    ? 'choose a palette export format or configure an image export.'
+    : view.type === 'image'
+      ? 'configure the image layout, labels, size, and file format.'
+      : view.type === 'howToUse'
+        ? `read import instructions for ${view.format.label.toLowerCase()}.`
+        : 'the export completed successfully.'
+
   const handleExport = useCallback(async (format: ExportFormat) => {
     const formatInfo = EXPORT_FORMATS.find(f => f.value === format)
     if (!formatInfo) return
@@ -76,6 +85,9 @@ export default function ExportDialog({ colors, onCancel, onCopied, initialView =
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className={view.type === 'image' || view.type === 'imageConfirmation' ? 'sm:max-w-xl' : 'sm:max-w-lg'}>
+        <DialogDescription className="sr-only">
+          {dialogDescription}
+        </DialogDescription>
         {view.type === 'selecting' && (
           <ExportSelectingView
             onExport={handleExport}

@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PalettePort release roadmap — 2026-09-06</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000;
+      --fg: #fff;
+      --muted: #aaa;
+      --line: #444;
+      --panel: #0b0b0b;
+      --pass: #8fff8f;
+      --warn: #ffd166;
+      --fail: #ff7777;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); color: var(--fg); }
+    body {
+      margin: 0 auto;
+      max-width: 1440px;
+      padding: 24px;
+      font: 15px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    a { color: var(--fg); text-underline-offset: 3px; }
+    button, input, select {
+      background: var(--bg);
+      border: 1px solid var(--fg);
+      border-radius: 0;
+      color: var(--fg);
+      font: inherit;
+      min-height: 40px;
+      padding: 8px 10px;
+    }
+    button { cursor: pointer; }
+    button:hover, button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+    :focus-visible { outline: 3px solid var(--warn); outline-offset: 3px; }
+    h1, h2, h3 { line-height: 1.15; }
+    h1 { font-size: clamp(25px, 4vw, 48px); margin: 0 0 8px; }
+    h2 { border-bottom: 1px solid var(--fg); font-size: 22px; margin: 48px 0 16px; padding-bottom: 8px; }
+    h3 { font-size: 16px; margin: 0 0 8px; }
+    p { max-width: 90ch; }
+    .muted { color: var(--muted); }
+    .lede { font-size: 17px; max-width: 86ch; }
+    .notice { border: 1px solid var(--warn); padding: 12px; }
+    .sources { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 16px; }
+    .controls {
+      align-items: end;
+      background: var(--bg);
+      border-block: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+    .control { display: grid; gap: 4px; }
+    .control label { color: var(--muted); font-size: 12px; }
+    #search { width: min(380px, 80vw); }
+    .stats, .definitions, .path, .risk-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+    .stat, .definition, .stage, .risk {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px;
+    }
+    .stat output { display: block; font-size: 30px; font-weight: 700; }
+    .stage { border-top: 4px solid var(--fg); }
+    .stage[data-stage="alpha"] { border-top-color: var(--fail); }
+    .stage[data-stage="beta"] { border-top-color: var(--warn); }
+    .stage[data-stage="v1"] { border-top-color: var(--pass); }
+    .stage .count { font-size: 24px; font-weight: 700; }
+    .status { font-weight: 700; }
+    .status.fail { color: var(--fail); }
+    .status.warn { color: var(--warn); }
+    .status.pass { color: var(--pass); }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid var(--line); padding: 9px; text-align: left; vertical-align: top; }
+    th { background: var(--panel); }
+    .table-wrap { overflow-x: auto; }
+    .bars { display: grid; gap: 18px; }
+    .bar-row { display: grid; gap: 6px; grid-template-columns: minmax(190px, 1fr) minmax(240px, 3fr); }
+    .bar-label strong, .bar-label span { display: block; }
+    .track { background: #171717; border: 1px solid var(--line); min-height: 48px; padding: 6px; position: relative; }
+    .bar { align-items: center; display: flex; height: 15px; min-width: 2px; padding-left: 5px; white-space: nowrap; }
+    .bar.current { background: var(--fg); color: var(--bg); }
+    .bar.target { background: #555; color: var(--fg); margin-top: 5px; }
+    .network-chart { border: 1px solid var(--line); padding: 12px; }
+    .network-row { display: grid; gap: 8px; grid-template-columns: 180px 1fr 80px; margin: 9px 0; align-items: center; }
+    .network-track { background: #171717; height: 18px; position: relative; }
+    .network-track::after { border-left: 1px dashed var(--warn); content: ""; inset: 0 auto 0 25%; position: absolute; }
+    .network-bar { background: var(--fg); height: 100%; min-width: 2px; }
+    .network-row.landing .network-bar { background: var(--pass); }
+    .network-row.bad .network-bar { background: var(--fail); }
+    .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; }
+    .swatch { display: inline-block; height: 10px; margin-right: 6px; width: 20px; }
+    .task-groups { display: grid; gap: 28px; }
+    .task-group[hidden], .task[hidden] { display: none; }
+    .task-list { display: grid; gap: 10px; }
+    .task { border: 1px solid var(--line); padding: 12px; }
+    .task-head { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }
+    .task-id { font-weight: 700; }
+    .priority { border: 1px solid currentColor; font-size: 12px; padding: 1px 5px; }
+    .task p { margin: 6px 0 0; }
+    .empty { border: 1px dashed var(--line); padding: 18px; }
+    footer { border-top: 1px solid var(--fg); margin-top: 48px; padding-top: 14px; }
+    @media (max-width: 720px) {
+      body { padding: 16px; }
+      .bar-row { grid-template-columns: 1fr; }
+      .network-row { grid-template-columns: 110px 1fr 65px; }
+      .controls { position: static; }
+    }
+    @media print {
+      .controls { display: none; }
+      body { max-width: none; padding: 0; }
+      .task[hidden], .task-group[hidden] { display: block; }
+      a { text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="muted">engineering report / 2026-09-06 / desktop release scope</p>
+    <h1>PalettePort release roadmap</h1>
+    <p class="lede">The product already exceeds an MVP. The remaining work is release hardening: correctness, honest public claims, dependency and failure handling, constrained-device startup, offline boot, and repeatable release gates.</p>
+    <p class="notice"><strong>Source of truth:</strong> <a href="TODO.md">TODO.md</a>. Controls on this page filter and copy tasks; they do not change project state.</p>
+    <nav class="sources" aria-label="report sources">
+      <a href="TODO.md">release TODO</a>
+      <a href="AUDIT.md">ship audit</a>
+      <a href="PERFORMANCE_AUDIT.md">performance audit</a>
+      <a href="TESTING.md">test baseline</a>
+      <a href="COMPETITOR_RESEARCH.md">competitor research</a>
+    </nav>
+  </header>
+
+  <section class="controls" aria-label="roadmap filters">
+    <div class="control">
+      <label for="stage-filter">milestone</label>
+      <select id="stage-filter">
+        <option value="all">all milestones</option>
+        <option value="alpha">public alpha</option>
+        <option value="beta">public beta</option>
+        <option value="v1">v1</option>
+      </select>
+    </div>
+    <div class="control">
+      <label for="priority-filter">priority</label>
+      <select id="priority-filter">
+        <option value="all">all priorities</option>
+        <option value="P0">P0</option>
+        <option value="P1">P1</option>
+      </select>
+    </div>
+    <div class="control">
+      <label for="search">search tasks</label>
+      <input id="search" type="search" placeholder="offline, dependency, motion…">
+    </div>
+    <button id="copy-open" type="button">copy visible tasks</button>
+    <output id="copy-status" class="muted" aria-live="polite"></output>
+  </section>
+
+  <main>
+    <h2>Decision</h2>
+    <div class="definitions">
+      <article class="definition">
+        <h3>MVP</h3>
+        <p>Smallest scope that validates whether the product is useful. PalettePort is already beyond this. Do not create a separate MVP milestone.</p>
+      </article>
+      <article class="definition">
+        <h3>Public alpha</h3>
+        <p>External testing with known limits. No known P0 correctness, security, legal, accessibility, or false-claim defect. Stored formats may still change.</p>
+      </article>
+      <article class="definition">
+        <h3>Public beta</h3>
+        <p>Feature scope frozen for v1. Constrained-device, offline, and compatibility gates pass. Remaining changes are bug fixes.</p>
+      </article>
+      <article class="definition">
+        <h3>v1</h3>
+        <p>Stable URL, version, support scope, release notes, and operational checks. No known high-severity release issue.</p>
+      </article>
+    </div>
+    <p><strong>Recommended next target:</strong> desktop-only public alpha after the 12 alpha tasks close. Alpha may omit offline boot only if the app stops claiming it works offline.</p>
+
+    <h2>Release path</h2>
+    <div class="path" id="release-path" aria-label="release milestone status"></div>
+
+    <h2>Audit baseline</h2>
+    <div class="stats">
+      <div class="stat"><span class="muted">active tests</span><output>398</output><span class="status pass">passing</span></div>
+      <div class="stat"><span class="muted">stale TODO tests</span><output>50</output><span class="status warn">shipped behavior</span></div>
+      <div class="stat"><span class="muted">statement coverage</span><output>81.70%</output><span class="status warn">baseline</span></div>
+      <div class="stat"><span class="muted">production audit</span><output>6 high</output><span class="status fail">re-run required</span></div>
+    </div>
+
+    <h3 style="margin-top: 28px">Current versus beta targets</h3>
+    <p class="muted">Each pair shares its own scale. Exact values are labels; bar length is only a ratio aid.</p>
+    <div class="bars" id="budget-bars"></div>
+
+    <h3 style="margin-top: 28px">Cold-load LCP by profile</h3>
+    <div class="network-chart" aria-label="cold load largest contentful paint chart">
+      <div id="network-bars"></div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#fff" aria-hidden="true">&#160;</span>app</span>
+        <span><span class="swatch" style="background:var(--pass)" aria-hidden="true">&#160;</span>static landing comparison</span>
+        <span><span class="swatch" style="border-left:1px dashed var(--warn)" aria-hidden="true">&#160;</span>2.5 s line</span>
+      </div>
+    </div>
+
+    <h2>Findings that drive the roadmap</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>Observed</th><th>Required response</th><th>Gate</th></tr></thead>
+        <tbody>
+          <tr><td>startup bundle</td><td>386–389 KB gzip; 52.2% unused after startup</td><td>real dynamic imports; remove Recharts, docs, dialogs, and naming data from startup</td><td>alpha starts; beta budget</td></tr>
+          <tr><td>startup DOM</td><td>1,246 elements; closed docs contributes 514</td><td>do not mount closed docs; defer keyboard reference</td><td>alpha starts; beta budget</td></tr>
+          <tr><td>poor network</td><td>9.28 s LCP, 11.18 s load at 400 Kbps + 6x CPU</td><td>pre-React shell plus smaller startup graph</td><td>beta</td></tr>
+          <tr><td>offline</td><td>cold and warm reload both fail</td><td>remove claim for alpha; service worker and automated navigation tests for beta</td><td>alpha/beta</td></tr>
+          <tr><td>motion</td><td>about 100 sites ignore reduced-motion preference</td><td>Framer configuration, CSS reduction, manual coverage</td><td>alpha</td></tr>
+          <tr><td>extraction</td><td>170 ms longest task; duplicate centroids</td><td>test and dedupe for alpha; worker and &lt;50 ms task for beta</td><td>alpha/beta</td></tr>
+          <tr><td>failure handling</td><td>component failure can blank the app</td><td>error boundary with non-destructive recovery</td><td>alpha</td></tr>
+          <tr><td>release hygiene</td><td>placeholder issue URL, no LICENSE, version mismatch</td><td>real endpoints, MIT file, aligned SemVer</td><td>alpha</td></tr>
+          <tr><td>public claims</td><td>offline/storage/competitor claims exceed evidence</td><td>use dated sources and narrower observed claims</td><td>alpha</td></tr>
+          <tr><td>mobile</td><td>needs separate redesign</td><td>state desktop-only scope; keep mobile out of this release</td><td>deferred</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Roadmap tasks</h2>
+    <p id="task-count" class="muted" aria-live="polite"></p>
+    <div class="task-groups" id="task-groups"></div>
+    <p id="no-results" class="empty" hidden>No task matches the current filters.</p>
+
+    <h2>Deferred beyond desktop v1</h2>
+    <ul>
+      <li>mobile UI and responsive redesign</li>
+      <li>dynamic per-palette Open Graph images</li>
+      <li>IndexedDB without measured storage pressure</li>
+      <li>radial/conic gradients and specialist export formats</li>
+      <li>additional preview modes and keyboard reordering</li>
+      <li>community backend, accounts, payments, and enterprise work</li>
+      <li>landing redesign or analytics</li>
+    </ul>
+  </main>
+
+  <footer>
+    <p>Update task status and acceptance criteria in <a href="TODO.md">TODO.md</a>. Update measurements in the relevant audit, then regenerate or edit this view.</p>
+  </footer>
+
+  <script>
+    const tasks = [
+      { id: 'A-01', stage: 'alpha', priority: 'P0', title: 'freeze desktop scope and production URL', detail: 'Choose GitHub Pages path or paletteport.com; reconcile base path, redirect, DNS, canonical/OG URLs, landing links, and desktop-only support.' },
+      { id: 'A-02', stage: 'alpha', priority: 'P0', title: 'restore palette reroll fades', detail: 'Verify reroll all/one, presets, relationships, and immediate reduced-motion behavior.' },
+      { id: 'A-03', stage: 'alpha', priority: 'P0', title: 'add release identity and license', detail: 'Add MIT LICENSE and align package, docs, and changelog on one SemVer prerelease.' },
+      { id: 'A-04', stage: 'alpha', priority: 'P0', title: 'replace or remove dead external actions', detail: 'Use the real issue tracker; fix or remove feature-request and donation destinations.' },
+      { id: 'A-05', stage: 'alpha', priority: 'P0', title: 'triage dependencies', detail: 'Re-run audits, patch production findings, and document any accepted advisory with exposure and revisit date.' },
+      { id: 'A-06', stage: 'alpha', priority: 'P0', title: 'make public claims match behavior', detail: 'Fix offline, storage, share delimiter, and lowercase-copy claims.' },
+      { id: 'A-07', stage: 'alpha', priority: 'P0', title: 'replace stale competitor matrix', detail: 'Use dated first-party sources and preserve unknown values as unknown.' },
+      { id: 'A-08', stage: 'alpha', priority: 'P0', title: 'add a desktop error boundary', detail: 'Provide readable, tested recovery without deleting local data.' },
+      { id: 'A-09', stage: 'alpha', priority: 'P0', title: 'respect reduced-motion preferences', detail: 'Cover Framer Motion, CSS transitions, core actions, docs, and dialogs.' },
+      { id: 'A-10', stage: 'alpha', priority: 'P0', title: 'remove worst startup-only work', detail: 'Lazy-mount docs and preview/Recharts; record gzip, transfer, and DOM deltas.' },
+      { id: 'A-11', stage: 'alpha', priority: 'P0', title: 'cover and fix extraction correctness', detail: 'Extract testable quantization, activate tests, deduplicate centroids, and handle low distinct-color counts.' },
+      { id: 'A-12', stage: 'alpha', priority: 'P0', title: 'cut and verify an alpha candidate', detail: 'Pass automated gates plus Helium, keyboard, accessibility, live-link, and network-request smoke checks.' },
+      { id: 'B-01', stage: 'beta', priority: 'P0', title: 'finish startup code splitting', detail: 'Split optional views and naming data; meet 175 KB gzip JS and 275 KB initial transfer.' },
+      { id: 'B-02', stage: 'beta', priority: 'P0', title: 'add accessible pre-React app shell', detail: 'Useful content under 1.5 s and core interactive under 5 s at 400 Kbps + 6x CPU.' },
+      { id: 'B-03', stage: 'beta', priority: 'P0', title: 'remove startup layout instability', detail: 'Initialize share state before render; meet CLS below 0.05 and initial DOM below 700.' },
+      { id: 'B-04', stage: 'beta', priority: 'P0', title: 'implement reliable offline startup', detail: 'Versioned scoped service worker, app-shell precache, update behavior, and cold/warm offline tests.' },
+      { id: 'B-05', stage: 'beta', priority: 'P0', title: 'move extraction off the main thread', detail: 'Worker with transferable buffers and accessible failure/cancel states; longest task below 50 ms.' },
+      { id: 'B-06', stage: 'beta', priority: 'P0', title: 'enforce performance budgets in CI', detail: 'Pin Chromium and gate bundle, LCP, CLS, blocking time, and offline navigation.' },
+      { id: 'B-07', stage: 'beta', priority: 'P1', title: 'retire shipped-feature test debt', detail: 'Replace 50 stale TODOs and reach at least 85% lines on critical helpers/hooks.' },
+      { id: 'B-08', stage: 'beta', priority: 'P1', title: 'pin supported Node version', detail: 'Remove local Node 24 versus CI Node 20 drift.' },
+      { id: 'B-09', stage: 'beta', priority: 'P1', title: 'run compatibility and zoom checks', detail: 'Use isolated Chromium by default and Helium only when personal-browser state is required; cover desktop zoom 100–200% and online/offline workflows.' },
+      { id: 'B-10', stage: 'beta', priority: 'P1', title: 'burn down alpha feedback', detail: 'Resolve or explicitly defer all P0/P1 correctness, accessibility, data, performance, and UX issues.' },
+      { id: 'V-01', stage: 'v1', priority: 'P0', title: 'stabilize production address', detail: 'Complete DNS/base/canonical work and verify direct, landing, share, and offline routes.' },
+      { id: 'V-02', stage: 'v1', priority: 'P0', title: 'finalize release metadata', detail: 'Remove prerelease suffix; align package, changelog, Help/About, tags, and release notes.' },
+      { id: 'V-03', stage: 'v1', priority: 'P0', title: 'close high-severity release issues', detail: 'No P0/P1 data-loss, correctness, accessibility, security, or constrained-device issue remains.' },
+      { id: 'V-04', stage: 'v1', priority: 'P1', title: 'verify repeat-visit caching', detail: 'Use immutable hashed assets where possible, short-lived HTML, and lazy preview fonts.' },
+      { id: 'V-05', stage: 'v1', priority: 'P1', title: 'run complete release matrix', detail: 'Clean/existing storage in isolated Chromium, plus network/offline, motion modes, and keyboard/pointer; use Helium only if personal state is required.' },
+      { id: 'V-06', stage: 'v1', priority: 'P1', title: 're-check external facts', detail: 'Re-verify competitor facts, external links, and privacy/storage/offline claims.' }
+    ];
+
+    const budgets = [
+      { label: 'initial JavaScript', current: 389, target: 175, currentText: '389 KB gzip', targetText: '≤175 KB gzip', lowerIsBetter: true },
+      { label: 'initial transfer', current: 481, target: 275, currentText: '481 KB', targetText: '≤275 KB', lowerIsBetter: true },
+      { label: 'initial DOM', current: 1246, target: 700, currentText: '1,246 elements', targetText: '<700', lowerIsBetter: true },
+      { label: 'slow-4G LCP', current: 2.55, target: 2.5, currentText: '2.55 s', targetText: '<2.5 s', lowerIsBetter: true },
+      { label: 'slow-4G CLS', current: 0.145, target: 0.05, currentText: '0.10–0.19', targetText: '<0.05', lowerIsBetter: true },
+      { label: 'slow-4G blocking time', current: 96, target: 200, currentText: '86–96 ms', targetText: '<200 ms', lowerIsBetter: true },
+      { label: 'extraction longest task', current: 170, target: 50, currentText: '170 ms', targetText: '<50 ms', lowerIsBetter: true }
+    ];
+
+    const profiles = [
+      { label: 'unthrottled', value: 0.164 },
+      { label: '6x CPU', value: 0.588 },
+      { label: 'slow 4G + 4x', value: 2.55 },
+      { label: '400 Kbps + 6x', value: 9.28, bad: true },
+      { label: 'landing / worst', value: 0.772, landing: true }
+    ];
+
+    const escapeHtml = (value) => value.replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+
+    function renderPath() {
+      const labels = { alpha: 'public alpha', beta: 'public beta', v1: 'v1' };
+      document.querySelector('#release-path').innerHTML = ['alpha', 'beta', 'v1'].map(stage => {
+        const total = tasks.filter(task => task.stage === stage).length;
+        return `<article class="stage" data-stage="${stage}"><h3>${labels[stage]}</h3><div class="count">0 / ${total}</div><p class="muted">tasks complete</p></article>`;
+      }).join('');
+    }
+
+    function renderBudgets() {
+      document.querySelector('#budget-bars').innerHTML = budgets.map(item => {
+        const max = Math.max(item.current, item.target);
+        const currentWidth = Math.max(2, item.current / max * 100);
+        const targetWidth = Math.max(2, item.target / max * 100);
+        const passes = item.lowerIsBetter ? item.current <= item.target : item.current >= item.target;
+        return `<div class="bar-row">
+          <div class="bar-label"><strong>${escapeHtml(item.label)}</strong><span class="status ${passes ? 'pass' : 'fail'}">${passes ? 'within target' : 'over target'}</span></div>
+          <div class="track" aria-label="${escapeHtml(item.label)}: current ${escapeHtml(item.currentText)}, target ${escapeHtml(item.targetText)}">
+            <div class="bar current" style="width:${currentWidth}%">current ${escapeHtml(item.currentText)}</div>
+            <div class="bar target" style="width:${targetWidth}%">target ${escapeHtml(item.targetText)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderProfiles() {
+      document.querySelector('#network-bars').innerHTML = profiles.map(profile =>
+        `<div class="network-row ${profile.landing ? 'landing' : ''} ${profile.bad ? 'bad' : ''}">
+          <span>${escapeHtml(profile.label)}</span>
+          <div class="network-track"><div class="network-bar" style="width:${Math.max(0.5, profile.value / 10 * 100)}%"></div></div>
+          <strong>${profile.value.toFixed(profile.value < 1 ? 3 : 2)} s</strong>
+        </div>`
+      ).join('');
+    }
+
+    function renderTasks() {
+      const stageFilter = document.querySelector('#stage-filter').value;
+      const priorityFilter = document.querySelector('#priority-filter').value;
+      const query = document.querySelector('#search').value.trim().toLowerCase();
+      const labels = { alpha: 'public alpha', beta: 'public beta', v1: 'v1' };
+      let visible = 0;
+      document.querySelector('#task-groups').innerHTML = ['alpha', 'beta', 'v1'].map(stage => {
+        const stageTasks = tasks.filter(task => {
+          const text = `${task.id} ${task.title} ${task.detail}`.toLowerCase();
+          return task.stage === stage &&
+            (stageFilter === 'all' || task.stage === stageFilter) &&
+            (priorityFilter === 'all' || task.priority === priorityFilter) &&
+            (!query || text.includes(query));
+        });
+        visible += stageTasks.length;
+        if (!stageTasks.length) return '';
+        return `<section class="task-group" data-stage="${stage}"><h3>${labels[stage]} — ${stageTasks.length} visible</h3><div class="task-list">${stageTasks.map(task =>
+          `<article class="task" data-id="${task.id}"><div class="task-head"><span aria-hidden="true">☐</span><span class="task-id">${task.id}</span><span class="priority">${task.priority}</span><strong>${escapeHtml(task.title)}</strong></div><p>${escapeHtml(task.detail)}</p></article>`
+        ).join('')}</div></section>`;
+      }).join('');
+      document.querySelector('#task-count').textContent = `${visible} of ${tasks.length} open tasks visible`;
+      document.querySelector('#no-results').hidden = visible !== 0;
+    }
+
+    function visibleTasks() {
+      const ids = [...document.querySelectorAll('.task')].map(node => node.dataset.id);
+      return tasks.filter(task => ids.includes(task.id));
+    }
+
+    async function copyVisible() {
+      const lines = visibleTasks().map(task => `- [ ] ${task.id} ${task.priority} — ${task.title}: ${task.detail}`);
+      const status = document.querySelector('#copy-status');
+      if (!lines.length) { status.textContent = 'no visible tasks'; return; }
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        status.textContent = `copied ${lines.length} tasks`;
+      } catch {
+        status.textContent = 'clipboard unavailable from this context';
+      }
+    }
+
+    renderPath();
+    renderBudgets();
+    renderProfiles();
+    renderTasks();
+    document.querySelector('#stage-filter').addEventListener('change', renderTasks);
+    document.querySelector('#priority-filter').addEventListener('change', renderTasks);
+    document.querySelector('#search').addEventListener('input', renderTasks);
+    document.querySelector('#copy-open').addEventListener('click', copyVisible);
+  </script>
+</body>
+</html>
