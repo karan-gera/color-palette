@@ -230,6 +230,35 @@
   opacity: 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body,
+  .cvd-color,
+  .cvd-color.editing {
+    transition: none;
+  }
+
+  /* State changes remain visible, but decorative movement and delays are removed. */
+  .reduced-motion-instant {
+    animation-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reduced-motion-no-transform {
+    transform: none !important;
+  }
+
+  [data-cvd-transitioning] .cvd-color {
+    opacity: 1;
+  }
+}
+
 [data-cvd="deuteranopia"] .cvd-color {
   filter: url(#cvd-deuteranopia);
 }

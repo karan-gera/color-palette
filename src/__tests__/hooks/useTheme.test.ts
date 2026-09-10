@@ -5,19 +5,27 @@ import { useTheme } from '@/hooks/useTheme'
 type SystemTheme = 'light' | 'dark' | 'none'
 
 let systemTheme: SystemTheme
+let reducedMotion: boolean
 let darkModeListener: (() => void) | null
+let reducedMotionListener: ((event: MediaQueryListEvent) => void) | null
 
 beforeEach(() => {
   systemTheme = 'none'
+  reducedMotion = false
   darkModeListener = null
+  reducedMotionListener = null
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn((query: string) => ({
       matches:
+        (query.includes('prefers-reduced-motion') && reducedMotion) ||
         (query.includes('dark') && systemTheme === 'dark') ||
         (query.includes('light') && systemTheme === 'light'),
       addEventListener: vi.fn((_event: string, listener: () => void) => {
         if (query.includes('dark')) darkModeListener = listener
+        if (query.includes('prefers-reduced-motion')) {
+          reducedMotionListener = listener as (event: MediaQueryListEvent) => void
+        }
       }),
       removeEventListener: vi.fn(),
     })),
@@ -96,6 +104,33 @@ describe('useTheme', () => {
 
     act(() => result.current.completeTransition())
     expect(result.current.transition).toBeNull()
+  })
+
+  it('applies theme changes immediately when reduced motion is requested', () => {
+    reducedMotion = true
+    localStorage.setItem('color-palette:theme', 'light')
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+
+    expect(result.current.theme).toBe('dark')
+    expect(result.current.transition).toBeNull()
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+  })
+
+  it('finishes an active theme wipe when reduced motion becomes requested', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    expect(result.current.transition?.to).toBe('dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+
+    reducedMotion = true
+    act(() => reducedMotionListener?.({ matches: true } as MediaQueryListEvent))
+
+    expect(result.current.transition).toBeNull()
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
   })
 
   it('ignores no-op and overlapping transitions', () => {

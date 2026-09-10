@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export type Theme = 'light' | 'gray' | 'dark'
 
@@ -40,6 +41,7 @@ export interface ThemeTransition {
 }
 
 export function useTheme() {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [theme, setThemeState] = useState<Theme>(getInitialTheme)
   const [transition, setTransition] = useState<ThemeTransition | null>(null)
 
@@ -54,6 +56,10 @@ export function useTheme() {
   const setThemeWithTransition = useCallback((newTheme: Theme, origin: { x: number; y: number }) => {
     if (newTheme === theme) return // No change
     if (transition) return // Already transitioning - ignore click
+    if (prefersReducedMotion) {
+      setTheme(newTheme)
+      return
+    }
     
     // Start transition - overlay will show new theme expanding
     // Keep OLD theme on document during animation
@@ -67,7 +73,7 @@ export function useTheme() {
     setThemeState(newTheme)
     localStorage.setItem(STORAGE_KEY, newTheme)
     // Note: applyTheme() is called in applyTransitionTarget, not here
-  }, [theme, transition])
+  }, [theme, transition, prefersReducedMotion, setTheme])
 
   // Apply the new theme during animation (overlay masks the change)
   const applyTransitionTarget = useCallback(() => {
@@ -94,6 +100,13 @@ export function useTheme() {
       applyTheme(theme)
     }
   }, [theme, transition])
+
+  // If the OS preference changes during a wipe, finish it immediately.
+  useEffect(() => {
+    if (!prefersReducedMotion || !transition) return
+    applyTheme(transition.to)
+    setTransition(null)
+  }, [prefersReducedMotion, transition])
 
   // Listen for system theme changes (only if no stored preference)
   useEffect(() => {

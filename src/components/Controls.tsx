@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import PresetBrowser from './PresetBrowser'
 import { hasEyeDropper } from '@/helpers/eyeDropper'
 import { isMac } from '@/helpers/platform'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 const showPickButton = hasEyeDropper || isMac
 
@@ -62,11 +63,12 @@ export default function Controls({
   onPreview,
   canPreview,
 }: ControlsProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   return (
     <TooltipProvider>
       <motion.div
         variants={container}
-        initial="hidden"
+        initial={prefersReducedMotion ? false : 'hidden'}
         animate="show"
         className="flex items-center gap-2 flex-wrap justify-center"
       >
