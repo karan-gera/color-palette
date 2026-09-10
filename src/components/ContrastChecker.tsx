@@ -78,12 +78,12 @@ function ContrastChecker({ colors, expanded, onToggle }, ref) {
       </Button>
 
       <div
-        className={`w-full overflow-hidden transition-all duration-300 ease-out ${
+        className={`w-full overflow-hidden transition-all duration-300 ease-out reduced-motion-instant ${
           expanded ? 'max-h-[2000px] opacity-100 mt-3' : 'max-h-0 opacity-0'
         }`}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4 !gap-0">
-          <div className={`transition-all duration-200 ease-out overflow-hidden ${
+          <div className={`transition-all duration-200 ease-out reduced-motion-instant overflow-hidden ${
             colors.length >= 2
               ? 'max-h-12 opacity-100'
               : 'max-h-0 opacity-0 pointer-events-none'
@@ -98,7 +98,7 @@ function ContrastChecker({ colors, expanded, onToggle }, ref) {
             <TabsContent
               value="backgrounds"
               forceMount
-              className="transition-opacity duration-150 ease-out data-[state=inactive]:opacity-0 data-[state=inactive]:pointer-events-none"
+              className="transition-opacity duration-150 ease-out reduced-motion-instant data-[state=inactive]:opacity-0 data-[state=inactive]:pointer-events-none"
             >
               <div className="flex flex-wrap gap-3 justify-center">
                 {backgroundResults.map(({ color, results, description }) => (
@@ -145,7 +145,7 @@ function ContrastChecker({ colors, expanded, onToggle }, ref) {
             <TabsContent
               value="each-other"
               forceMount
-              className="transition-opacity duration-150 ease-out data-[state=inactive]:opacity-0 data-[state=inactive]:pointer-events-none"
+              className="transition-opacity duration-150 ease-out reduced-motion-instant data-[state=inactive]:opacity-0 data-[state=inactive]:pointer-events-none"
             >
               {colors.length >= 2 && (
                 <div className="flex justify-center">

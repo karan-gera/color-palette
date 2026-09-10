@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type ExtractViewProps = {
   onAddColors: (colors: string[]) => void
@@ -90,6 +91,7 @@ function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
 // ---------------------------------------------------------------------------
 
 export default function ExtractView({ onAddColors }: ExtractViewProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
@@ -171,9 +173,9 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
       <motion.div
         className="w-full relative"
         style={{ paddingBottom: '56.25%' }}
-        initial={{ opacity: 0, y: 6 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
       >
         <div
           className={[
@@ -222,7 +224,7 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
       {isExtracting && (
         <motion.p
           className="font-mono text-xs text-muted-foreground lowercase animate-pulse"
-          initial={{ opacity: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           extracting colors…
@@ -233,7 +235,7 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
       {extractError && (
         <motion.p
           className="font-mono text-xs text-destructive lowercase"
-          initial={{ opacity: 0 }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           {extractError}
@@ -244,9 +246,9 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
       {extracted.length > 0 && (
         <motion.div
           className="flex flex-col gap-4"
-          initial={{ opacity: 0, y: 4 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
         >
           <p className="font-mono text-xs text-muted-foreground lowercase">
             extracted colors — click or drag to toggle
@@ -261,14 +263,14 @@ export default function ExtractView({ onAddColors }: ExtractViewProps) {
                   onMouseDown={e => handleSwatchMouseDown(i, e)}
                   onMouseEnter={() => handleSwatchMouseEnter(i)}
                   className={[
-                    'flex flex-col items-center gap-1.5 transition-all duration-150',
+                    'flex flex-col items-center gap-1.5 transition-all duration-150 reduced-motion-instant',
                     isSel ? 'opacity-100' : 'opacity-35',
                   ].join(' ')}
                   aria-label={hex}
                 >
                   <div
                     className={[
-                      'size-12 rounded-md border transition-all duration-150',
+                      'size-12 rounded-md border transition-all duration-150 reduced-motion-instant',
                       isSel
                         ? 'border-foreground/40 ring-2 ring-foreground ring-offset-2 ring-offset-background scale-105'
                         : 'border-border',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export type CVDType = 'normal' | 'deuteranopia' | 'protanopia' | 'tritanopia' | 'achromatopsia'
 
@@ -39,12 +40,30 @@ function applyDataAttribute(cvd: CVDType) {
 }
 
 export function useCVD() {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [cvd, setCVDState] = useState<CVDType>(getInitialCVD)
   const transitionTimeoutRef = useRef<number | null>(null)
   const pendingCVDRef = useRef<CVDType | null>(null)
+  const transitionTargetRef = useRef<CVDType | null>(null)
+
+  const applyCVD = useCallback((newCVD: CVDType) => {
+    setCVDState(newCVD)
+    localStorage.setItem(STORAGE_KEY, newCVD)
+    applyDataAttribute(newCVD)
+  }, [])
 
   const setCVD = useCallback((newCVD: CVDType) => {
     if (newCVD === cvd) return
+
+    if (prefersReducedMotion) {
+      if (transitionTimeoutRef.current !== null) clearTimeout(transitionTimeoutRef.current)
+      transitionTimeoutRef.current = null
+      transitionTargetRef.current = null
+      pendingCVDRef.current = null
+      document.documentElement.removeAttribute('data-cvd-transitioning')
+      applyCVD(newCVD)
+      return
+    }
     
     // If already transitioning, update the pending target
     if (transitionTimeoutRef.current !== null) {
@@ -54,18 +73,18 @@ export function useCVD() {
     
     // Start fade out
     document.documentElement.setAttribute('data-cvd-transitioning', '')
+    transitionTargetRef.current = newCVD
     
     transitionTimeoutRef.current = window.setTimeout(() => {
       // Apply the new filter while faded out
-      setCVDState(newCVD)
-      localStorage.setItem(STORAGE_KEY, newCVD)
-      applyDataAttribute(newCVD)
+      applyCVD(newCVD)
       
       // Start fade in
       document.documentElement.removeAttribute('data-cvd-transitioning')
       
       transitionTimeoutRef.current = window.setTimeout(() => {
         transitionTimeoutRef.current = null
+        transitionTargetRef.current = null
         
         // If there's a pending change, apply it
         if (pendingCVDRef.current !== null && pendingCVDRef.current !== newCVD) {
@@ -77,7 +96,7 @@ export function useCVD() {
         }
       }, TRANSITION_DURATION)
     }, TRANSITION_DURATION)
-  }, [cvd])
+  }, [cvd, prefersReducedMotion, applyCVD])
 
   const cycleCVD = useCallback(() => {
     const currentIndex = CVD_TYPES.indexOf(cvd)
@@ -89,6 +108,19 @@ export function useCVD() {
   useEffect(() => {
     applyDataAttribute(cvd)
   }, [cvd])
+
+  // Resolve an in-flight fade immediately if the OS preference changes.
+  useEffect(() => {
+    if (!prefersReducedMotion || transitionTimeoutRef.current === null) return
+
+    clearTimeout(transitionTimeoutRef.current)
+    transitionTimeoutRef.current = null
+    const target = pendingCVDRef.current ?? transitionTargetRef.current
+    transitionTargetRef.current = null
+    pendingCVDRef.current = null
+    document.documentElement.removeAttribute('data-cvd-transitioning')
+    if (target) applyCVD(target)
+  }, [prefersReducedMotion, applyCVD])
 
   // Cleanup timeouts on unmount
   useEffect(() => {

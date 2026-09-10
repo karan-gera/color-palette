@@ -13,7 +13,7 @@ function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCou
   const disabled = shortcut.minColors !== undefined && colorCount < shortcut.minColors
 
   return (
-    <div className={`flex items-center gap-1.5 text-xs transition-opacity duration-200 ${disabled ? 'opacity-30' : ''}`}>
+    <div className={`flex items-center gap-1.5 text-xs transition-opacity duration-200 reduced-motion-instant ${disabled ? 'opacity-30' : ''}`}>
       <span className="flex items-center gap-0.5 shrink-0">
         {shortcut.modifiers?.map((mod) => (
           <kbd
@@ -57,7 +57,7 @@ export default function KeyboardHints({ visible, onToggle, colorCount }: Keyboar
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
       <div
-        className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out overflow-y-auto max-h-[calc(100vh-8rem)] pointer-events-auto ${
+        className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out reduced-motion-instant overflow-y-auto max-h-[calc(100vh-8rem)] pointer-events-auto ${
           visible
             ? 'opacity-100 translate-y-0'
             : 'opacity-0 translate-y-2 pointer-events-none'
@@ -75,7 +75,7 @@ export default function KeyboardHints({ visible, onToggle, colorCount }: Keyboar
         className="font-mono text-xs text-muted-foreground hover:text-foreground gap-1.5 h-7 pointer-events-auto"
       >
         {visible ? <EyeOff className="size-3" /> : <Keyboard className="size-3" />}
-        <span className="transition-all duration-200">{visible ? 'hide' : 'shortcuts'}</span>
+        <span className="transition-all duration-200 reduced-motion-instant">{visible ? 'hide' : 'shortcuts'}</span>
         <kbd className="ml-0.5 px-1 py-0.5 bg-muted rounded text-[10px] font-mono border border-border/50">/</kbd>
       </Button>
     </div>

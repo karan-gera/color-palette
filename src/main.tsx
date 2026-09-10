@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { MotionConfig } from 'framer-motion'
 import './index.css'
 import App from './App.tsx'
 import MobileInterstitial from './components/MobileInterstitial.tsx'
@@ -13,8 +14,10 @@ if (!new URLSearchParams(window.location.search).has('colors')) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MobileInterstitial>
-      <App />
-    </MobileInterstitial>
+    <MotionConfig reducedMotion="user">
+      <MobileInterstitial>
+        <App />
+      </MobileInterstitial>
+    </MotionConfig>
   </StrictMode>,
 )
