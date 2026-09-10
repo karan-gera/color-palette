@@ -57,4 +57,4 @@ Your palettes stay on your device. No accounts, no analytics, no server. Data li
 
 ## License
 
-[MIT](LICENSE) © 2026 Karan Gera
+[MIT](LICENSE) © 2026 Kaydigit LLC
