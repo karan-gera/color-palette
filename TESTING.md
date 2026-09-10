@@ -385,9 +385,36 @@ Increments index; no-op at end; enables `canUndo`.
 
 ---
 
+### 3.9 `helpers/extractFromImage.test.ts`
+
+**Module:** [src/helpers/extractFromImage.ts](src/helpers/extractFromImage.ts)
+
+Image extraction passes canvas RGBA data to a pure, deterministic quantizer. Exact
+RGB duplicates are collapsed into weighted source colors before k-means runs, so
+frequent pixels still influence cluster centroids without creating duplicate
+starting points.
+
+Tests cover:
+
+- The shipped default of 10 colors and custom requested counts
+- Lowercase six-digit hex output plus exact red, white, black, and one-pixel cases
+- Deterministic output for repeated calls with identical pixel data
+- Deduplication and requests larger than the image's distinct-color count
+- Fully transparent pixels and alpha values of 128 being excluded; pixels above the cutoff
+  remain eligible
+- Empty, malformed, non-finite, zero, negative, and fractional-below-one inputs
+- Channel clamping and dominance ordering by represented source-pixel count
+
+**Regression guarded:** The component previously seeded `k` centroids from raw
+samples. Repeated pixels could therefore create repeated centroids and duplicate
+swatches, especially when the requested count exceeded the number of distinct
+image colors.
+
+---
+
 ## 4. Remaining TODO test specifications
 
-The following files still contain `it.todo()` markers. Four cases describe genuinely planned radial/conic gradient work. The other 50 cases are stale test debt for features that already ship; their assumptions must be checked against the current implementation before activation.
+The following files still contain `it.todo()` markers. Four cases describe genuinely planned radial/conic gradient work. The other 38 cases are stale test debt for features that already ship; their assumptions must be checked against the current implementation before activation.
 
 | File | Status | Next action |
 |------|--------|-------------|
@@ -395,7 +422,6 @@ The following files still contain `it.todo()` markers. Four cases describe genui
 | `future/paletteVisualization.test.ts` | Shipped / test debt | Extract role assignment from `PalettePreviewOverlay.tsx`, reconcile the old assumptions, and test the helper. |
 | `future/sessionHistory.test.ts` | Shipped / test debt | Rewrite the old session-only assumptions around the persisted `useHistory` / `usePaletteColors` behavior. |
 | `future/paletteCollections.test.ts` | Shipped / test debt | Move current tag and collection cases into storage/UI tests; remove assumptions the product no longer uses. |
-| `future/extractFromImage.test.ts` | Shipped / test debt | Extract quantization from `ExtractView.tsx`, then activate deterministic pixel-level tests. |
 
 **Protocol:** Planned behavior gets activated before its feature is marked complete. Stale cases are not authoritative specs: first compare them with the shipped behavior, then rewrite and activate or delete them explicitly.
 
@@ -472,15 +498,16 @@ The h=360 bug is the canonical example: `hslToHex({ h: 360, s: 100, l: 50 })` an
 
 Coverage counts every file under `src/helpers`, `src/hooks`, and `src/lib`, including files with no tests. Components remain outside the global percentage because this project's default is browser verification for UI, with focused component regression tests used only when DOM behavior is the contract.
 
-As of 2026-09-06:
+As of 2026-09-10:
 
-- 398 active tests pass; 4 deferred future tests and 50 stale TODO cases remain.
-- Statements: 81.70%.
-- Branches: 76.03%.
-- Functions: 77.62%.
-- Lines: 82.40%.
+- 419 active tests pass; 4 deferred future tests and 38 stale TODO cases remain.
+- Statements: 81.98%.
+- Branches: 76.00%.
+- Functions: 78.49%.
+- Lines: 82.73%.
 - `storage.ts`: 96.42% lines.
 - `imageExport.ts`: 99.18% lines.
+- `extractFromImage.ts`: 88.00% lines.
 - `useKeyboardShortcuts.ts`, `useTheme.ts`, `useCVD.ts`, and `useDialogState.ts`: 100% lines.
 
 The coverage command enforces the rounded-down baseline. Thresholds should only move upward unless a PR explains why a lower threshold is correct.
@@ -500,12 +527,11 @@ Prefer observable state, serialized output, focus, storage, or rendered behavior
 
 Work in risk order:
 
-1. Image extraction logic: currently represented only by stale TODO tests and responsible for turning user files into palettes.
-2. `useColorEditing`, `usePresetControl`, `useSwapMode`, `useUIPanels`, and `useViewNavigation`: currently 0% and small enough to cover directly.
-3. `usePaletteColors`: cover locks, full palettes, expired history, URL loading, relationship rerolls, and row-split ID replacement.
-4. `gradientGenerator.ts`: cover SVG encoding, invalid dimensions, and Tailwind fallbacks.
-5. Replace stale `future` files for shipped collections, visualization, and session-history behavior with real tests. Keep only genuinely unimplemented gradient types as `it.todo`.
-6. Add a small Playwright suite for critical browser workflows after the unit and hook contracts are stable.
+1. `useColorEditing`, `usePresetControl`, `useSwapMode`, `useUIPanels`, and `useViewNavigation`: currently 0% and small enough to cover directly.
+2. `usePaletteColors`: cover locks, full palettes, expired history, URL loading, relationship rerolls, and row-split ID replacement.
+3. `gradientGenerator.ts`: cover SVG encoding, invalid dimensions, and Tailwind fallbacks.
+4. Replace stale `future` files for shipped collections, visualization, and session-history behavior with real tests. Keep only genuinely unimplemented gradient types as `it.todo`.
+5. Add a small Playwright suite for critical browser workflows after the unit and hook contracts are stable.
 
 ### Spec-driven development pilot
 
