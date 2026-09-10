@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
 import { type CVDToggleHandle } from '@/components/CVDToggle'
@@ -16,11 +16,9 @@ import GradientView from '@/components/GradientView'
 import GradientExportDialog from '@/components/GradientExportDialog'
 import ExtractView from '@/components/ExtractView'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import PalettePreviewOverlay from '@/components/PalettePreviewOverlay'
 import GradientPreviewOverlay from '@/components/GradientPreviewOverlay'
 import ViewTabStrip from '@/components/ViewTabStrip'
 import KeyboardHints from '@/components/KeyboardHints'
-import DocsOverlay from '@/components/DocsOverlay'
 import CVDFilters from '@/components/CVDFilters'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -37,6 +35,29 @@ import type { PaletteCollection } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
+
+const DocsOverlay = lazy(() => import('@/components/DocsOverlay'))
+const PalettePreviewOverlay = lazy(() => import('@/components/PalettePreviewOverlay'))
+
+type OverlayLoadingFallbackProps = {
+  label: string
+}
+
+function OverlayLoadingFallback({ label }: OverlayLoadingFallbackProps) {
+  return (
+    <div
+      className="fixed inset-0 z-[9997] bg-background flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      aria-busy="true"
+    >
+      <p className="font-mono text-sm text-muted-foreground lowercase" role="status" aria-live="polite">
+        {label}
+      </p>
+    </div>
+  )
+}
 
 function App() {
   const {
@@ -534,14 +555,22 @@ function App() {
 
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
-      <DocsOverlay visible={showDocs} onClose={closeDocs} />
+      <AnimatePresence>
+        {showDocs && (
+          <Suspense fallback={<OverlayLoadingFallback label="loading documentation…" />}>
+            <DocsOverlay onClose={closeDocs} />
+          </Suspense>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {showPreviewOverlay && (
-          <PalettePreviewOverlay
-            key={(current ?? []).join(',')}
-            palette={current ?? []}
-            onClose={() => setShowPreviewOverlay(false)}
-          />
+          <Suspense fallback={<OverlayLoadingFallback label="loading preview…" />}>
+            <PalettePreviewOverlay
+              key={(current ?? []).join(',')}
+              palette={current ?? []}
+              onClose={() => setShowPreviewOverlay(false)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
       <AnimatePresence>
