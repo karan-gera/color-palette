@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type PaletteHistoryProps = {
   history: string[][]
@@ -14,6 +15,7 @@ type PaletteHistoryProps = {
 const SCROLL_AMOUNT = 228 // ~4 thumbnails wide
 
 export default function PaletteHistory({ history, currentIndex, expanded, onToggle, onRestore }: PaletteHistoryProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
@@ -48,11 +50,11 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
       requestAnimationFrame(() => {
         const el = scrollRef.current
         if (!el) return
-        el.scrollTo({ left: el.scrollWidth, behavior: expandedRef.current ? 'smooth' : 'instant' })
+        el.scrollTo({ left: el.scrollWidth, behavior: expandedRef.current && !prefersReducedMotion ? 'smooth' : 'instant' })
       })
     }
     prevLengthRef.current = history.length
-  }, [history.length])
+  }, [history.length, prefersReducedMotion])
 
   // Scroll to current thumbnail when jumping (user clicks a thumbnail / undo / redo)
   // Uses container-relative scroll to avoid propagating to page scroll ancestors.
@@ -64,19 +66,19 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
     const childRect = child.getBoundingClientRect()
     const containerRect = el.getBoundingClientRect()
     if (childRect.left < containerRect.left) {
-      el.scrollBy({ left: childRect.left - containerRect.left, behavior: 'smooth' })
+      el.scrollBy({ left: childRect.left - containerRect.left, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     } else if (childRect.right > containerRect.right) {
-      el.scrollBy({ left: childRect.right - containerRect.right, behavior: 'smooth' })
+      el.scrollBy({ left: childRect.right - containerRect.right, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     }
-  }, [currentIndex, expanded])
+  }, [currentIndex, expanded, prefersReducedMotion])
 
   const scrollLeft = useCallback(() => {
-    scrollRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' })
-  }, [])
+    scrollRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
+  }, [prefersReducedMotion])
 
   const scrollRight = useCallback(() => {
-    scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' })
-  }, [])
+    scrollRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
+  }, [prefersReducedMotion])
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -91,7 +93,7 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
       </Button>
 
       <div
-        className={`w-full overflow-hidden transition-all duration-300 ease-out ${
+        className={`w-full overflow-hidden transition-all duration-300 ease-out reduced-motion-instant ${
           expanded ? 'max-h-40 opacity-100 mt-3' : 'max-h-0 opacity-0'
         }`}
       >
@@ -112,14 +114,14 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
                     key={i}
                     type="button"
                     onClick={() => onRestore(i)}
-                    initial={{ opacity: 0, scale: 0.75 }}
+                    initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.75 }}
                     animate={{
                       opacity: i === currentIndex ? 1 : i < currentIndex ? 0.6 : 0.3,
                       scale: 1,
                     }}
-                    exit={{ opacity: 0, scale: 0.75 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.75 }}
                     whileHover={i !== currentIndex ? { opacity: i < currentIndex ? 1 : 0.6 } : undefined}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15, ease: 'easeOut' }}
                     className={`shrink-0 h-8 w-14 rounded-md border overflow-hidden cursor-pointer ${
                       i === currentIndex ? 'ring-2 ring-ring' : ''
                     }`}
@@ -148,7 +150,7 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
                 onClick={scrollLeft}
                 tabIndex={canScrollLeft ? 0 : -1}
                 aria-label="scroll history left"
-                className={`relative pointer-events-auto text-muted-foreground hover:text-foreground transition-all duration-200 ${
+                className={`relative pointer-events-auto text-muted-foreground hover:text-foreground transition-all duration-200 reduced-motion-instant ${
                   canScrollLeft ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
               >
@@ -168,7 +170,7 @@ export default function PaletteHistory({ history, currentIndex, expanded, onTogg
                 onClick={scrollRight}
                 tabIndex={canScrollRight ? 0 : -1}
                 aria-label="scroll history right"
-                className={`relative pointer-events-auto text-muted-foreground hover:text-foreground transition-all duration-200 ${
+                className={`relative pointer-events-auto text-muted-foreground hover:text-foreground transition-all duration-200 reduced-motion-instant ${
                   canScrollRight ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}
               >

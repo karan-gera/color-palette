@@ -86,7 +86,7 @@ export default function StopColorPicker({
             <button
               key={entry.colorId}
               className={[
-                'w-7 h-7 rounded-full border-2 transition-all duration-100',
+                'w-7 h-7 rounded-full border-2 transition-all duration-100 reduced-motion-instant reduced-motion-no-transform',
                 'hover:scale-110 cursor-pointer',
                 isActive
                   ? 'border-foreground scale-110 shadow-sm'

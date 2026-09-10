@@ -38,6 +38,7 @@ import {
   type ImageSize,
 } from '@/helpers/imageExport'
 import { getColorName } from '@/helpers/colorNaming'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type ExportDialogProps = {
   colors: string[]
@@ -143,6 +144,7 @@ type ExportSelectingViewProps = {
 }
 
 function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
   const [showArrowUp, setShowArrowUp] = useState(false)
@@ -217,13 +219,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
     if (!item || !container) return
 
     if (index === 0) {
-      container.scrollTo({ top: 0, behavior: 'smooth' })
+      container.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     } else if (index === totalItems - 1) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+      container.scrollTo({ top: container.scrollHeight, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     } else {
-      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      item.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     }
-  }, [totalItems])
+  }, [totalItems, prefersReducedMotion])
 
   const { selectedIndex, setSelectedIndex } = useListKeyboardNav({
     count: totalItems,

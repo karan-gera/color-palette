@@ -32,6 +32,7 @@ import { useSwapMode } from '@/hooks/useSwapMode'
 import { usePresetControl } from '@/hooks/usePresetControl'
 import { useViewNavigation } from '@/hooks/useViewNavigation'
 import { useDialogState } from '@/hooks/useDialogState'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { savePalette, removePalette, getSavedPalettes, getCollections, getAllTags } from '@/helpers/storage'
 import type { PaletteCollection } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
@@ -39,6 +40,7 @@ import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
 function App() {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const {
     isOpenDialog, setIsOpenDialog,
     savedPalettes, setSavedPalettes,
@@ -240,9 +242,9 @@ function App() {
             {activeView === 'palette' && (
               <motion.div
                 key="controls"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1, transition: { duration: 0.2 } }}
-                exit={{ height: 0, opacity: 0, transition: { duration: 0.12 } }}
+                initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1, transition: { duration: prefersReducedMotion ? 0 : 0.2 } }}
+                exit={{ height: 0, opacity: 0, transition: { duration: prefersReducedMotion ? 0 : 0.12 } }}
                 className="w-full flex justify-center"
                 style={{ overflow: 'hidden' }}
               >
@@ -280,23 +282,23 @@ function App() {
             <ViewTabStrip activeView={activeView} onSwitch={handleSwitchView} />
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'wait'}>
             {activeView === 'palette' ? (
               <motion.div
                 key="palette-view"
                 className="w-full flex flex-col items-center gap-6"
-                initial={{ opacity: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
               >
                 <LayoutGroup>
                   <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    layout={!prefersReducedMotion}
+                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                     className="relative w-full flex justify-center"
                   >
-                    <div className={`transition-all duration-300 ease-out ${
+                    <div className={`transition-all duration-300 ease-out reduced-motion-instant ${
                       variationsIndex !== null
                         ? 'opacity-0 scale-[0.98] pointer-events-none absolute'
                         : 'opacity-100 scale-100'
@@ -319,7 +321,7 @@ function App() {
                         onSwapClick={handleSwapClick}
                       />
                     </div>
-                    <div className={`transition-all duration-300 ease-out ${
+                    <div className={`transition-all duration-300 ease-out reduced-motion-instant ${
                       variationsIndex !== null
                         ? 'opacity-100 scale-100'
                         : 'opacity-0 scale-[0.98] pointer-events-none absolute'
@@ -346,8 +348,8 @@ function App() {
                   />
 
                   <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    layout={!prefersReducedMotion}
+                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                     className="w-full"
                   >
                     <HarmonyScore
@@ -358,16 +360,16 @@ function App() {
                   </motion.div>
 
                   <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    layout={!prefersReducedMotion}
+                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                     ref={contrastRef}
                   >
                     <ContrastChecker ref={cycleContrastTabRef} colors={current ?? []} expanded={showContrast} onToggle={toggleContrast} />
                   </motion.div>
 
                   <motion.div
-                    layout
-                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    layout={!prefersReducedMotion}
+                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                     className="w-full max-w-4xl"
                   >
                     <PaletteHistory
@@ -384,10 +386,10 @@ function App() {
               <motion.div
                 key="gradient-view"
                 className="w-full max-w-4xl"
-                initial={{ opacity: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
               >
                 <GradientView
                   palette={current ?? []}
@@ -403,10 +405,10 @@ function App() {
               <motion.div
                 key="extract-view"
                 className="w-full max-w-4xl"
-                initial={{ opacity: 0 }}
+                initial={prefersReducedMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
+                transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
               >
                 <ExtractView
                   onAddColors={(colors) => {
@@ -522,12 +524,12 @@ function App() {
         />
 
         {/* Spacer to clear fixed keyboard hints overlay — taller when panel is open */}
-        <div className={`transition-all duration-300 ${showHints ? 'h-[340px]' : 'h-52'}`} aria-hidden="true" />
+        <div className={`transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-52'}`} aria-hidden="true" />
       </div>
 
       {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 ${showHints ? 'h-[340px]' : 'h-56'}`}
+        className={`fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-56'}`}
         style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
         aria-hidden="true"
       />
@@ -564,7 +566,7 @@ function App() {
 
       {/* Notification toast */}
       {notification && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 z-50">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 reduced-motion-instant z-50">
           {notification}
         </div>
       )}

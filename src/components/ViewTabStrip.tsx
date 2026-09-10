@@ -27,7 +27,7 @@ export default function ViewTabStrip({ activeView, onSwitch }: ViewTabStripProps
             {/* Label — invisible until group hover */}
             <span
               className={[
-                'font-mono text-xs transition-all duration-200 whitespace-nowrap',
+                'font-mono text-xs transition-all duration-200 reduced-motion-instant whitespace-nowrap',
                 'opacity-0 group-hover:opacity-100',
                 isActive ? 'text-foreground' : 'text-muted-foreground',
               ].join(' ')}
@@ -38,7 +38,7 @@ export default function ViewTabStrip({ activeView, onSwitch }: ViewTabStripProps
             {/* Dot indicator */}
             <span
               className={[
-                'block rounded-full transition-all duration-200',
+                'block rounded-full transition-all duration-200 reduced-motion-instant',
                 isActive
                   ? 'w-3 h-3 bg-foreground'
                   : 'w-2.5 h-2.5 border border-foreground/40 bg-transparent group-hover:border-foreground/70',

@@ -10,6 +10,7 @@ import ColorPicker from './ColorPicker'
 import { getColorName } from '@/helpers/colorNaming'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 import { BLUEPRINT_COLOR, hexLuminance } from '@/helpers/colorTheory'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type PaletteItemProps = {
   color: string
@@ -28,6 +29,7 @@ type PaletteItemProps = {
 }
 
 export default function PaletteItem({ color, isLocked, isEditing, onEditStart, onEditSave, onEditCancel, onReroll, onDelete, onToggleLock, onViewVariations, swapMode, isSwapSelected, onSwapClick }: PaletteItemProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [isHovered, setIsHovered] = useState(false)
   const [editValue, setEditValue] = useState('')
   const [editInvalid, setEditInvalid] = useState(false)
@@ -109,7 +111,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
           >
             {showLockIcon && (
               <div
-                className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+                className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 reduced-motion-instant"
                 style={{ opacity: isLocked ? 1 : 0.7 }}
               >
                 <LockIcon isLocked={isLocked} size={32} color={textColor} />
@@ -120,11 +122,11 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
           <AnimatePresence mode="popLayout">
             {!swapMode && (
               <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
+                layout={!prefersReducedMotion}
+                initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.15, ease: 'easeOut' }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15, ease: 'easeOut' }}
                 className="flex items-center gap-1.5"
               >
               <Tooltip>
@@ -182,8 +184,8 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
         </AnimatePresence>
 
         <motion.span
-          layout
-          transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+          layout={!prefersReducedMotion}
+          transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
           className="font-mono text-xs text-muted-foreground lowercase truncate max-w-[var(--circle-size)] text-center"
           title={colorName.name}
         >
@@ -191,8 +193,8 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
         </motion.span>
 
         <motion.div
-          layout
-          transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+          layout={!prefersReducedMotion}
+          transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
           className="relative flex items-center justify-center"
         >
           {isEditing && (

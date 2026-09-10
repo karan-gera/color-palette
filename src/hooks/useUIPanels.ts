@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 const HINTS_KEY = 'color-palette:show-hints'
 const CONTRAST_KEY = 'color-palette:show-contrast'
@@ -20,6 +21,7 @@ export type UseUIPanelsReturn = {
 }
 
 export function useUIPanels(): UseUIPanelsReturn {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem(HINTS_KEY)
     return stored !== 'false'
@@ -59,14 +61,14 @@ export function useUIPanels(): UseUIPanelsReturn {
       localStorage.setItem(CONTRAST_KEY, String(next))
       if (next) {
         setTimeout(() => {
-          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-        }, 350)
+          window.scrollTo({ top: document.body.scrollHeight, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
+        }, prefersReducedMotion ? 0 : 350)
       } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
       }
       return next
     })
-  }, [])
+  }, [prefersReducedMotion])
 
   const closeDocs = useCallback(() => {
     setShowDocs(false)

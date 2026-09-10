@@ -25,6 +25,7 @@ import {
   removeCollection,
   getAllTags,
 } from '@/helpers/storage'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type OpenDialogProps = {
   palettes: SavedPalette[]
@@ -56,6 +57,7 @@ export default function OpenDialog({
   onPalettesUpdated,
   onCollectionsUpdated,
 }: OpenDialogProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [fading, setFading] = useState<Record<string, boolean>>({})
   const [showNotification, setShowNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
@@ -147,13 +149,19 @@ export default function OpenDialog({
   useEffect(() => { setSelectedIndex(0) }, [search, activeCollection, tagFilterKey])
 
   const handleDelete = useCallback((id: string) => {
+    if (prefersReducedMotion) {
+      onRemove(id)
+      setSelectedIndex((i) => Math.max(0, i > 0 ? i - 1 : 0))
+      return
+    }
+
     setFading((prev) => ({ ...prev, [id]: true }))
     setTimeout(() => {
       onRemove(id)
       setFading((prev) => { const next = { ...prev }; delete next[id]; return next })
       setSelectedIndex((i) => Math.max(0, i > 0 ? i - 1 : 0))
     }, 200)
-  }, [onRemove])
+  }, [onRemove, prefersReducedMotion])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -184,9 +192,9 @@ export default function OpenDialog({
     if (listRef.current && filtered.length > 0) {
       const items = listRef.current.querySelectorAll('[data-palette-item]')
       const el = items[selectedIndex] as HTMLElement
-      if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      if (el) el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     }
-  }, [selectedIndex, filtered.length])
+  }, [selectedIndex, filtered.length, prefersReducedMotion])
 
   // Re-check scroll indicators when content changes
   useEffect(() => {
@@ -430,8 +438,8 @@ export default function OpenDialog({
 
           {/* Animated body: tags + palette list */}
           <motion.div
-            layout
-            transition={{ type: 'spring', stiffness: 400, damping: 36 }}
+            layout={!prefersReducedMotion}
+            transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 36 }}
             className="grid overflow-hidden"
           >
             {/* Tag filter chips — no inner AnimatePresence; the outer layout handles height */}
@@ -487,14 +495,14 @@ export default function OpenDialog({
                 onScroll={updateScrollIndicators}
                 className="max-h-[40vh] overflow-y-auto scrollbar-none -mx-2 px-2 py-1"
               >
-                <AnimatePresence mode="popLayout" initial={false}>
+                <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'popLayout'} initial={false}>
                   {filtered.length === 0 ? (
                     <motion.p
                       key="empty"
-                      initial={{ opacity: 0 }}
+                      initial={prefersReducedMotion ? false : { opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.15 }}
+                      exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
                       className="text-muted-foreground text-sm font-mono text-center py-8"
                     >
                       {palettes.length === 0 ? 'no saved palettes' : 'no results'}
@@ -504,11 +512,11 @@ export default function OpenDialog({
                     <motion.div
                       key={p.id}
                       data-palette-item
-                      layout
-                      initial={{ opacity: 0, scale: 0.97 }}
+                      layout={!prefersReducedMotion}
+                      initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.97 }}
                       animate={{ opacity: fading[p.id] ? 0 : 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      transition={{
+                      exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.97 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : {
                         layout: { type: 'spring', stiffness: 400, damping: 36 },
                         opacity: { duration: 0.15 },
                         scale: { duration: 0.15 },

@@ -62,6 +62,15 @@ const COMPETITOR_ROWS = [
 
 const CHANGELOG = [
   {
+    version: '0.21',
+    title: 'reduced motion',
+    items: [
+      'motion now follows the operating-system reduced-motion preference',
+      'palette layout springs, view transitions, and theme wipes become immediate',
+      'dialogs, documentation, contrast, and shortcut panels keep their state without decorative movement',
+    ],
+  },
+  {
     version: '0.20',
     title: 'test coverage & image export shortcut',
     items: [
@@ -384,6 +393,7 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'page', id: 'variations', label: 'variations' },
   { type: 'page', id: 'harmony', label: 'harmony score' },
   { type: 'section', label: 'accessibility' },
+  { type: 'page', id: 'reduced-motion', label: 'reduced motion' },
   { type: 'page', id: 'color-blindness', label: 'color blindness' },
   { type: 'page', id: 'contrast', label: 'contrast checker' },
   { type: 'section', label: 'reference' },
@@ -1002,6 +1012,32 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               </>
             )
           })()}
+        </DocArticle>
+      )
+
+    case 'reduced-motion':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              follows your operating system’s reduced-motion preference automatically. there is no separate setting in paletteport.
+            </p>
+            <p>
+              with reduced motion enabled, palette reordering, view changes, theme and color-vision changes, panels, dialogs, and documentation update immediately instead of using springs, wipes, fades, or large transforms.
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">what stays visible</span>
+            <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
+              <p>
+                focus rings, selected states, lock indicators, dialog focus handling, and loading feedback remain available.
+              </p>
+              <p>
+                changes take effect when the operating-system preference changes, without reloading the page.
+              </p>
+            </div>
+          </div>
         </DocArticle>
       )
 
@@ -1807,7 +1843,7 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
       aria-hidden={!visible}
       inert={!visible}
       tabIndex={-1}
-      className={`fixed inset-0 z-[9997] bg-background transition-all duration-300 ease-out ${
+      className={`fixed inset-0 z-[9997] bg-background transition-all duration-300 ease-out reduced-motion-instant ${
         visible
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 translate-y-4 pointer-events-none'
