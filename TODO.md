@@ -119,6 +119,8 @@ release issue remains.
     first-visit redirect, root-relative assets replace `/color-palette/` paths,
     canonical/Open Graph URLs use the production domain, and `public/CNAME`
     declares the custom domain.
+  - First visits open directly into the workspace with a one-time orientation
+    dialog for help and keyboard shortcuts.
   - The optional promotional page remains directly available at `/landing/`.
   - Spaceship DNS points the apex to all four GitHub Pages addresses, `www` to
     `karan-gera.github.io`, and retains the GitHub verification TXT record.
@@ -284,8 +286,10 @@ promoted into a release gate.
 - Expanded preview role set, preview CSS-variable export, and gradient preview modes.
 - Keyboard color reordering after a deliberate focus model is defined.
 - Community accounts, backend, payments, moderation, and enterprise features.
-- Landing-page redesign or analytics. The current static landing page is already
-  the fastest measured surface; do not make it part of the app bundle.
+- Landing-page redesign or analytics.
+  - The current static page remains available at `/landing/`, but is not part of
+    the first-visit flow and must be redesigned before it is reconsidered there.
+  - Keep it outside the app bundle; it remains the fastest measured surface.
 
 ## Release checklist template
 
