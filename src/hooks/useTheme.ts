@@ -6,24 +6,7 @@ export type Theme = 'light' | 'gray' | 'dark'
 const STORAGE_KEY = 'color-palette:theme'
 const THEME_CHANGE_EVENT = 'paletteport:theme-change'
 export const REDUCED_THEME_FADE_DURATION = 150
-export const THEME_CHANGE_INTERVAL = 500
-
-function reserveThemeChange() {
-  const root = document.documentElement
-  if (root.hasAttribute('data-theme-wiping')) return false
-
-  const now = Date.now()
-  const lastChange = Number(root.dataset.themeChangeAt)
-  if (Number.isFinite(lastChange) && now - lastChange < THEME_CHANGE_INTERVAL) return false
-
-  root.dataset.themeChangeAt = String(now)
-  window.setTimeout(() => {
-    if (root.dataset.themeChangeAt === String(now)) {
-      delete root.dataset.themeChangeAt
-    }
-  }, THEME_CHANGE_INTERVAL)
-  return true
-}
+export const THEME_KEY_REPEAT_INTERVAL = 500
 
 function getSystemTheme(): Theme {
   if (typeof window === 'undefined') return 'gray'
@@ -76,6 +59,7 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
   const reducedFadeTimeoutRef = useRef<number | null>(null)
   const reducedFadeTargetRef = useRef<Theme | null>(null)
   const ownsWipeRef = useRef(false)
+  const lastThemeKeyChangeRef = useRef<number | null>(null)
 
   // Set theme without animation
   const setTheme = useCallback((newTheme: Theme) => {
@@ -85,12 +69,13 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
   }, [])
 
   const setThemeWithReducedFade = useCallback((newTheme: Theme) => {
+    reducedFadeTargetRef.current = newTheme
     if (reducedFadeTimeoutRef.current !== null) return
 
-    reducedFadeTargetRef.current = newTheme
     document.documentElement.setAttribute('data-theme-fading', '')
     reducedFadeTimeoutRef.current = window.setTimeout(() => {
-      setTheme(newTheme)
+      const target = reducedFadeTargetRef.current
+      if (target) setTheme(target)
       reducedFadeTargetRef.current = null
       document.documentElement.removeAttribute('data-theme-fading')
       reducedFadeTimeoutRef.current = null
@@ -102,7 +87,7 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
     if (newTheme === theme) return // No change
     if (transition) return // Already transitioning - ignore click
     if (reducedFadeTimeoutRef.current !== null) return
-    if (!reserveThemeChange()) return
+    if (document.documentElement.hasAttribute('data-theme-wiping')) return
     if (prefersReducedMotion) {
       setThemeWithReducedFade(newTheme)
       return
@@ -141,13 +126,21 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
     setTransition(null)
   }, [])
 
-  const cycleTheme = useCallback(() => {
-    if (reducedFadeTimeoutRef.current !== null) return
-    if (!reserveThemeChange()) return
+  const cycleTheme = useCallback((isRepeat = false) => {
+    if (document.documentElement.hasAttribute('data-theme-wiping')) return
+
+    const now = Date.now()
+    if (
+      isRepeat &&
+      lastThemeKeyChangeRef.current !== null &&
+      now - lastThemeKeyChangeRef.current < THEME_KEY_REPEAT_INTERVAL
+    ) return
+    lastThemeKeyChangeRef.current = now
 
     const order: Theme[] = ['light', 'gray', 'dark']
     const appliedTheme = document.documentElement.getAttribute('data-theme') as Theme | null
-    const currentTheme = appliedTheme && order.includes(appliedTheme) ? appliedTheme : theme
+    const pendingTheme = reducedFadeTargetRef.current
+    const currentTheme = pendingTheme ?? (appliedTheme && order.includes(appliedTheme) ? appliedTheme : theme)
     const currentIndex = order.indexOf(currentTheme)
     const nextIndex = (currentIndex + 1) % order.length
     const nextTheme = order[nextIndex]

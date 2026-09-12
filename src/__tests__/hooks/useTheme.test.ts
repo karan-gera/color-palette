@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { REDUCED_THEME_FADE_DURATION, THEME_CHANGE_INTERVAL, useTheme } from '@/hooks/useTheme'
+import { REDUCED_THEME_FADE_DURATION, THEME_KEY_REPEAT_INTERVAL, useTheme } from '@/hooks/useTheme'
 
 type SystemTheme = 'light' | 'dark' | 'none'
 
@@ -37,7 +37,6 @@ afterEach(() => {
   vi.useRealTimers()
   document.documentElement.removeAttribute('data-theme')
   document.documentElement.removeAttribute('data-theme-fading')
-  document.documentElement.removeAttribute('data-theme-change-at')
   document.documentElement.removeAttribute('data-theme-wiping')
   document.documentElement.style.backgroundColor = ''
   vi.restoreAllMocks()
@@ -84,31 +83,35 @@ describe('useTheme', () => {
 
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('gray')
-    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('dark')
-    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('light')
   })
 
-  it('caps theme cycling globally at two changes per second', () => {
+  it('caps held-key repeats but lets deliberate theme-key taps bypass the interval', () => {
     localStorage.setItem('color-palette:theme', 'light')
     const { result } = renderHook(() => useTheme())
 
-    act(() => result.current.cycleTheme())
+    act(() => result.current.cycleTheme(false))
     expect(result.current.theme).toBe('gray')
 
-    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL - 1))
-    act(() => result.current.cycleTheme())
+    act(() => vi.advanceTimersByTime(THEME_KEY_REPEAT_INTERVAL - 1))
+    act(() => result.current.cycleTheme(true))
     expect(result.current.theme).toBe('gray')
 
-    act(() => vi.advanceTimersByTime(1))
-    act(() => result.current.cycleTheme())
+    act(() => result.current.cycleTheme(false))
     expect(result.current.theme).toBe('dark')
+
+    act(() => result.current.cycleTheme(false))
+    expect(result.current.theme).toBe('light')
+
+    act(() => vi.advanceTimersByTime(THEME_KEY_REPEAT_INTERVAL))
+    act(() => result.current.cycleTheme(true))
+    expect(result.current.theme).toBe('gray')
   })
 
-  it('shares current theme and the change cap between header and keyboard hook instances', () => {
+  it('shares current theme between header and keyboard hook instances without locking out taps', () => {
     localStorage.setItem('color-palette:theme', 'light')
     const header = renderHook(() => useTheme())
     const keyboard = renderHook(() => useTheme({ syncExternalChanges: false }))
@@ -119,12 +122,7 @@ describe('useTheme', () => {
     expect(header.result.current.theme).toBe('dark')
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
 
-    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL - 1))
-    act(() => keyboard.result.current.cycleTheme())
-    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
-
-    act(() => vi.advanceTimersByTime(1))
-    act(() => keyboard.result.current.cycleTheme())
+    act(() => keyboard.result.current.cycleTheme(false))
     expect(keyboard.result.current.theme).toBe('light')
     expect(header.result.current.theme).toBe('light')
   })
@@ -136,14 +134,14 @@ describe('useTheme', () => {
 
     act(() => header.result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
     act(() => header.result.current.applyTransitionTarget())
-    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
-    act(() => keyboard.result.current.cycleTheme())
+    act(() => vi.advanceTimersByTime(THEME_KEY_REPEAT_INTERVAL))
+    act(() => keyboard.result.current.cycleTheme(true))
 
     expect(header.result.current.transition?.to).toBe('dark')
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
 
     act(() => header.result.current.completeTransition())
-    act(() => keyboard.result.current.cycleTheme())
+    act(() => keyboard.result.current.cycleTheme(false))
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
   })
 
@@ -185,6 +183,23 @@ describe('useTheme', () => {
     expect(result.current.theme).toBe('dark')
     expect(result.current.transition).toBeNull()
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
+  })
+
+  it('accepts rapid deliberate taps during a reduced-motion fade and applies the final cycle', () => {
+    reducedMotion = true
+    localStorage.setItem('color-palette:theme', 'light')
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.cycleTheme(false))
+    act(() => result.current.cycleTheme(false))
+
+    expect(result.current.theme).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+
+    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+
+    expect(result.current.theme).toBe('dark')
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
