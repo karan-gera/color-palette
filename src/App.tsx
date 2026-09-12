@@ -89,7 +89,7 @@ function App() {
     cycleRelationship,
     addPickedColor,
   } = usePaletteColors()
-  const { cycleTheme } = useTheme()
+  const { cycleTheme } = useTheme({ syncExternalChanges: false })
 
   const {
     editIndex,
@@ -235,7 +235,7 @@ function App() {
       <CVDFilters />
       
       {/* Wrapper for CVD filter application (Firefox workaround) */}
-      <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
+      <div id="cvd-wrapper" className="theme-fade-surface min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
           <Header cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
           <AnimatePresence initial={false}>
@@ -529,7 +529,7 @@ function App() {
 
       {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-56'}`}
+        className={`theme-fade-surface fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-56'}`}
         style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
         aria-hidden="true"
       />
@@ -566,7 +566,7 @@ function App() {
 
       {/* Notification toast */}
       {notification && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 reduced-motion-instant z-50">
+        <div className="theme-fade-surface fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 reduced-motion-instant z-50">
           {notification}
         </div>
       )}

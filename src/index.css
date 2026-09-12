@@ -241,6 +241,10 @@
     transition: none;
   }
 
+  [data-theme-fading] .theme-fade-surface {
+    opacity: 0;
+  }
+
   /* State changes remain visible, but decorative movement and delays are removed. */
   .reduced-motion-instant {
     animation-delay: 0ms !important;
@@ -248,6 +252,11 @@
     animation-iteration-count: 1 !important;
     transition-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Keep the reduced-motion-safe theme fade smooth, even on instant surfaces. */
+  .theme-fade-surface {
+    transition: opacity 150ms ease-out !important;
   }
 
   .reduced-motion-no-transform {

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useTheme } from '@/hooks/useTheme'
+import { REDUCED_THEME_FADE_DURATION, THEME_CHANGE_INTERVAL, useTheme } from '@/hooks/useTheme'
 
 type SystemTheme = 'light' | 'dark' | 'none'
 
@@ -10,6 +10,7 @@ let darkModeListener: (() => void) | null
 let reducedMotionListener: ((event: MediaQueryListEvent) => void) | null
 
 beforeEach(() => {
+  vi.useFakeTimers()
   systemTheme = 'none'
   reducedMotion = false
   darkModeListener = null
@@ -33,7 +34,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
   document.documentElement.removeAttribute('data-theme')
+  document.documentElement.removeAttribute('data-theme-fading')
+  document.documentElement.removeAttribute('data-theme-change-at')
+  document.documentElement.removeAttribute('data-theme-wiping')
   document.documentElement.style.backgroundColor = ''
   vi.restoreAllMocks()
 })
@@ -79,10 +84,67 @@ describe('useTheme', () => {
 
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('gray')
+    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('dark')
+    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
     act(() => result.current.cycleTheme())
     expect(result.current.theme).toBe('light')
+  })
+
+  it('caps theme cycling globally at two changes per second', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.cycleTheme())
+    expect(result.current.theme).toBe('gray')
+
+    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL - 1))
+    act(() => result.current.cycleTheme())
+    expect(result.current.theme).toBe('gray')
+
+    act(() => vi.advanceTimersByTime(1))
+    act(() => result.current.cycleTheme())
+    expect(result.current.theme).toBe('dark')
+  })
+
+  it('shares current theme and the change cap between header and keyboard hook instances', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const header = renderHook(() => useTheme())
+    const keyboard = renderHook(() => useTheme({ syncExternalChanges: false }))
+
+    act(() => header.result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    act(() => header.result.current.applyTransitionTarget())
+    act(() => header.result.current.completeTransition())
+    expect(header.result.current.theme).toBe('dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+
+    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL - 1))
+    act(() => keyboard.result.current.cycleTheme())
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+
+    act(() => vi.advanceTimersByTime(1))
+    act(() => keyboard.result.current.cycleTheme())
+    expect(keyboard.result.current.theme).toBe('light')
+    expect(header.result.current.theme).toBe('light')
+  })
+
+  it('does not interrupt a normal theme wipe after the rate-limit interval elapses', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const header = renderHook(() => useTheme())
+    const keyboard = renderHook(() => useTheme({ syncExternalChanges: false }))
+
+    act(() => header.result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    act(() => header.result.current.applyTransitionTarget())
+    act(() => vi.advanceTimersByTime(THEME_CHANGE_INTERVAL))
+    act(() => keyboard.result.current.cycleTheme())
+
+    expect(header.result.current.transition?.to).toBe('dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+
+    act(() => header.result.current.completeTransition())
+    act(() => keyboard.result.current.cycleTheme())
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
   })
 
   it('defers applying a transition target until requested', () => {
@@ -106,16 +168,38 @@ describe('useTheme', () => {
     expect(result.current.transition).toBeNull()
   })
 
-  it('applies theme changes immediately when reduced motion is requested', () => {
+  it('uses a brief non-spatial fade for theme changes when reduced motion is requested', () => {
     reducedMotion = true
     localStorage.setItem('color-palette:theme', 'light')
     const { result } = renderHook(() => useTheme())
 
     act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
 
+    expect(result.current.theme).toBe('light')
+    expect(result.current.transition).toBeNull()
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+
+    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+
     expect(result.current.theme).toBe('dark')
     expect(result.current.transition).toBeNull()
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
+  })
+
+  it('finishes a reduced theme fade if reduced motion is disabled mid-transition', () => {
+    reducedMotion = true
+    localStorage.setItem('color-palette:theme', 'light')
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    reducedMotion = false
+    act(() => reducedMotionListener?.({ matches: false } as MediaQueryListEvent))
+
+    expect(result.current.theme).toBe('dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
   it('finishes an active theme wipe when reduced motion becomes requested', () => {
