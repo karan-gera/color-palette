@@ -77,7 +77,7 @@ export default function ExportDialog({ colors, onCancel, onCopied, initialView =
     } else {
       const success = await copyToClipboard(content as string)
       if (success) {
-        onCopied?.(`Copied ${formatInfo.label}`)
+        onCopied?.(`copied ${formatInfo.label.toLowerCase()}`)
         onCancel()
       }
     }
@@ -278,7 +278,7 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
                 <span className="lowercase">{format.label}</span>
                 <span className="text-[10px] text-muted-foreground text-left">
                   {format.compatibleApps.length > 0
-                    ? `Works with: ${getAppNames(format.compatibleApps)}`
+                    ? `works with: ${getAppNames(format.compatibleApps).toLowerCase()}`
                     : format.description
                   }
                 </span>
@@ -303,7 +303,7 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
             <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1 mr-2">
               <span className="lowercase">image (png / svg)</span>
               <span className="text-[10px] text-muted-foreground text-left">
-                Download as image for sharing
+                download as image for sharing
               </span>
             </div>
             <Image className="size-4 opacity-50 shrink-0" />
@@ -326,7 +326,7 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
                   <span className="lowercase">{format.label}</span>
                   <span className="text-[10px] text-muted-foreground text-left">
                     {format.compatibleApps.length > 0
-                      ? `Works with: ${getAppNames(format.compatibleApps)}`
+                      ? `works with: ${getAppNames(format.compatibleApps).toLowerCase()}`
                       : format.description
                     }
                   </span>
@@ -353,7 +353,7 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
       </div>
 
       <p className="text-[9px] text-muted-foreground font-mono text-center px-4 py-1.5 border-t">
-        Can't find your format? Click any color's hex code to copy it individually.
+        can't find your format? click any color's hex code to copy it individually.
       </p>
 
       <DialogKeyboardHints hints={HINTS} />
@@ -511,9 +511,9 @@ function ExportConfirmationView({ format, wasDownload, onHowToUse, onDone }: Exp
           </div>
         </div>
         <p className="font-mono text-sm">
-          {wasDownload ? 'Your palette has been downloaded!' : 'Copied to clipboard!'}
+          {wasDownload ? 'your palette has been downloaded!' : 'copied to clipboard!'}
         </p>
-        <p className="text-xs text-muted-foreground font-mono mt-1">
+        <p className="text-xs text-muted-foreground font-mono mt-1 lowercase">
           {format.label} ({format.extension})
         </p>
       </div>
@@ -550,7 +550,7 @@ function ExportImageConfirmationView({ format, onDone }: ExportImageConfirmation
             <Check className="size-6 text-green-500" />
           </div>
         </div>
-        <p className="font-mono text-sm">Your palette image has been downloaded!</p>
+        <p className="font-mono text-sm">your palette image has been downloaded!</p>
         <p className="text-xs text-muted-foreground font-mono mt-1">palette.{format}</p>
       </div>
 
@@ -574,8 +574,8 @@ function ExportHowToUseView({ format, onBack, onDone }: ExportHowToUseViewProps)
   const compatibleApps = APP_INFO.filter(app => format.compatibleApps.includes(app.id))
 
   const getSelectedLabel = () => {
-    if (!selectedApp) return 'Select your app...'
-    if (selectedApp === 'other') return 'Other / Not listed'
+    if (!selectedApp) return 'select your app...'
+    if (selectedApp === 'other') return 'other / not listed'
     return selectedApp.name
   }
 
@@ -587,7 +587,7 @@ function ExportHowToUseView({ format, onBack, onDone }: ExportHowToUseViewProps)
 
       <div className="pt-1">
         <p className="text-xs text-muted-foreground font-mono mb-2">
-          What app are you importing to?
+          what app are you importing to?
         </p>
 
         <DropdownMenu>
@@ -611,7 +611,7 @@ function ExportHowToUseView({ format, onBack, onDone }: ExportHowToUseViewProps)
               onClick={() => setSelectedApp('other')}
               className="font-mono text-sm lowercase cursor-pointer"
             >
-              Other / Not listed
+              other / not listed
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -619,10 +619,10 @@ function ExportHowToUseView({ format, onBack, onDone }: ExportHowToUseViewProps)
 
       {selectedApp && selectedApp !== 'other' && (
         <div className="bg-muted/50 rounded-md p-3 mt-2 mb-4">
-          <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider mb-2">
+          <p className="text-[10px] text-muted-foreground font-mono tracking-wider mb-2 lowercase">
             import steps for {selectedApp.name}
           </p>
-          <ol className="text-xs font-mono space-y-1.5">
+          <ol className="text-xs font-mono space-y-1.5 lowercase">
             {selectedApp.importSteps.map((step, i) => (
               <li key={i} className="text-muted-foreground">
                 <span className="text-foreground font-medium">{i + 1}.</span> {step}
@@ -635,32 +635,32 @@ function ExportHowToUseView({ format, onBack, onDone }: ExportHowToUseViewProps)
       {selectedApp === 'other' && (
         <div className="bg-muted/50 rounded-md p-3 mt-2 mb-4 space-y-3">
           <div>
-            <p className="text-xs font-mono font-medium mb-1">Check your software's documentation</p>
+            <p className="text-xs font-mono font-medium mb-1">check your software's documentation</p>
             <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
-              Look for "import palette", "load swatches", or "color presets" in your app's
-              help menu. The file extension ({format.extension}) can help you find the right import option.
+              look for "import palette", "load swatches", or "color presets" in your app's
+              help menu. the file extension ({format.extension}) can help you find the right import option.
             </p>
           </div>
 
           <div>
-            <p className="text-xs font-mono font-medium mb-1">If no format works</p>
+            <p className="text-xs font-mono font-medium mb-1">if no format works</p>
             <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
-              You can copy colors one-by-one: click any color's hex code on the main palette
-              to copy it in your preferred format (HEX, RGB, HSL, etc).
+              you can copy colors one-by-one: click any color's hex code on the main palette
+              to copy it in your preferred format (hex, rgb, hsl, etc).
             </p>
           </div>
 
           <div className="pt-2 border-t border-border">
-            <p className="text-xs font-mono font-medium mb-1">Missing your app?</p>
+            <p className="text-xs font-mono font-medium mb-1">missing your app?</p>
             <p className="text-[11px] text-muted-foreground font-mono leading-relaxed">
-              We'd love to add support for more formats!{' '}
+              we'd love to add support for more formats!{' '}
               <a
-                href="https://github.com/your-repo/issues"
+                href="https://github.com/karan-gera/color-palette/issues/new"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground underline underline-offset-2"
               >
-                Submit a request
+                submit a request
               </a>
               {' '}and let us know what software and format you need.
             </p>

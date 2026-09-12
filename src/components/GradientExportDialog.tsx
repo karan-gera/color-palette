@@ -53,7 +53,7 @@ function buildFormats(aspectRatio: number): ExportFormat[] {
     },
     {
       id: 'svg',
-      label: 'SVG file',
+      label: 'svg file',
       description: `${width}×${height} vector — Illustrator, Affinity, Inkscape`,
       ext: '.svg',
       action: 'download',

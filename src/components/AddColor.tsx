@@ -14,7 +14,7 @@ export default function AddColor({ onAdd }: AddColorProps) {
         borderColor: 'hsl(var(--border))',
         color: 'hsl(var(--muted-foreground))',
       }}
-      aria-label="Add color"
+      aria-label="add color"
     >
       <Plus className="size-16" strokeWidth={1.5} />
     </button>
