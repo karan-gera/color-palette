@@ -66,6 +66,8 @@ const CHANGELOG = [
     title: 'public alpha identity & image extraction correctness',
     items: [
       `the public alpha is identified as ${__APP_VERSION__}`,
+      'the production address is paletteport.app',
+      'the public alpha supports desktop browsers; mobile ui remains deferred',
       'package metadata and in-app version now share one source',
       'paletteport is licensed under the mit license',
       'image extraction now returns deterministic palettes without duplicate swatches',
@@ -273,6 +275,9 @@ function AboutTab() {
         </p>
         <p className="text-muted-foreground text-xs">
           v{__APP_VERSION__} · public alpha · mit licensed
+        </p>
+        <p className="text-muted-foreground text-xs">
+          desktop browsers supported · mobile ui deferred
         </p>
         <p className="text-muted-foreground/50 text-[10px]">missing something? request it.</p>
       </div>

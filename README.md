@@ -2,9 +2,13 @@
 
 Free color palette tool. No accounts, no ads, no paywalls. Everything runs in your browser and stays on your device.
 
-**[Try it live →](https://karan-gera.github.io/color-palette/)**
+**[Try it live →](https://paletteport.app/)**
 
 Current release: **0.21.0-alpha.1** (public alpha)
+
+The public alpha supports desktop browsers. Mobile UI and responsive-layout QA
+are deferred; mobile visitors may continue to the desktop experience at their
+own discretion.
 
 ## What it does
 

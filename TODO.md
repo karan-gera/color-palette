@@ -79,8 +79,8 @@ CLS and no long tasks. The constraint is the app startup path, not the base CSS.
 - The share-link documentation uses commas, while the encoder uses hyphens.
 - Competitor copy contains stale or overbroad claims. The dated evidence and safe
   replacements are in `COMPETITOR_RESEARCH.md`.
-- The production URL/domain is unresolved. GitHub Pages and `paletteport.com`
-  require different base paths, canonical URLs, landing links, and DNS setup.
+- The production URL is `https://paletteport.app/`; DNS and GitHub Pages custom
+  domain activation remain before the address is live.
 - Mobile layout and mobile UI are explicitly outside the desktop release scope.
 
 ## Release model
@@ -114,10 +114,17 @@ release issue remains.
 ### Release decisions and correctness
 
 - [ ] **A-01 P0 — freeze the desktop scope and production URL.**
-  - Choose GitHub Pages path or `paletteport.com`.
-  - Reconcile Vite `base`, redirect guard, `CNAME`, landing links, canonical URL,
-    Open Graph URLs, and favicon/title for that choice.
-  - Record mobile as unsupported/deferred rather than partially supported.
+  - Production URL selected and registered: `https://paletteport.app/`.
+  - Root deployment is implemented: Vite uses `/`, the app owns `/` without a
+    first-visit redirect, root-relative assets replace `/color-palette/` paths,
+    canonical/Open Graph URLs use the production domain, and `public/CNAME`
+    declares the custom domain.
+  - The optional promotional page remains directly available at `/landing/`.
+  - GitHub Pages custom-domain activation, Spaceship DNS, HTTPS enforcement, and
+    live URL verification remain before this item can be marked complete.
+  - Vite `base`, redirect behavior, `CNAME`, landing links, canonical URL, Open
+    Graph URLs, favicon, and title have been reconciled for the root domain.
+  - Mobile is explicitly unsupported/deferred in the app, About page, and README.
 - [ ] **A-02 P0 — restore palette reroll fades.**
   - Locate the regression in the animated palette path.
   - Verify reroll-all, reroll-one, preset, and relationship changes.
