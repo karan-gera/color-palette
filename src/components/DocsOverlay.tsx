@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion, useIsPresent } from 'framer-motion'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
@@ -11,7 +12,6 @@ import { generateTints, generateShades, generateTones, COLOR_RELATIONSHIPS, PALE
 import { EXPORT_FORMATS } from '@/helpers/exportFormats'
 
 type DocsOverlayProps = {
-  visible: boolean
   onClose: () => void
 }
 
@@ -407,6 +407,20 @@ const DOC_NAV: DocNavItem[] = [
 ]
 
 type DocPageId = string
+
+const docsSessionState: {
+  activeTab: Tab
+  activePage: DocPageId
+  mainScrollTop: number
+  helpNavScrollTop: number
+  helpContentScrollTop: number
+} = {
+  activeTab: 'about',
+  activePage: 'getting-started',
+  mainScrollTop: 0,
+  helpNavScrollTop: 0,
+  helpContentScrollTop: 0,
+}
 
 /* ---- Doc page utilities ---- */
 
@@ -1675,13 +1689,29 @@ function DocPageKeyboard() {
   )
 }
 
-function HelpTab() {
-  const [activePage, setActivePage] = useState<DocPageId>('getting-started')
+type HelpTabProps = {
+  activePage: DocPageId
+  onActivePageChange: (pageId: DocPageId) => void
+}
+
+function HelpTab({ activePage, onActivePageChange }: HelpTabProps) {
+  const restoreNavScroll = useCallback((element: HTMLElement | null) => {
+    if (element) element.scrollTop = docsSessionState.helpNavScrollTop
+  }, [])
+  const restoreContentScroll = useCallback((element: HTMLElement | null) => {
+    if (element) element.scrollTop = docsSessionState.helpContentScrollTop
+  }, [])
 
   return (
     <div className="flex flex-1 min-h-0 w-full">
       {/* sidebar */}
-      <nav className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto">
+      <nav
+        ref={restoreNavScroll}
+        className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto"
+        onScroll={(event) => {
+          docsSessionState.helpNavScrollTop = event.currentTarget.scrollTop
+        }}
+      >
         <ul className="space-y-0.5 py-1">
           {DOC_NAV.map((item, i) =>
             item.type === 'section' ? (
@@ -1694,7 +1724,7 @@ function HelpTab() {
               <li key={item.id}>
                 <button
                   type="button"
-                  onClick={() => setActivePage(item.id)}
+                  onClick={() => onActivePageChange(item.id)}
                   className={`block w-full text-left py-1.5 px-2 rounded text-xs font-mono lowercase transition-colors ${
                     activePage === item.id
                       ? 'bg-accent text-accent-foreground'
@@ -1710,7 +1740,13 @@ function HelpTab() {
       </nav>
 
       {/* content */}
-      <div className="flex-1 min-w-0 overflow-y-auto pl-6">
+      <div
+        ref={restoreContentScroll}
+        className="flex-1 min-w-0 overflow-y-auto pl-6"
+        onScroll={(event) => {
+          docsSessionState.helpContentScrollTop = event.currentTarget.scrollTop
+        }}
+      >
         {activePage === 'keyboard' ? (
           <DocPageKeyboard />
         ) : (
@@ -1742,22 +1778,51 @@ function ChangelogTab() {
   )
 }
 
-export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('about')
+export default function DocsOverlay({ onClose }: DocsOverlayProps) {
+  const [activeTab, setActiveTabState] = useState<Tab>(() => docsSessionState.activeTab)
+  const [activePage, setActivePageState] = useState<DocPageId>(() => docsSessionState.activePage)
   const overlayRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const isPresent = useIsPresent()
+
+  const setActiveTab = useCallback((tab: Tab) => {
+    if (docsSessionState.activeTab === 'help' && tab !== 'help') {
+      docsSessionState.activePage = 'getting-started'
+      docsSessionState.helpNavScrollTop = 0
+      docsSessionState.helpContentScrollTop = 0
+      setActivePageState('getting-started')
+    } else if (docsSessionState.activeTab !== 'help' && tab === 'help') {
+      docsSessionState.mainScrollTop = 0
+    }
+    docsSessionState.activeTab = tab
+    setActiveTabState(tab)
+  }, [])
+
+  const setActivePage = useCallback((pageId: DocPageId) => {
+    docsSessionState.activePage = pageId
+    setActivePageState(pageId)
+  }, [])
+
+  const restoreMainScroll = useCallback((element: HTMLDivElement | null) => {
+    if (element) element.scrollTop = docsSessionState.mainScrollTop
+  }, [])
+
+  const restorePreviousFocus = useCallback(() => {
+    if (previousFocusRef.current?.isConnected) {
+      previousFocusRef.current.focus()
+    }
+    previousFocusRef.current = null
+  }, [])
+
+  const handleClose = useCallback(() => {
+    onClose()
+    restorePreviousFocus()
+  }, [onClose, restorePreviousFocus])
 
   useEffect(() => {
+    if (!isPresent) return
+
     const overlay = overlayRef.current
-
-    if (!visible) {
-      if (previousFocusRef.current?.isConnected) {
-        previousFocusRef.current.focus()
-      }
-      previousFocusRef.current = null
-      return
-    }
-
     if (!overlay) return
 
     const activeElement = document.activeElement
@@ -1774,7 +1839,7 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
       if (event.key === 'Escape') {
         event.preventDefault()
         event.stopPropagation()
-        onClose()
+        handleClose()
         return
       }
 
@@ -1810,23 +1875,24 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
     return () => {
       window.cancelAnimationFrame(focusInitialControl)
       document.removeEventListener('keydown', handleKeyDown)
+      restorePreviousFocus()
     }
-  }, [visible, onClose])
+  }, [handleClose, isPresent, restorePreviousFocus])
 
   return (
-    <div
+    <motion.div
       ref={overlayRef}
       role="dialog"
-      aria-modal={visible ? true : undefined}
+      aria-modal={isPresent ? 'true' : undefined}
       aria-label="paletteport documentation"
-      aria-hidden={!visible}
-      inert={!visible}
+      aria-hidden={!isPresent}
+      inert={!isPresent}
       tabIndex={-1}
-      className={`fixed inset-0 z-[9997] bg-background transition-all duration-300 ease-out ${
-        visible
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-4 pointer-events-none'
-      }`}
+      className={`fixed inset-0 z-[9997] bg-background ${isPresent ? '' : 'pointer-events-none'}`}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 16 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {/* top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b">
@@ -1850,7 +1916,7 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="close documentation"
           className="text-muted-foreground hover:text-foreground transition-colors p-1"
         >
@@ -1862,10 +1928,16 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
       <div className="flex flex-col h-[calc(100vh-57px)] min-h-0">
         {activeTab === 'help' ? (
           <div className="flex-1 flex min-h-0 px-6 py-6">
-            <HelpTab />
+            <HelpTab activePage={activePage} onActivePageChange={setActivePage} />
           </div>
         ) : (
-          <div className="overflow-y-auto flex-1 px-6 py-8">
+          <div
+            ref={restoreMainScroll}
+            className="overflow-y-auto flex-1 px-6 py-8"
+            onScroll={(event) => {
+              docsSessionState.mainScrollTop = event.currentTarget.scrollTop
+            }}
+          >
             <div className="max-w-3xl mx-auto">
               <div className={activeTab === 'about' ? '' : 'hidden'}>
                 <AboutTab />
@@ -1878,6 +1950,6 @@ export default function DocsOverlay({ visible, onClose }: DocsOverlayProps) {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
