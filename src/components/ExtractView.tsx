@@ -2,7 +2,7 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { quantizeImagePixels } from '@/helpers/extractFromImage'
+import { quantizeImagePixels, sampleImagePixels } from '@/helpers/extractFromImage'
 
 type ExtractViewProps = {
   onAddColors: (colors: string[]) => void
@@ -23,11 +23,7 @@ function extractColorsFromImage(src: string, k = 10): Promise<string[]> {
       if (!ctx) { resolve([]); return }
       ctx.drawImage(img, 0, 0, w, h)
       const data = ctx.getImageData(0, 0, w, h).data
-      const sampledPixels: number[] = []
-      for (let i = 0; i < data.length; i += 4 * 3) {
-        sampledPixels.push(data[i], data[i + 1], data[i + 2], data[i + 3])
-      }
-      resolve(quantizeImagePixels(sampledPixels, k))
+      resolve(quantizeImagePixels(sampleImagePixels(data), k))
     }
     img.onerror = () => reject(new Error('could not load image'))
     img.src = src

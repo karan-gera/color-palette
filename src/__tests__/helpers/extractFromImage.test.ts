@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { quantizeImagePixels } from '@/helpers/extractFromImage'
+import {
+  deduplicateCentroids,
+  quantizeImagePixels,
+  sampleImagePixels,
+  type RGB,
+  type WeightedColor,
+} from '@/helpers/extractFromImage'
 
 type Rgba = [number, number, number, number]
 
@@ -20,6 +26,63 @@ const DISTINCT_COLORS: Rgba[] = [
   [32, 64, 128, 255],
   [64, 128, 32, 255],
 ]
+
+describe('sampleImagePixels', () => {
+  it('samples every third complete rgba tuple by default', () => {
+    const input = pixels(
+      [1, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12],
+      [13, 14, 15, 16],
+      [17, 18, 19, 20],
+      [21, 22, 23, 24],
+      [25, 26, 27, 28],
+    )
+
+    expect(sampleImagePixels(input)).toEqual([
+      1, 2, 3, 4,
+      13, 14, 15, 16,
+      25, 26, 27, 28,
+    ])
+  })
+
+  it('preserves sampled alpha values for the quantizer cutoff', () => {
+    const input = pixels(
+      [255, 0, 0, 128],
+      [1, 1, 1, 255],
+      [2, 2, 2, 255],
+      [0, 0, 255, 129],
+    )
+
+    expect(quantizeImagePixels(sampleImagePixels(input), 2)).toEqual(['#0000ff'])
+  })
+
+  it.each([
+    { name: 'empty data', input: new Uint8ClampedArray(), stride: 3 },
+    { name: 'incomplete rgba data', input: new Uint8ClampedArray([1, 2, 3]), stride: 3 },
+    { name: 'zero stride', input: pixels([1, 2, 3, 255]), stride: 0 },
+    { name: 'fractional stride below one', input: pixels([1, 2, 3, 255]), stride: 0.5 },
+    { name: 'non-finite stride', input: pixels([1, 2, 3, 255]), stride: Number.NaN },
+  ])('returns no samples for $name', ({ input, stride }) => {
+    expect(sampleImagePixels(input, stride)).toEqual([])
+  })
+})
+
+describe('deduplicateCentroids', () => {
+  it('replaces a duplicate centroid with the most separated distinct source color', () => {
+    const centroids: RGB[] = [[0, 0, 0], [0, 0, 0]]
+    const colors: WeightedColor[] = [
+      { color: [0, 0, 0], count: 3 },
+      { color: [10, 10, 10], count: 2 },
+      { color: [255, 255, 255], count: 1 },
+    ]
+
+    expect(deduplicateCentroids(centroids, colors, 2)).toEqual([
+      [0, 0, 0],
+      [255, 255, 255],
+    ])
+  })
+})
 
 describe('quantizeImagePixels', () => {
   it('returns the default 10 colors when enough distinct colors are available', () => {

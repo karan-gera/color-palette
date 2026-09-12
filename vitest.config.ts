@@ -16,10 +16,10 @@ export default defineConfig({
         'src/lib/**/*.ts',
       ],
       thresholds: {
-        statements: 81,
+        statements: 82,
         branches: 76,
         functions: 78,
-        lines: 82,
+        lines: 83,
       },
     },
     alias: {

@@ -1,11 +1,12 @@
-type RGB = [number, number, number]
+export type RGB = [number, number, number]
 
-type WeightedColor = {
+export type WeightedColor = {
   color: RGB
   count: number
 }
 
 const DEFAULT_COLOR_COUNT = 10
+const DEFAULT_PIXEL_STRIDE = 3
 const MIN_INCLUDED_ALPHA = 128
 const MAX_ITERATIONS = 20
 
@@ -19,6 +20,25 @@ function colorKey([r, g, b]: RGB): string {
 
 function rgbToHex([r, g, b]: RGB): string {
   return `#${[r, g, b].map(channel => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
+export function sampleImagePixels(
+  pixelData: ArrayLike<number>,
+  pixelStride = DEFAULT_PIXEL_STRIDE,
+): number[] {
+  const normalizedPixelStride = Math.floor(pixelStride)
+  if (
+    pixelData.length === 0
+    || pixelData.length % 4 !== 0
+    || !Number.isFinite(pixelStride)
+    || normalizedPixelStride <= 0
+  ) return []
+
+  const sampledPixels: number[] = []
+  for (let i = 0; i < pixelData.length; i += 4 * normalizedPixelStride) {
+    sampledPixels.push(pixelData[i], pixelData[i + 1], pixelData[i + 2], pixelData[i + 3])
+  }
+  return sampledPixels
 }
 
 function collectOpaqueColors(pixelData: ArrayLike<number>): WeightedColor[] {
@@ -123,7 +143,11 @@ function runKMeans(colors: WeightedColor[], count: number): RGB[] {
   return centroids
 }
 
-function ensureUniquePalette(centroids: RGB[], colors: WeightedColor[], count: number): RGB[] {
+export function deduplicateCentroids(
+  centroids: RGB[],
+  colors: WeightedColor[],
+  count: number,
+): RGB[] {
   const palette = [...new Map(centroids.map(color => [colorKey(color), color])).values()]
   const paletteKeys = new Set(palette.map(colorKey))
 
@@ -194,7 +218,7 @@ export function quantizeImagePixels(
 
   const colorCount = Math.min(normalizedColorCount, colors.length)
   const centroids = runKMeans(colors, colorCount)
-  const palette = ensureUniquePalette(centroids, colors, colorCount)
+  const palette = deduplicateCentroids(centroids, colors, colorCount)
 
   return sortByDominance(palette, colors).map(rgbToHex)
 }
