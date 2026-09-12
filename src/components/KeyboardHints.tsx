@@ -55,7 +55,7 @@ function ShortcutGroupSection({ group, colorCount }: { group: ShortcutGroup; col
 
 export default function KeyboardHints({ visible, onToggle, colorCount }: KeyboardHintsProps) {
   return (
-    <div className="theme-fade-surface fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
       <div
         className={`flex gap-5 px-4 py-3 bg-card border rounded-lg shadow-lg transition-all duration-300 ease-out reduced-motion-instant overflow-y-auto max-h-[calc(100vh-8rem)] pointer-events-auto ${
           visible

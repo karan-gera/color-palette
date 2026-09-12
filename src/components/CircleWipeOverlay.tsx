@@ -111,7 +111,7 @@ export default function CircleWipeOverlay({
     // Clone content BEFORE applying new state
     const cloneSource = targetElementId
       ? document.getElementById(targetElementId)
-      : document.getElementById('cvd-wrapper')
+      : document.getElementById('theme-transition-root')
 
     if (cloneSource) {
       setClonedContent(cloneSource.innerHTML)
@@ -217,7 +217,7 @@ export default function CircleWipeOverlay({
     >
       {/* OLD content clone - shrinks/wipes away to reveal new content */}
       <div
-        className={targetRect ? targetClassRef.current : "min-h-screen p-8 flex flex-col items-center gap-6"}
+        className={targetRect ? targetClassRef.current : undefined}
         dangerouslySetInnerHTML={{ __html: clonedContent }}
       />
     </div>

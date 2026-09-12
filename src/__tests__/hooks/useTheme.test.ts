@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, fireEvent, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { REDUCED_THEME_FADE_DURATION, THEME_KEY_REPEAT_INTERVAL, useTheme } from '@/hooks/useTheme'
 
@@ -39,6 +39,8 @@ afterEach(() => {
   document.documentElement.removeAttribute('data-theme-fading')
   document.documentElement.removeAttribute('data-theme-wiping')
   document.documentElement.style.backgroundColor = ''
+  document.documentElement.style.removeProperty('--theme-fade-background')
+  document.querySelectorAll('.theme-fade-overlay').forEach((element) => element.remove())
   vi.restoreAllMocks()
 })
 
@@ -151,7 +153,7 @@ describe('useTheme', () => {
 
     act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
 
-    expect(result.current.theme).toBe('dark')
+    expect(result.current.theme).toBe('light')
     expect(result.current.transition).toEqual({
       from: 'light',
       to: 'dark',
@@ -160,6 +162,7 @@ describe('useTheme', () => {
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
 
     act(() => result.current.applyTransitionTarget())
+    expect(result.current.theme).toBe('dark')
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
 
     act(() => result.current.completeTransition())
@@ -182,6 +185,27 @@ describe('useTheme', () => {
 
     expect(result.current.theme).toBe('dark')
     expect(result.current.transition).toBeNull()
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
+  })
+
+  it('waits for the reduced-theme cover to become opaque before applying the new theme', () => {
+    reducedMotion = true
+    localStorage.setItem('color-palette:theme', 'light')
+    const overlay = document.createElement('div')
+    overlay.className = 'theme-fade-overlay'
+    document.body.append(overlay)
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+
+    act(() => fireEvent.transitionEnd(overlay, { propertyName: 'opacity' }))
+
+    expect(result.current.theme).toBe('dark')
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })

@@ -79,6 +79,7 @@ const CHANGELOG = [
     items: [
       'motion now follows the operating-system reduced-motion preference',
       'palette layout springs and view transitions become immediate while theme wipes become brief fades',
+      'theme changes keep controls, active indicators, and shortcut surfaces in one synchronized frame',
       'held theme-key repeats are capped at two per second while deliberate taps stay unrestricted',
       'the right-side view selector uses larger contiguous targets',
       'dialogs, documentation, contrast, and shortcut panels keep their state without decorative movement',
@@ -1040,7 +1041,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               follows your operating system’s reduced-motion preference automatically. there is no separate setting in paletteport.
             </p>
             <p>
-              with reduced motion enabled, theme changes briefly fade the workspace and shortcuts panel together to hide the repaint. palette reordering, view changes, color-vision changes, panels, dialogs, and documentation update immediately without springs, wipes, or large transforms.
+              with reduced motion enabled, theme changes briefly fade through the current background so controls, active indicators, and the shortcuts panel update as one frame. palette reordering, view changes, color-vision changes, panels, dialogs, and documentation update immediately without springs, wipes, or large transforms.
             </p>
             <p>
               holding <Kbd>T</Kbd> caps automatic key repeats at two per second in either motion mode. deliberate taps are not rate-limited, and header selections retain their existing transition behavior.

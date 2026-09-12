@@ -58,6 +58,7 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
   const [transition, setTransition] = useState<ThemeTransition | null>(null)
   const reducedFadeTimeoutRef = useRef<number | null>(null)
   const reducedFadeTargetRef = useRef<Theme | null>(null)
+  const reducedFadeListenerCleanupRef = useRef<(() => void) | null>(null)
   const ownsWipeRef = useRef(false)
   const lastThemeKeyChangeRef = useRef<number | null>(null)
 
@@ -68,19 +69,45 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
     applyTheme(newTheme)
   }, [])
 
+  const finishReducedFade = useCallback(() => {
+    if (reducedFadeTimeoutRef.current !== null) {
+      clearTimeout(reducedFadeTimeoutRef.current)
+      reducedFadeTimeoutRef.current = null
+    }
+    reducedFadeListenerCleanupRef.current?.()
+    reducedFadeListenerCleanupRef.current = null
+
+    const target = reducedFadeTargetRef.current
+    reducedFadeTargetRef.current = null
+    if (target) setTheme(target)
+    document.documentElement.removeAttribute('data-theme-fading')
+  }, [setTheme])
+
   const setThemeWithReducedFade = useCallback((newTheme: Theme) => {
     reducedFadeTargetRef.current = newTheme
     if (reducedFadeTimeoutRef.current !== null) return
 
-    document.documentElement.setAttribute('data-theme-fading', '')
-    reducedFadeTimeoutRef.current = window.setTimeout(() => {
-      const target = reducedFadeTargetRef.current
-      if (target) setTheme(target)
-      reducedFadeTargetRef.current = null
-      document.documentElement.removeAttribute('data-theme-fading')
-      reducedFadeTimeoutRef.current = null
-    }, REDUCED_THEME_FADE_DURATION)
-  }, [setTheme])
+    const root = document.documentElement
+    const overlay = document.querySelector<HTMLElement>('.theme-fade-overlay')
+    const currentBackground = getComputedStyle(document.body).backgroundColor
+    if (currentBackground) root.style.setProperty('--theme-fade-background', currentBackground)
+
+    if (overlay) {
+      const handleTransitionEnd = (event: TransitionEvent) => {
+        if (event.target === overlay && event.propertyName === 'opacity') finishReducedFade()
+      }
+      overlay.addEventListener('transitionend', handleTransitionEnd)
+      reducedFadeListenerCleanupRef.current = () => overlay.removeEventListener('transitionend', handleTransitionEnd)
+    }
+
+    root.setAttribute('data-theme-fading', '')
+    // transitionend is authoritative in a browser. The timeout is a safety net
+    // for background tabs and test environments where transitions do not run.
+    reducedFadeTimeoutRef.current = window.setTimeout(
+      finishReducedFade,
+      overlay ? REDUCED_THEME_FADE_DURATION + 50 : REDUCED_THEME_FADE_DURATION,
+    )
+  }, [finishReducedFade])
 
   // Set theme with circle wipe animation
   const setThemeWithTransition = useCallback((newTheme: Theme, origin: { x: number; y: number }) => {
@@ -104,18 +131,16 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
       origin,
     })
     
-    // Update state but DON'T apply theme yet - overlay handles visual
-    setThemeState(newTheme)
-    localStorage.setItem(STORAGE_KEY, newTheme)
-    // Note: applyTheme() is called in applyTransitionTarget, not here
+    // Keep both the DOM theme and selected control on the old state until the
+    // overlay has captured them. The target state is applied behind the clone.
   }, [theme, transition, prefersReducedMotion, setThemeWithReducedFade])
 
   // Apply the new theme during animation (overlay masks the change)
   const applyTransitionTarget = useCallback(() => {
     if (transition) {
-      applyTheme(transition.to)
+      setTheme(transition.to)
     }
-  }, [transition])
+  }, [transition, setTheme])
 
   // Called when animation completes - clear transition state
   const completeTransition = useCallback(() => {
@@ -161,25 +186,20 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
   // If the OS preference changes during a wipe, finish it immediately.
   useEffect(() => {
     if (!prefersReducedMotion || !transition) return
-    applyTheme(transition.to)
+    setTheme(transition.to)
     if (ownsWipeRef.current) {
       document.documentElement.removeAttribute('data-theme-wiping')
       ownsWipeRef.current = false
     }
     setTransition(null)
-  }, [prefersReducedMotion, transition])
+  }, [prefersReducedMotion, transition, setTheme])
 
   // Finish a reduced-motion fade if the OS preference changes mid-transition.
   useEffect(() => {
     if (prefersReducedMotion || reducedFadeTimeoutRef.current === null) return
 
-    clearTimeout(reducedFadeTimeoutRef.current)
-    reducedFadeTimeoutRef.current = null
-    const target = reducedFadeTargetRef.current
-    reducedFadeTargetRef.current = null
-    if (target) setTheme(target)
-    document.documentElement.removeAttribute('data-theme-fading')
-  }, [prefersReducedMotion, setTheme])
+    finishReducedFade()
+  }, [prefersReducedMotion, finishReducedFade])
 
   useEffect(() => {
     if (!syncExternalChanges) return
@@ -197,6 +217,7 @@ export function useTheme({ syncExternalChanges = true }: UseThemeOptions = {}) {
       if (reducedFadeTimeoutRef.current !== null) {
         clearTimeout(reducedFadeTimeoutRef.current)
       }
+      reducedFadeListenerCleanupRef.current?.()
       document.documentElement.removeAttribute('data-theme-fading')
       if (ownsWipeRef.current) {
         document.documentElement.removeAttribute('data-theme-wiping')
