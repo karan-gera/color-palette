@@ -34,7 +34,7 @@ Update this file when work lands; do not add duplicate speculative plans here.
 
 ### Test baseline
 
-- 427 active tests pass.
+- 452 active tests pass.
 - 42 TODO tests remain: 4 real future gradient cases and 38 stale cases for
   shipped behavior.
 - Coverage: 82.72% statements, 76.76% branches, 78.82% functions, 83.51% lines.
@@ -141,10 +141,13 @@ release issue remains.
   - Choose a SemVer prerelease and align `package.json`, docs, and changelog.
   - Release identity is `0.21.0-alpha.1`; Vite injects the package version into
     the About page and changelog so the displayed value stays aligned.
-- [ ] **A-04 P0 — replace or remove dead external actions.**
+- [x] **A-04 P0 — replace or remove dead external actions. ✅**
   - Replace `https://github.com/your-repo/issues` with the real issue tracker.
   - Give About-page feature-request and donation controls real destinations or
     remove them.
+  - Export fallback and About requests now open the repository's real new-issue
+    route; source, star, and MIT license actions point to verified GitHub pages.
+  - Donation copy was removed until a suitable support platform is selected.
 - [x] **A-05 P0 — triage dependencies. ✅**
   - Re-run `npm audit` and `npm audit --omit=dev`.
   - Patch production findings without breaking the build.
@@ -153,32 +156,65 @@ release issue remains.
     refreshed vulnerable transitive packages within their declared ranges.
   - Both full and production-only audits report zero findings; no advisories are
     accepted or deferred.
-- [ ] **A-06 P0 — make public claims match observed behavior.**
+- [x] **A-06 P0 — make public claims match observed behavior. ✅**
   - Replace “works offline” with “runs in your browser” until beta offline gates pass.
   - Correct the share-link delimiter example.
   - Replace “unlimited storage” with “no app-level save limit; browser storage applies.”
   - Fix remaining uppercase UI copy covered by the lowercase convention.
+  - About now states that offline startup is not guaranteed and that browser
+    storage limits apply; the static landing comparison no longer claims
+    unlimited saves.
+  - Share documentation now matches the encoder's hyphen-separated colors and
+    lock values.
+  - Documentation, shortcut, export, dialog, and preview-control labels follow
+    the lowercase convention; code output and preview artwork keep intentional case.
 - [ ] **A-07 P0 — replace the stale competitor matrix.**
   - Use the conservative comparison in `COMPETITOR_RESEARCH.md`.
   - Include source URLs and the research date with quota or price facts.
   - Render unknown as unknown, not as feature absence.
+- [x] **A-08 P1 — refresh the About page. ✅**
+  - Rework the content and visual hierarchy around what PalettePort does, who it
+    is for, the desktop-only alpha scope, browser-local storage, and project
+    attribution.
+  - Keep the injected release version and license details accurate, and
+    coordinate link and claim fixes with A-04 and A-06 instead of duplicating
+    conflicting copy.
+  - Keep all user-visible prose lowercase and verify every external action,
+    keyboard navigation, focus behavior, and layout at supported desktop zooms.
+  - Replaced the sales-style feature wall and competitor scorecard with a focused
+    purpose, capability, data/limits, alpha-scope, and project-link structure.
+  - Split About into its own component while preserving lazy Help/About loading.
+  - Verified link destinations, tab order, focus containment, reduced-motion
+    treatment, and no horizontal overflow at 100%, 125%, 150%, and 200% zoom equivalents.
+- [ ] **A-09 P1 — redesign the Help page from the ground up.**
+  - Audit the existing information architecture, navigation, demos, and copy
+    against the tasks people actually need to complete.
+  - Replace the current Help experience with a clearer structure and interaction
+    model rather than incrementally restyling the existing two-column browser.
+  - Rewrite the content in concise lowercase prose, preserve complete shortcut
+    and feature coverage, and make navigation fully keyboard and screen-reader
+    accessible.
+  - Keep Help lazy-loaded and out of the closed-overlay DOM so the redesign does
+    not regress the startup and DOM budgets established by A-12 and B-01.
+  - Validate the new experience with task-based desktop usability, focus, zoom,
+    and reduced-motion smoke tests.
 
 ### Failure containment and constrained-device minimum
 
-- [ ] **A-08 P0 — add a desktop error boundary.**
+- [ ] **A-10 P0 — add a desktop error boundary.**
   - Preserve a readable recovery screen instead of a blank app.
   - Provide reload/reset guidance without deleting local data automatically.
   - Add a regression test for the fallback path.
-- [ ] **A-09 P0 — respect reduced-motion preferences.**
+- [ ] **A-11 P0 — respect reduced-motion preferences.**
   - Configure Framer Motion to respect the user preference.
   - Add CSS reduction for nonessential transitions and animations.
   - Test add, delete, reroll, view changes, docs, and dialogs with reduction enabled.
-- [ ] **A-10 P0 — remove the worst startup-only work.**
+- [ ] **A-12 P0 — remove the worst startup-only work.**
   - Dynamically import and conditionally mount `DocsOverlay`.
   - Dynamically import `PalettePreviewOverlay` so Recharts/D3 leave the initial chunk.
   - Keep the closed documentation subtree out of the DOM.
   - Record before/after gzip size, initial transfer, and DOM count.
-- [x] **A-11 P0 — cover and fix image-extraction correctness. ✅**
+- [x] **A-13 P0 — cover and fix image-extraction correctness. ✅**
   - Extract quantization into a directly testable module.
   - Activate the stale extraction tests, including transparency and determinism.
   - Deduplicate centroids and handle requests larger than the distinct-color count.
@@ -191,7 +227,7 @@ release issue remains.
 
 ### Alpha verification
 
-- [ ] **A-12 P0 — cut and verify an alpha candidate.**
+- [ ] **A-14 P0 — cut and verify an alpha candidate.**
   - `npm run build`, `npm run lint`, `npm test`, and `npm run test:coverage` pass.
   - Helium clean-profile smoke: add, lock, reroll, relationship, undo/redo,
     save/open, share, export, image export, gradient, extraction, reload.
@@ -286,9 +322,12 @@ promoted into a release gate.
 - Expanded preview role set, preview CSS-variable export, and gradient preview modes.
 - Keyboard color reordering after a deliberate focus model is defined.
 - Community accounts, backend, payments, moderation, and enterprise features.
+- Select a support or donation platform before adding donation controls or copy.
 - Landing-page redesign or analytics.
   - The current static page remains available at `/landing/`, but is not part of
     the first-visit flow and must be redesigned before it is reconsidered there.
+  - Move competitive positioning to the landing page rather than About; rebuild
+    its comparison from dated, sourced claims in `COMPETITOR_RESEARCH.md`.
   - Keep it outside the app bundle; it remains the fastest measured surface.
 
 ## Release checklist template
