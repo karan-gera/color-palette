@@ -249,11 +249,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
 
       <div className="relative">
         <div
-          className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10 flex items-start justify-center pt-1 transition-opacity duration-200 ${
+          className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10 flex items-start justify-center pt-1 transition-opacity duration-200 reduced-motion-instant ${
             canScrollUp ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <ChevronUp className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowUp ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          <ChevronUp className={`size-4 text-muted-foreground transition-opacity duration-200 reduced-motion-instant ${
+            showArrowUp ? `opacity-100 ${prefersReducedMotion ? '' : 'animate-pulse'}` : 'opacity-0'
+          }`} />
         </div>
 
         <div
@@ -340,11 +342,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
         </div>
 
         <div
-          className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none z-10 flex items-end justify-center pb-1 transition-opacity duration-200 ${
+          className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none z-10 flex items-end justify-center pb-1 transition-opacity duration-200 reduced-motion-instant ${
             canScrollDown ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <ChevronDown className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowDown ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          <ChevronDown className={`size-4 text-muted-foreground transition-opacity duration-200 reduced-motion-instant ${
+            showArrowDown ? `opacity-100 ${prefersReducedMotion ? '' : 'animate-pulse'}` : 'opacity-0'
+          }`} />
         </div>
       </div>
 
