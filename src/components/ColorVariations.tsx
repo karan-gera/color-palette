@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { generateTints, generateShades, generateTones, hexLuminance } from '@/helpers/colorTheory'
 import { getColorName } from '@/helpers/colorNaming'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type ColorVariationsProps = {
   sourceColor: string
@@ -17,16 +18,22 @@ type VariationSwatchProps = {
   color: string
   isSource?: boolean
   delay: number
+  prefersReducedMotion: boolean
   onClick: (e: React.MouseEvent) => void
 }
 
-function VariationSwatch({ color, isSource, delay, onClick }: VariationSwatchProps) {
-  const [isVisible, setIsVisible] = useState(false)
+function VariationSwatch({ color, isSource, delay, prefersReducedMotion, onClick }: VariationSwatchProps) {
+  const [isVisible, setIsVisible] = useState(prefersReducedMotion)
 
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsVisible(true)
+      return
+    }
+
     const timer = setTimeout(() => setIsVisible(true), delay)
     return () => clearTimeout(timer)
-  }, [delay])
+  }, [delay, prefersReducedMotion])
 
   const textColor = useMemo(() => hexLuminance(color) > 160 ? '#111111' : '#ffffff', [color])
 
@@ -35,7 +42,7 @@ function VariationSwatch({ color, isSource, delay, onClick }: VariationSwatchPro
       <TooltipTrigger asChild>
         <button
           type="button"
-          className={`cvd-color size-10 rounded-lg border transition-all duration-300 cursor-pointer hover:scale-110 hover:border-foreground ${
+          className={`cvd-color size-10 rounded-lg border transition-all duration-300 reduced-motion-instant reduced-motion-no-transform cursor-pointer hover:scale-110 hover:border-foreground ${
             isSource ? 'border-2 border-foreground ring-2 ring-foreground/20' : 'border-border/50'
           } ${
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
@@ -60,10 +67,11 @@ type VariationRowProps = {
   sourceColor: string
   variations: string[]
   baseDelay: number
+  prefersReducedMotion: boolean
   onSwatchClick: (hex: string, e: React.MouseEvent) => void
 }
 
-function VariationRow({ label, sourceColor, variations, baseDelay, onSwatchClick }: VariationRowProps) {
+function VariationRow({ label, sourceColor, variations, baseDelay, prefersReducedMotion, onSwatchClick }: VariationRowProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="font-mono text-xs text-muted-foreground lowercase">{label}</span>
@@ -72,6 +80,7 @@ function VariationRow({ label, sourceColor, variations, baseDelay, onSwatchClick
           color={sourceColor}
           isSource
           delay={baseDelay}
+          prefersReducedMotion={prefersReducedMotion}
           onClick={(e) => onSwatchClick(sourceColor, e)}
         />
         {variations.map((hex, i) => (
@@ -79,6 +88,7 @@ function VariationRow({ label, sourceColor, variations, baseDelay, onSwatchClick
             key={hex + i}
             color={hex}
             delay={baseDelay + (i + 1) * 30}
+            prefersReducedMotion={prefersReducedMotion}
             onClick={(e) => onSwatchClick(hex, e)}
           />
         ))}
@@ -94,6 +104,7 @@ export default function ColorVariations({
   onCopyHex,
   onReplaceColor,
 }: ColorVariationsProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const tints = useMemo(() => generateTints(sourceColor), [sourceColor])
   const shades = useMemo(() => generateShades(sourceColor), [sourceColor])
   const tones = useMemo(() => generateTones(sourceColor), [sourceColor])
@@ -130,6 +141,7 @@ export default function ColorVariations({
             sourceColor={sourceColor}
             variations={tints}
             baseDelay={0}
+            prefersReducedMotion={prefersReducedMotion}
             onSwatchClick={handleSwatchClick}
           />
           <VariationRow
@@ -137,6 +149,7 @@ export default function ColorVariations({
             sourceColor={sourceColor}
             variations={shades}
             baseDelay={100}
+            prefersReducedMotion={prefersReducedMotion}
             onSwatchClick={handleSwatchClick}
           />
           <VariationRow
@@ -144,6 +157,7 @@ export default function ColorVariations({
             sourceColor={sourceColor}
             variations={tones}
             baseDelay={200}
+            prefersReducedMotion={prefersReducedMotion}
             onSwatchClick={handleSwatchClick}
           />
         </div>

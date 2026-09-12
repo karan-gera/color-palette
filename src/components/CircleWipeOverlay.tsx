@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { calculateMaxRadius } from '@/hooks/useCircleWipe'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export interface CircleWipeConfig {
   /** CSS filter to apply (for CVD transitions) */
@@ -57,6 +58,7 @@ export default function CircleWipeOverlay({
   onAnimationEnd,
   targetElementId,
 }: CircleWipeOverlayProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [phase, setPhase] = useState<'idle' | 'ready' | 'animating' | 'done'>('idle')
   const [clonedContent, setClonedContent] = useState<string>('')
   const maxRadiusRef = useRef(0)
@@ -93,6 +95,13 @@ export default function CircleWipeOverlay({
     // Already started this transition
     if (hasStartedRef.current) return
     hasStartedRef.current = true
+
+    if (prefersReducedMotion) {
+      onApplyStateRef.current()
+      setPhase('done')
+      onAnimationEndRef.current()
+      return
+    }
     
     // Store values
     maxRadiusRef.current = calculateMaxRadius(origin)
@@ -102,7 +111,7 @@ export default function CircleWipeOverlay({
     // Clone content BEFORE applying new state
     const cloneSource = targetElementId
       ? document.getElementById(targetElementId)
-      : document.getElementById('cvd-wrapper')
+      : document.getElementById('theme-transition-root')
 
     if (cloneSource) {
       setClonedContent(cloneSource.innerHTML)
@@ -143,7 +152,7 @@ export default function CircleWipeOverlay({
       cancelAnimationFrame(animateTimer)
       clearTimeout(doneTimer)
     }
-  }, [isActive, origin, config])
+  }, [isActive, origin, config, prefersReducedMotion])
   
   // Don't render if not active or done
   if (!isActive || phase === 'idle' || phase === 'done') return null
@@ -208,7 +217,7 @@ export default function CircleWipeOverlay({
     >
       {/* OLD content clone - shrinks/wipes away to reveal new content */}
       <div
-        className={targetRect ? targetClassRef.current : "min-h-screen p-8 flex flex-col items-center gap-6"}
+        className={targetRect ? targetClassRef.current : undefined}
         dangerouslySetInnerHTML={{ __html: clonedContent }}
       />
     </div>

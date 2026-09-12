@@ -6,6 +6,7 @@ import GradientStopBar from './GradientStopBar'
 import StopColorPicker from './StopColorPicker'
 import { generateLinearGradientCSS, type LinearGradientConfig } from '@/helpers/gradientGenerator'
 import { type UseGradientStopsReturn } from '@/hooks/useGradientStops'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type GradientViewProps = {
   palette: string[]         // current palette hex values (same order as colorIds)
@@ -26,6 +27,7 @@ export default function GradientView({
   previewRatio,
   onPreviewRatioChange,
 }: GradientViewProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const {
     stops,
     angle,
@@ -145,8 +147,8 @@ export default function GradientView({
       <div className="w-full relative" style={{ paddingBottom: '56.25%' }}>
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
-            layout
-            transition={{ type: 'spring', damping: 28, stiffness: 260 }}
+            layout={!prefersReducedMotion}
+            transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', damping: 28, stiffness: 260 }}
             className="cvd-color h-full rounded-xl border border-border"
             style={{ aspectRatio: String(previewRatio), background: gradientCSS }}
           />

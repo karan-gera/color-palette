@@ -11,7 +11,7 @@ type KeyboardShortcutsConfig = {
   onImageExport: () => void
   onRerollAll: () => void
   onToggleLock: (index: number) => void
-  onCycleTheme: () => void
+  onCycleTheme: (isRepeat: boolean) => void
   onToggleHints: () => void
   onToggleContrast: () => void
   onCycleContrastTab: () => void
@@ -227,7 +227,7 @@ export function useKeyboardShortcuts({
         if (event.shiftKey) {
           onCycleCVD()
         } else {
-          onCycleTheme()
+          onCycleTheme(event.repeat)
         }
         break
       case 'q':

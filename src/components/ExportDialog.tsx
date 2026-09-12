@@ -38,6 +38,7 @@ import {
   type ImageSize,
 } from '@/helpers/imageExport'
 import { getColorName } from '@/helpers/colorNaming'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type ExportDialogProps = {
   colors: string[]
@@ -143,6 +144,7 @@ type ExportSelectingViewProps = {
 }
 
 function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
   const [showArrowUp, setShowArrowUp] = useState(false)
@@ -217,13 +219,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
     if (!item || !container) return
 
     if (index === 0) {
-      container.scrollTo({ top: 0, behavior: 'smooth' })
+      container.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     } else if (index === totalItems - 1) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+      container.scrollTo({ top: container.scrollHeight, behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     } else {
-      item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      item.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion ? 'instant' : 'smooth' })
     }
-  }, [totalItems])
+  }, [totalItems, prefersReducedMotion])
 
   const { selectedIndex, setSelectedIndex } = useListKeyboardNav({
     count: totalItems,
@@ -247,11 +249,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
 
       <div className="relative">
         <div
-          className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10 flex items-start justify-center pt-1 transition-opacity duration-200 ${
+          className={`absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background to-transparent pointer-events-none z-10 flex items-start justify-center pt-1 transition-opacity duration-200 reduced-motion-instant ${
             canScrollUp ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <ChevronUp className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowUp ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          <ChevronUp className={`size-4 text-muted-foreground transition-opacity duration-200 reduced-motion-instant ${
+            showArrowUp ? `opacity-100 ${prefersReducedMotion ? '' : 'animate-pulse'}` : 'opacity-0'
+          }`} />
         </div>
 
         <div
@@ -338,11 +342,13 @@ function ExportSelectingView({ onExport, onImageExport }: ExportSelectingViewPro
         </div>
 
         <div
-          className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none z-10 flex items-end justify-center pb-1 transition-opacity duration-200 ${
+          className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none z-10 flex items-end justify-center pb-1 transition-opacity duration-200 reduced-motion-instant ${
             canScrollDown ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <ChevronDown className={`size-4 text-muted-foreground transition-opacity duration-200 ${showArrowDown ? 'opacity-100 animate-pulse' : 'opacity-0'}`} />
+          <ChevronDown className={`size-4 text-muted-foreground transition-opacity duration-200 reduced-motion-instant ${
+            showArrowDown ? `opacity-100 ${prefersReducedMotion ? '' : 'animate-pulse'}` : 'opacity-0'
+          }`} />
         </div>
       </div>
 

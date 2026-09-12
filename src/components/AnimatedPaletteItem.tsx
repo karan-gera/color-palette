@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import PaletteItem from './PaletteItem'
 import { BLUEPRINT_COLOR } from '@/helpers/colorTheory'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type AnimatedPaletteItemProps = {
   layoutId: string
@@ -37,14 +38,15 @@ export default function AnimatedPaletteItem({
   isSwapSelected,
   onSwapClick,
 }: AnimatedPaletteItemProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   return (
     <motion.div
-      layoutId={layoutId}
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: isSwapSelected ? 1.05 : 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{
+      layoutId={prefersReducedMotion ? undefined : layoutId}
+      layout={!prefersReducedMotion}
+      initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: prefersReducedMotion ? 1 : isSwapSelected ? 1.05 : 1 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+      transition={prefersReducedMotion ? { duration: 0 } : {
         layout: { type: 'spring', stiffness: 400, damping: 32 },
         opacity: { duration: 0.15, ease: 'easeOut' },
         scale: { duration: 0.15, ease: 'easeOut' },

@@ -1,4 +1,4 @@
-import { useCallback, type KeyboardEvent, type MouseEvent } from 'react'
+import { useCallback, useMemo, type KeyboardEvent, type MouseEvent } from 'react'
 import { Sun, Moon, Circle } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -13,6 +13,10 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
 
 export default function ThemeToggle() {
   const { theme, setThemeWithTransition, transition, applyTransitionTarget, completeTransition } = useTheme()
+  const wipeConfig = useMemo(() => ({
+    theme: transition?.to,
+    oldTheme: transition?.from,
+  }), [transition?.from, transition?.to])
 
   // Shared transition trigger — derives animation origin from the element's center
   const triggerTransition = useCallback((el: HTMLElement, value: Theme) => {
@@ -69,10 +73,7 @@ export default function ThemeToggle() {
       <CircleWipeOverlay
         isActive={transition !== null}
         origin={transition?.origin ?? null}
-        config={{ 
-          theme: transition?.to,
-          oldTheme: transition?.from,
-        }}
+        config={wipeConfig}
         onApplyState={applyTransitionTarget}
         onAnimationEnd={completeTransition}
       />

@@ -3,6 +3,7 @@ import { motion, useIsPresent } from 'framer-motion'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import AddColor from './AddColor'
 import PaletteItem from './PaletteItem'
 import PresetBrowser from './PresetBrowser'
@@ -73,6 +74,18 @@ const CHANGELOG = [
       'image extraction now returns deterministic palettes without duplicate swatches',
       'transparent pixels are excluded from extracted colors',
       'images with fewer distinct colors return only the colors available',
+    ],
+  },
+  {
+    version: '0.21',
+    title: 'reduced motion',
+    items: [
+      'motion now follows the operating-system reduced-motion preference',
+      'palette layout springs and view transitions become immediate while header theme wipes become brief fades',
+      'keyboard theme cycling keeps the workspace and bottom fade synchronized in either motion mode',
+      'held theme-key repeats are capped at two per second while deliberate taps stay unrestricted',
+      'the right-side view selector uses larger contiguous targets',
+      'dialogs, documentation, contrast, and shortcut panels keep their state without decorative movement',
     ],
   },
   {
@@ -404,6 +417,7 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'page', id: 'variations', label: 'variations' },
   { type: 'page', id: 'harmony', label: 'harmony score' },
   { type: 'section', label: 'accessibility' },
+  { type: 'page', id: 'reduced-motion', label: 'reduced motion' },
   { type: 'page', id: 'color-blindness', label: 'color blindness' },
   { type: 'page', id: 'contrast', label: 'contrast checker' },
   { type: 'section', label: 'reference' },
@@ -1036,6 +1050,35 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
               </>
             )
           })()}
+        </DocArticle>
+      )
+
+    case 'reduced-motion':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              follows your operating system’s reduced-motion preference automatically. there is no separate setting in paletteport.
+            </p>
+            <p>
+              with reduced motion enabled, theme changes briefly fade through the current background so controls, active indicators, and the shortcuts panel update as one frame. palette reordering, view changes, color-vision changes, panels, dialogs, and documentation update immediately without springs, wipes, or large transforms.
+            </p>
+            <p>
+              pressing <Kbd>T</Kbd> uses the same synchronized fade in either motion mode, while header selections retain the circle wipe when reduced motion is off. holding <Kbd>T</Kbd> caps automatic key repeats at two per second. deliberate taps are not rate-limited and update the pending theme before the fade reveals it.
+            </p>
+          </div>
+
+          <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">what stays visible</span>
+            <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
+              <p>
+                focus rings, selected states, lock indicators, dialog focus handling, and loading feedback remain available.
+              </p>
+              <p>
+                changes take effect when the operating-system preference changes, without reloading the page.
+              </p>
+            </div>
+          </div>
         </DocArticle>
       )
 
@@ -1784,6 +1827,7 @@ function ChangelogTab() {
 }
 
 export default function DocsOverlay({ onClose }: DocsOverlayProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [activeTab, setActiveTabState] = useState<Tab>(() => docsSessionState.activeTab)
   const [activePage, setActivePageState] = useState<DocPageId>(() => docsSessionState.activePage)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -1894,10 +1938,10 @@ export default function DocsOverlay({ onClose }: DocsOverlayProps) {
       inert={!isPresent}
       tabIndex={-1}
       className={`fixed inset-0 z-[9997] bg-background ${isPresent ? '' : 'pointer-events-none'}`}
-      initial={{ opacity: 0, y: 16 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
     >
       {/* top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b">

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type PreviewMode = 'mosaic' | 'ui' | 'title'
 type TitleLayout = 'hero' | 'editorial' | 'poster'
@@ -493,7 +494,7 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
       </div>
 
       {/* Right: live dashboard */}
-      <div className="flex-1 overflow-hidden transition-opacity duration-500" style={{ opacity: fontReady ? 1 : 0 }}>
+      <div className="flex-1 overflow-hidden transition-opacity duration-500 reduced-motion-instant" style={{ opacity: fontReady ? 1 : 0 }}>
         <ShadcnDashboard colors={colors} fontFamily={fontFamily} fontScale={fontScale} radius={radius} />
       </div>
     </div>
@@ -620,7 +621,7 @@ function RoleSwatchPicker({
                 type="button"
                 onClick={() => { onSelect(i); setOpen(false) }}
                 className={[
-                  'size-6 rounded transition-all duration-100',
+                  'size-6 rounded transition-all duration-100 reduced-motion-instant reduced-motion-no-transform',
                   i === selectedIndex
                     ? 'ring-2 ring-foreground ring-offset-1 ring-offset-popover scale-110'
                     : 'hover:scale-110',
@@ -765,6 +766,7 @@ function TitlePoster({ heading, subtitle, onHeadingChange, onSubtitleChange, col
 // ---------------------------------------------------------------------------
 
 export default function PalettePreviewOverlay({ palette, onClose }: PalettePreviewOverlayProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const [mode, setMode] = useState<PreviewMode>(
     () => (localStorage.getItem(MODE_KEY) as PreviewMode | null) ?? 'mosaic'
   )
@@ -849,10 +851,10 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
   return (
     <motion.div
       className="fixed inset-0 z-[9997] bg-background flex flex-col"
-      initial={{ opacity: 0 }}
+      initial={prefersReducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
     >
 
       {/* Top bar — relative z-10 so role-picker popovers render above the content area */}

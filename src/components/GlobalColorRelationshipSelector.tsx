@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { COLOR_RELATIONSHIPS, type ColorRelationship } from '@/helpers/colorTheory'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 type GlobalColorRelationshipSelectorProps = {
   currentRelationship: ColorRelationship
@@ -22,13 +23,14 @@ export default function GlobalColorRelationshipSelector({
   onRelationshipChange,
   onGlobalReroll
 }: GlobalColorRelationshipSelectorProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const currentLabel = COLOR_RELATIONSHIPS.find(r => r.value === currentRelationship)?.label || 'Random'
 
   return (
     <TooltipProvider>
       <motion.div
-        layout
-        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+        layout={!prefersReducedMotion}
+        transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
         className="flex items-center gap-2 mt-4"
       >
         <Tooltip>
