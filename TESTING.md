@@ -33,6 +33,18 @@ Use isolated or headless Chromium for browser checks by default. Start the app w
 
 The minimum release smoke covers adding a color, keyboard routing, save/open, palette export, image export, and one undo/redo round trip. Record any browser that could not be exercised instead of treating a server response as a UI pass.
 
+### Agentic browser review pile
+
+Keep browser-owned behavior here when jsdom cannot exercise the real platform API.
+Run the relevant case in isolated Chromium whenever its implementation changes:
+
+- Image extraction, limited colors: upload a synthetic opaque red/blue image,
+  verify exactly two unique swatches, add them, and confirm the palette contains
+  `#ff0000` and `#0000ff`.
+- Image extraction, transparency: upload an image with a fully transparent region
+  and one opaque color, then verify the transparent RGB values do not produce a
+  swatch. This covers browser decoding, canvas drawing, and `getImageData` together.
+
 ### Philosophy
 
 Tests focus on **pure functions and state logic** — the mathematical and algorithmic core that the UI depends on. A bug in `hslToHex` or `contrastRatio` affects every feature silently and produces no runtime error. A test catches it immediately and pinpoints the cause.
@@ -396,6 +408,8 @@ starting points.
 
 Tests cover:
 
+- Every-third-pixel sampling without breaking RGBA tuple alignment
+- Alpha values passing unchanged from the sampler into the quantizer cutoff
 - The shipped default of 10 colors and custom requested counts
 - Lowercase six-digit hex output plus exact red, white, black, and one-pixel cases
 - Deterministic output for repeated calls with identical pixel data
@@ -404,6 +418,7 @@ Tests cover:
   remain eligible
 - Empty, malformed, non-finite, zero, negative, and fractional-below-one inputs
 - Channel clamping and dominance ordering by represented source-pixel count
+- Duplicate-centroid repair using the most separated distinct source color
 
 **Regression guarded:** The component previously seeded `k` centroids from raw
 samples. Repeated pixels could therefore create repeated centroids and duplicate
@@ -498,16 +513,16 @@ The h=360 bug is the canonical example: `hslToHex({ h: 360, s: 100, l: 50 })` an
 
 Coverage counts every file under `src/helpers`, `src/hooks`, and `src/lib`, including files with no tests. Components remain outside the global percentage because this project's default is browser verification for UI, with focused component regression tests used only when DOM behavior is the contract.
 
-As of 2026-09-10:
+As of 2026-09-12:
 
-- 419 active tests pass; 4 deferred future tests and 38 stale TODO cases remain.
-- Statements: 81.98%.
-- Branches: 76.00%.
-- Functions: 78.49%.
-- Lines: 82.73%.
+- 427 active tests pass; 4 deferred future tests and 38 stale TODO cases remain.
+- Statements: 82.72%.
+- Branches: 76.76%.
+- Functions: 78.82%.
+- Lines: 83.51%.
 - `storage.ts`: 96.42% lines.
 - `imageExport.ts`: 99.18% lines.
-- `extractFromImage.ts`: 88.00% lines.
+- `extractFromImage.ts`: 100% lines.
 - `useKeyboardShortcuts.ts`, `useTheme.ts`, `useCVD.ts`, and `useDialogState.ts`: 100% lines.
 
 The coverage command enforces the rounded-down baseline. Thresholds should only move upward unless a PR explains why a lower threshold is correct.

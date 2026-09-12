@@ -1,6 +1,6 @@
 # PalettePort release TODO
 
-Last updated: 2026-09-10
+Last updated: 2026-09-12
 
 This file is the active release backlog. `AUDIT.md`, `PERFORMANCE_AUDIT.md`,
 `TESTING.md`, and `COMPETITOR_RESEARCH.md` contain the evidence behind it.
@@ -34,12 +34,12 @@ Update this file when work lands; do not add duplicate speculative plans here.
 
 ### Test baseline
 
-- 419 active tests pass.
+- 427 active tests pass.
 - 42 TODO tests remain: 4 real future gradient cases and 38 stale cases for
   shipped behavior.
-- Coverage: 81.98% statements, 76.00% branches, 78.49% functions, 82.73% lines.
+- Coverage: 82.72% statements, 76.76% branches, 78.82% functions, 83.51% lines.
 - Storage is 96.42% covered by line; image export is 99.18%; image extraction is
-  88.00% covered by line.
+  100% covered by line.
 - Build passes. Lint passes with the accepted `CircleWipeOverlay.tsx` warning.
 
 ### Performance baseline
@@ -168,7 +168,8 @@ release issue remains.
     remains visibly blocking in the 6x CPU check.
   - Implemented a deterministic, weighted k-means helper that ignores transparent
     pixels, returns unique colors, and caps output at the distinct-color count.
-  - Activated 21 pixel-level tests; extraction now has 88.00% line coverage.
+  - Activated 29 pixel-level tests, including the canvas sampling bridge and
+    duplicate-centroid repair; extraction now has 100% line coverage.
 
 ### Alpha verification
 
