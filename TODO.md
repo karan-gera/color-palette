@@ -113,15 +113,20 @@ release issue remains.
 
 ### Release decisions and correctness
 
-- [ ] **A-01 P0 — freeze the desktop scope and production URL.**
+- [x] **A-01 P0 — freeze the desktop scope and production URL. ✅**
   - Production URL selected and registered: `https://paletteport.app/`.
   - Root deployment is implemented: Vite uses `/`, the app owns `/` without a
     first-visit redirect, root-relative assets replace `/color-palette/` paths,
     canonical/Open Graph URLs use the production domain, and `public/CNAME`
     declares the custom domain.
   - The optional promotional page remains directly available at `/landing/`.
-  - GitHub Pages custom-domain activation, Spaceship DNS, HTTPS enforcement, and
-    live URL verification remain before this item can be marked complete.
+  - Spaceship DNS points the apex to all four GitHub Pages addresses, `www` to
+    `karan-gera.github.io`, and retains the GitHub verification TXT record.
+  - GitHub verified the domain, accepted the repository custom domain, completed
+    its DNS check, and has HTTPS enforcement enabled.
+  - The 2026-09-12 production smoke test verified the root app and share URL,
+    favicon, Open Graph image, core font, optional `/landing/` page, and `www`
+    redirect against the successful `main` Pages deployment.
   - Vite `base`, redirect behavior, `CNAME`, landing links, canonical URL, Open
     Graph URLs, favicon, and title have been reconciled for the root domain.
   - Mobile is explicitly unsupported/deferred in the app, About page, and README.
