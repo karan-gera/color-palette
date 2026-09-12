@@ -19,6 +19,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import GradientPreviewOverlay from '@/components/GradientPreviewOverlay'
 import ViewTabStrip from '@/components/ViewTabStrip'
 import KeyboardHints from '@/components/KeyboardHints'
+import FirstVisitWelcome from '@/components/FirstVisitWelcome'
 import CVDFilters from '@/components/CVDFilters'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -30,6 +31,7 @@ import { useSwapMode } from '@/hooks/useSwapMode'
 import { usePresetControl } from '@/hooks/usePresetControl'
 import { useViewNavigation } from '@/hooks/useViewNavigation'
 import { useDialogState } from '@/hooks/useDialogState'
+import { useFirstVisitWelcome } from '@/hooks/useFirstVisitWelcome'
 import { savePalette, removePalette, getSavedPalettes, getCollections, getAllTags } from '@/helpers/storage'
 import type { PaletteCollection } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
@@ -83,6 +85,7 @@ function OverlayLoadingFallback({ label }: OverlayLoadingFallbackProps) {
 }
 
 function App() {
+  const [docsEntry, setDocsEntry] = useState<{ tab: 'help'; page: string } | null>(null)
   const {
     isOpenDialog, setIsOpenDialog,
     savedPalettes, setSavedPalettes,
@@ -102,6 +105,7 @@ function App() {
     notification, setNotification, setShowHistory, setShowHarmony,
     toggleHints, toggleContrast, toggleDocs, closeDocs,
   } = useUIPanels()
+  const { isWelcomeOpen, dismissWelcome } = useFirstVisitWelcome()
   const contrastRef = useRef<HTMLDivElement>(null)
   const cycleContrastTabRef = useRef<ContrastCheckerHandle>(null)
   const cycleCVDRef = useRef<CVDToggleHandle>(null)
@@ -219,10 +223,22 @@ function App() {
     closeDialogs()
     closeColorEditing()
     closeDocs()
+    if (isWelcomeOpen) dismissWelcome()
     setShowHistory(false)
     closePreviews()
     closeSwapMode()
-  }, [closeDialogs, closeColorEditing, closeDocs, setShowHistory, closePreviews, closeSwapMode])
+  }, [closeDialogs, closeColorEditing, closeDocs, isWelcomeOpen, dismissWelcome, setShowHistory, closePreviews, closeSwapMode])
+
+  const handleToggleDocs = useCallback(() => {
+    setDocsEntry(null)
+    toggleDocs()
+  }, [toggleDocs])
+
+  const handleWelcomeHelp = useCallback(() => {
+    setDocsEntry({ tab: 'help', page: 'getting-started' })
+    dismissWelcome()
+    window.setTimeout(toggleDocs, 0)
+  }, [dismissWelcome, toggleDocs])
 
   // Keep this list in sync with closeAllDialogs above.
   // showHistory is intentionally excluded — shortcuts still work while the history panel is open.
@@ -230,6 +246,7 @@ function App() {
     isAnyDialogStateOpen ||
     isColorEditingOpen ||
     showDocs ||
+    isWelcomeOpen ||
     showPreviewOverlay ||
     showGradientPreviewOverlay ||
     swapMode
@@ -258,7 +275,7 @@ function App() {
     onCyclePreset: cyclePreset,
     onPresetReroll: rerollPreset,
     onViewVariations: openVariations,
-    onToggleDocs: toggleDocs,
+    onToggleDocs: handleToggleDocs,
     onToggleSwapMode: toggleSwapMode,
     onToggleHistory: () => setShowHistory(v => !v),
     onToggleHarmony: () => setShowHarmony(v => !v),
@@ -279,7 +296,7 @@ function App() {
       {/* Wrapper for CVD filter application (Firefox workaround) */}
       <div id="cvd-wrapper" className="min-h-screen p-8 flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-4 w-full max-w-4xl">
-          <Header cvdRef={cycleCVDRef} onToggleDocs={toggleDocs} />
+          <Header cvdRef={cycleCVDRef} onToggleDocs={handleToggleDocs} />
           <AnimatePresence initial={false}>
             {activeView === 'palette' && (
               <motion.div
@@ -578,10 +595,21 @@ function App() {
 
       {/* Fixed elements outside cvd-wrapper to avoid Firefox filter bug */}
       <KeyboardHints visible={showHints} onToggle={toggleHints} colorCount={(current ?? []).length} />
+      {isWelcomeOpen ? (
+        <FirstVisitWelcome
+          open
+          onDismiss={dismissWelcome}
+          onOpenHelp={handleWelcomeHelp}
+        />
+      ) : null}
       <AnimatePresence>
         {showDocs && (
           <Suspense fallback={<OverlayLoadingFallback label="loading documentation…" />}>
-            <DocsOverlay onClose={closeDocs} />
+            <DocsOverlay
+              onClose={closeDocs}
+              initialTab={docsEntry?.tab}
+              initialPage={docsEntry?.page}
+            />
           </Suspense>
         )}
       </AnimatePresence>

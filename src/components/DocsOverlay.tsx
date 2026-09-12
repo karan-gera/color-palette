@@ -13,6 +13,8 @@ import { EXPORT_FORMATS } from '@/helpers/exportFormats'
 
 type DocsOverlayProps = {
   onClose: () => void
+  initialTab?: Tab
+  initialPage?: string
 }
 
 type Tab = 'about' | 'help' | 'changelog'
@@ -63,8 +65,9 @@ const COMPETITOR_ROWS = [
 const CHANGELOG = [
   {
     version: __APP_VERSION__,
-    title: 'public alpha identity & image extraction correctness',
+    title: 'public alpha welcome, identity & image extraction correctness',
     items: [
+      'first visits now open with a compact guide to help and keyboard shortcuts',
       `the public alpha is identified as ${__APP_VERSION__}`,
       'the production address is paletteport.app',
       'the public alpha supports desktop browsers; mobile ui remains deferred',
@@ -1783,9 +1786,17 @@ function ChangelogTab() {
   )
 }
 
-export default function DocsOverlay({ onClose }: DocsOverlayProps) {
-  const [activeTab, setActiveTabState] = useState<Tab>(() => docsSessionState.activeTab)
-  const [activePage, setActivePageState] = useState<DocPageId>(() => docsSessionState.activePage)
+export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOverlayProps) {
+  const [activeTab, setActiveTabState] = useState<Tab>(() => {
+    const tab = initialTab ?? docsSessionState.activeTab
+    docsSessionState.activeTab = tab
+    return tab
+  })
+  const [activePage, setActivePageState] = useState<DocPageId>(() => {
+    const page = initialPage ?? docsSessionState.activePage
+    docsSessionState.activePage = page
+    return page
+  })
   const overlayRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const isPresent = useIsPresent()

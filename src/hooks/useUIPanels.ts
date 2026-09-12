@@ -22,7 +22,7 @@ export type UseUIPanelsReturn = {
 export function useUIPanels(): UseUIPanelsReturn {
   const [showHints, setShowHints] = useState(() => {
     const stored = localStorage.getItem(HINTS_KEY)
-    return stored !== 'false'
+    return stored === 'true'
   })
   const [showContrast, setShowContrast] = useState(() => {
     const stored = localStorage.getItem(CONTRAST_KEY)
