@@ -74,8 +74,8 @@ CLS and no long tasks. The constraint is the app startup path, not the base CSS.
 - Image extraction still blocks the main thread; worker migration remains B-05.
 - There is no service worker. “works offline” is currently a false claim.
 - `ExportDialog.tsx` contains a placeholder GitHub issue URL.
-- The audit found six high-severity production dependency findings after omitting
-  dev dependencies. Re-run before remediation because advisories change.
+- The 2026-09-12 dependency triage cleared all production and development audit
+  findings without a direct-dependency major-version upgrade.
 - The share-link documentation uses commas, while the encoder uses hyphens.
 - Competitor copy contains stale or overbroad claims. The dated evidence and safe
   replacements are in `COMPETITOR_RESEARCH.md`.
@@ -131,10 +131,14 @@ release issue remains.
   - Replace `https://github.com/your-repo/issues` with the real issue tracker.
   - Give About-page feature-request and donation controls real destinations or
     remove them.
-- [ ] **A-05 P0 — triage dependencies.**
+- [x] **A-05 P0 — triage dependencies. ✅**
   - Re-run `npm audit` and `npm audit --omit=dev`.
   - Patch production findings without breaking the build.
   - Document accepted findings with package, advisory, exposure, and revisit date.
+  - Updated Vite within major 7 and Vitest/UI/coverage within major 4, then
+    refreshed vulnerable transitive packages within their declared ranges.
+  - Both full and production-only audits report zero findings; no advisories are
+    accepted or deferred.
 - [ ] **A-06 P0 — make public claims match observed behavior.**
   - Replace “works offline” with “runs in your browser” until beta offline gates pass.
   - Correct the share-link delimiter example.
