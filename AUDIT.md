@@ -1,6 +1,6 @@
 # PalettePort ship audit
 
-Last reviewed: 2026-09-06
+Last reviewed: 2026-09-12
 Original audit baseline: `5f77c12`
 Implemented in PRs: `#1` accessibility, `#2` hook dependencies, `#3` local preview fonts, `#4` audit and research
 
@@ -29,7 +29,13 @@ Mobile UI and responsive redesign are excluded from this audit and deferred unti
 - [x] Remove the five Google Fonts runtime requests from `PalettePreviewOverlay.tsx`. Official Latin variable WOFF2 files and their OFL licenses are now self-hosted under `public/fonts/preview`.
 - [ ] Either add and test an offline boot/cache strategy or replace the broad “works offline” claim with the narrower, verified “runs in your browser” / local-first language.
 - [ ] Add an actual MIT `LICENSE` file and reconcile package version `0.0.0` with the in-app changelog version.
-- [ ] Triage and patch dependency findings. The audit baseline was 16 findings: 3 critical, 11 high, 1 moderate, and 1 low; `npm audit --omit=dev` still reported 6 high findings.
+- [x] Triage and patch dependency findings. The 2026-09-12 recheck found 20
+      findings (3 critical, 12 high, 4 moderate, and 1 low), including 6 high
+      findings in `npm audit --omit=dev`. Vite was updated within major 7,
+      Vitest and its UI/coverage packages within major 4, and vulnerable
+      transitive packages were refreshed within their declared ranges. Both
+      audit commands now report zero findings; no advisories are accepted or
+      deferred.
 - [x] Make deployment depend on build, zero-unexpected-warning lint, and tests. Pull requests run the same quality gate before merge.
 - [ ] Decide whether v1 ships at the existing GitHub Pages URL or at `paletteport.com`. A custom-domain launch additionally requires DNS, `CNAME`, Vite base-path, canonical/OG URL, and landing-link changes.
 

@@ -128,7 +128,7 @@
 </head>
 <body>
   <header>
-    <p class="muted">engineering report / 2026-09-06 / desktop release scope</p>
+    <p class="muted">engineering report / 2026-09-12 / desktop release scope</p>
     <h1>PalettePort release roadmap</h1>
     <p class="lede">The product already exceeds an MVP. The remaining work is release hardening: correctness, honest public claims, dependency and failure handling, constrained-device startup, offline boot, and repeatable release gates.</p>
     <p class="notice"><strong>Source of truth:</strong> <a href="TODO.md">TODO.md</a>. Controls on this page filter and copy tasks; they do not change project state.</p>
@@ -187,17 +187,17 @@
         <p>Stable URL, version, support scope, release notes, and operational checks. No known high-severity release issue.</p>
       </article>
     </div>
-    <p><strong>Recommended next target:</strong> desktop-only public alpha after the 12 alpha tasks close. Alpha may omit offline boot only if the app stops claiming it works offline.</p>
+    <p><strong>Recommended next target:</strong> desktop-only public alpha after the 9 remaining alpha tasks close. Alpha may omit offline boot only if the app stops claiming it works offline.</p>
 
     <h2>Release path</h2>
     <div class="path" id="release-path" aria-label="release milestone status"></div>
 
     <h2>Audit baseline</h2>
     <div class="stats">
-      <div class="stat"><span class="muted">active tests</span><output>398</output><span class="status pass">passing</span></div>
-      <div class="stat"><span class="muted">stale TODO tests</span><output>50</output><span class="status warn">shipped behavior</span></div>
-      <div class="stat"><span class="muted">statement coverage</span><output>81.70%</output><span class="status warn">baseline</span></div>
-      <div class="stat"><span class="muted">production audit</span><output>6 high</output><span class="status fail">re-run required</span></div>
+      <div class="stat"><span class="muted">active tests</span><output>427</output><span class="status pass">passing</span></div>
+      <div class="stat"><span class="muted">stale TODO tests</span><output>38</output><span class="status warn">shipped behavior</span></div>
+      <div class="stat"><span class="muted">statement coverage</span><output>82.72%</output><span class="status warn">baseline</span></div>
+      <div class="stat"><span class="muted">production audit</span><output>0</output><span class="status pass">clear</span></div>
     </div>
 
     <h3 style="margin-top: 28px">Current versus beta targets</h3>
@@ -258,15 +258,15 @@
     const tasks = [
       { id: 'A-01', stage: 'alpha', priority: 'P0', title: 'freeze desktop scope and production URL', detail: 'Choose GitHub Pages path or paletteport.com; reconcile base path, redirect, DNS, canonical/OG URLs, landing links, and desktop-only support.' },
       { id: 'A-02', stage: 'alpha', priority: 'P0', title: 'restore palette reroll fades', detail: 'Verify reroll all/one, presets, relationships, and immediate reduced-motion behavior.' },
-      { id: 'A-03', stage: 'alpha', priority: 'P0', title: 'add release identity and license', detail: 'Add MIT LICENSE and align package, docs, and changelog on one SemVer prerelease.' },
+      { id: 'A-03', stage: 'alpha', priority: 'P0', complete: true, title: 'add release identity and license', detail: 'Added MIT LICENSE and aligned package, docs, and changelog on 0.21.0-alpha.1.' },
       { id: 'A-04', stage: 'alpha', priority: 'P0', title: 'replace or remove dead external actions', detail: 'Use the real issue tracker; fix or remove feature-request and donation destinations.' },
-      { id: 'A-05', stage: 'alpha', priority: 'P0', title: 'triage dependencies', detail: 'Re-run audits, patch production findings, and document any accepted advisory with exposure and revisit date.' },
+      { id: 'A-05', stage: 'alpha', priority: 'P0', complete: true, title: 'triage dependencies', detail: 'Updated vulnerable dependencies within direct major versions; full and production-only audits report zero findings.' },
       { id: 'A-06', stage: 'alpha', priority: 'P0', title: 'make public claims match behavior', detail: 'Fix offline, storage, share delimiter, and lowercase-copy claims.' },
       { id: 'A-07', stage: 'alpha', priority: 'P0', title: 'replace stale competitor matrix', detail: 'Use dated first-party sources and preserve unknown values as unknown.' },
       { id: 'A-08', stage: 'alpha', priority: 'P0', title: 'add a desktop error boundary', detail: 'Provide readable, tested recovery without deleting local data.' },
       { id: 'A-09', stage: 'alpha', priority: 'P0', title: 'respect reduced-motion preferences', detail: 'Cover Framer Motion, CSS transitions, core actions, docs, and dialogs.' },
       { id: 'A-10', stage: 'alpha', priority: 'P0', title: 'remove worst startup-only work', detail: 'Lazy-mount docs and preview/Recharts; record gzip, transfer, and DOM deltas.' },
-      { id: 'A-11', stage: 'alpha', priority: 'P0', title: 'cover and fix extraction correctness', detail: 'Extract testable quantization, activate tests, deduplicate centroids, and handle low distinct-color counts.' },
+      { id: 'A-11', stage: 'alpha', priority: 'P0', complete: true, title: 'cover and fix extraction correctness', detail: 'Extracted testable quantization, activated tests, deduplicated centroids, and handled low distinct-color counts.' },
       { id: 'A-12', stage: 'alpha', priority: 'P0', title: 'cut and verify an alpha candidate', detail: 'Pass automated gates plus Helium, keyboard, accessibility, live-link, and network-request smoke checks.' },
       { id: 'B-01', stage: 'beta', priority: 'P0', title: 'finish startup code splitting', detail: 'Split optional views and naming data; meet 175 KB gzip JS and 275 KB initial transfer.' },
       { id: 'B-02', stage: 'beta', priority: 'P0', title: 'add accessible pre-React app shell', detail: 'Useful content under 1.5 s and core interactive under 5 s at 400 Kbps + 6x CPU.' },
@@ -309,8 +309,9 @@
     function renderPath() {
       const labels = { alpha: 'public alpha', beta: 'public beta', v1: 'v1' };
       document.querySelector('#release-path').innerHTML = ['alpha', 'beta', 'v1'].map(stage => {
-        const total = tasks.filter(task => task.stage === stage).length;
-        return `<article class="stage" data-stage="${stage}"><h3>${labels[stage]}</h3><div class="count">0 / ${total}</div><p class="muted">tasks complete</p></article>`;
+        const stageTasks = tasks.filter(task => task.stage === stage);
+        const complete = stageTasks.filter(task => task.complete).length;
+        return `<article class="stage" data-stage="${stage}"><h3>${labels[stage]}</h3><div class="count">${complete} / ${stageTasks.length}</div><p class="muted">tasks complete</p></article>`;
       }).join('');
     }
 
@@ -349,7 +350,7 @@
       document.querySelector('#task-groups').innerHTML = ['alpha', 'beta', 'v1'].map(stage => {
         const stageTasks = tasks.filter(task => {
           const text = `${task.id} ${task.title} ${task.detail}`.toLowerCase();
-          return task.stage === stage &&
+          return !task.complete && task.stage === stage &&
             (stageFilter === 'all' || task.stage === stageFilter) &&
             (priorityFilter === 'all' || task.priority === priorityFilter) &&
             (!query || text.includes(query));
@@ -360,7 +361,8 @@
           `<article class="task" data-id="${task.id}"><div class="task-head"><span aria-hidden="true">☐</span><span class="task-id">${task.id}</span><span class="priority">${task.priority}</span><strong>${escapeHtml(task.title)}</strong></div><p>${escapeHtml(task.detail)}</p></article>`
         ).join('')}</div></section>`;
       }).join('');
-      document.querySelector('#task-count').textContent = `${visible} of ${tasks.length} open tasks visible`;
+      const openTaskCount = tasks.filter(task => !task.complete).length;
+      document.querySelector('#task-count').textContent = `${visible} of ${openTaskCount} open tasks visible`;
       document.querySelector('#no-results').hidden = visible !== 0;
     }
 
