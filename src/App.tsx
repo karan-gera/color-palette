@@ -575,7 +575,7 @@ function App() {
 
       {/* Bottom fade so content doesn't clash with fixed keyboard hints */}
       <div
-        className={`fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-56'}`}
+        className={`theme-background-surface fixed bottom-0 left-0 right-0 bg-background pointer-events-none z-40 transition-all duration-300 reduced-motion-instant ${showHints ? 'h-[340px]' : 'h-56'}`}
         style={{ maskImage: 'linear-gradient(to top, black, transparent)', WebkitMaskImage: 'linear-gradient(to top, black, transparent)' }}
         aria-hidden="true"
       />

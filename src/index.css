@@ -259,28 +259,35 @@
   }
 }
 
-/* Reduced theme changes are covered by one compositor-only veil. Keeping the
+/* Keyboard theme cycling and reduced-motion theme changes are covered by one
+   compositor-only veil. Keeping the
    veil above the whole app prevents independently painted control fills and
    active states from appearing between the old and new theme frames. */
 .theme-fade-overlay {
-  display: none;
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--theme-fade-background, var(--background));
+  transition: opacity 150ms ease-out;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .theme-fade-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    pointer-events: none;
-    opacity: 0;
-    background: var(--theme-fade-background, var(--background));
-    transition: opacity 150ms ease-out;
-  }
+[data-theme-fading] .theme-fade-overlay {
+  opacity: 1;
+}
 
-  [data-theme-fading] .theme-fade-overlay {
-    opacity: 1;
-  }
+/* The regular body transition is longer than the veil. Apply its new theme
+   color while covered so it cannot remain visibly between themes on reveal. */
+[data-theme-fading] body {
+  transition: none;
+}
+
+/* Keep the functional height transition available, but do not let this fixed
+   background trail the body during a coordinated theme fade. */
+[data-theme-fading] .theme-background-surface {
+  transition-property: height;
 }
 
 [data-cvd="deuteranopia"] .cvd-color {

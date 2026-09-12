@@ -1,6 +1,6 @@
 import { act, fireEvent, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { REDUCED_THEME_FADE_DURATION, THEME_KEY_REPEAT_INTERVAL, useTheme } from '@/hooks/useTheme'
+import { THEME_FADE_DURATION, THEME_KEY_REPEAT_INTERVAL, useTheme } from '@/hooks/useTheme'
 
 type SystemTheme = 'light' | 'dark' | 'none'
 
@@ -37,6 +37,7 @@ afterEach(() => {
   vi.useRealTimers()
   document.documentElement.removeAttribute('data-theme')
   document.documentElement.removeAttribute('data-theme-fading')
+  document.documentElement.removeAttribute('data-theme-fade-target')
   document.documentElement.removeAttribute('data-theme-wiping')
   document.documentElement.style.backgroundColor = ''
   document.documentElement.style.removeProperty('--theme-fade-background')
@@ -84,10 +85,14 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme())
 
     act(() => result.current.cycleTheme())
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(result.current.theme).toBe('gray')
     act(() => result.current.cycleTheme())
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(result.current.theme).toBe('dark')
     act(() => result.current.cycleTheme())
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(result.current.theme).toBe('light')
   })
 
@@ -96,20 +101,20 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme())
 
     act(() => result.current.cycleTheme(false))
-    expect(result.current.theme).toBe('gray')
+    expect(result.current.theme).toBe('light')
 
     act(() => vi.advanceTimersByTime(THEME_KEY_REPEAT_INTERVAL - 1))
     act(() => result.current.cycleTheme(true))
     expect(result.current.theme).toBe('gray')
 
     act(() => result.current.cycleTheme(false))
-    expect(result.current.theme).toBe('dark')
-
     act(() => result.current.cycleTheme(false))
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(result.current.theme).toBe('light')
 
     act(() => vi.advanceTimersByTime(THEME_KEY_REPEAT_INTERVAL))
     act(() => result.current.cycleTheme(true))
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(result.current.theme).toBe('gray')
   })
 
@@ -125,7 +130,10 @@ describe('useTheme', () => {
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
 
     act(() => keyboard.result.current.cycleTheme(false))
-    expect(keyboard.result.current.theme).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(header.result.current.theme).toBe('dark')
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
     expect(header.result.current.theme).toBe('light')
   })
 
@@ -144,7 +152,49 @@ describe('useTheme', () => {
 
     act(() => header.result.current.completeTransition())
     act(() => keyboard.result.current.cycleTheme(false))
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+  })
+
+  it('does not start a GUI transition from another hook instance during a keyboard fade', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const header = renderHook(() => useTheme())
+    const keyboard = renderHook(() => useTheme({ syncExternalChanges: false }))
+
+    act(() => keyboard.result.current.cycleTheme(false))
+    act(() => header.result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+
+    expect(header.result.current.transition).toBeNull()
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-wiping')
+
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
+    expect(document.documentElement).toHaveAttribute('data-theme', 'gray')
+  })
+
+  it('shares a reduced GUI fade target with keyboard cycling from another hook instance', () => {
+    reducedMotion = true
+    localStorage.setItem('color-palette:theme', 'light')
+    const overlay = document.createElement('div')
+    overlay.className = 'theme-fade-overlay'
+    document.body.append(overlay)
+    const header = renderHook(() => useTheme())
+    const keyboard = renderHook(() => useTheme({ syncExternalChanges: false }))
+
+    act(() => header.result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
+    act(() => keyboard.result.current.cycleTheme(false))
+
+    expect(document.documentElement).toHaveAttribute('data-theme-fade-target', 'light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+
+    act(() => fireEvent.transitionEnd(overlay, { propertyName: 'opacity' }))
+    act(() => vi.advanceTimersByTime(40))
+
+    expect(header.result.current.theme).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fade-target')
   })
 
   it('defers applying a transition target until requested', () => {
@@ -181,7 +231,7 @@ describe('useTheme', () => {
     expect(document.documentElement).toHaveAttribute('data-theme-fading')
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
 
-    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
 
     expect(result.current.theme).toBe('dark')
     expect(result.current.transition).toBeNull()
@@ -189,7 +239,7 @@ describe('useTheme', () => {
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
-  it('waits for the reduced-theme cover to become opaque before applying the new theme', () => {
+  it('waits for the theme cover to become opaque before applying the new theme', () => {
     reducedMotion = true
     localStorage.setItem('color-palette:theme', 'light')
     const overlay = document.createElement('div')
@@ -198,20 +248,22 @@ describe('useTheme', () => {
     const { result } = renderHook(() => useTheme())
 
     act(() => result.current.setThemeWithTransition('dark', { x: 10, y: 20 }))
-    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION))
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
     expect(document.documentElement).toHaveAttribute('data-theme-fading')
 
     act(() => fireEvent.transitionEnd(overlay, { propertyName: 'opacity' }))
-
     expect(result.current.theme).toBe('dark')
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+
+    act(() => vi.advanceTimersByTime(40))
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
-  it('accepts rapid deliberate taps during a reduced-motion fade and applies the final cycle', () => {
-    reducedMotion = true
+  it.each([false, true])('accepts rapid deliberate taps during a theme fade and applies the final cycle (reduced: %s)', (prefersReduced) => {
+    reducedMotion = prefersReduced
     localStorage.setItem('color-palette:theme', 'light')
     const { result } = renderHook(() => useTheme())
 
@@ -221,13 +273,33 @@ describe('useTheme', () => {
     expect(result.current.theme).toBe('light')
     expect(document.documentElement).toHaveAttribute('data-theme-fading')
 
-    act(() => vi.advanceTimersByTime(REDUCED_THEME_FADE_DURATION))
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
 
     expect(result.current.theme).toBe('dark')
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
-  it('finishes a reduced theme fade if reduced motion is disabled mid-transition', () => {
+  it('accepts a deliberate tap during the covered commit frame before reveal', () => {
+    localStorage.setItem('color-palette:theme', 'light')
+    const overlay = document.createElement('div')
+    overlay.className = 'theme-fade-overlay'
+    document.body.append(overlay)
+    const { result } = renderHook(() => useTheme())
+
+    act(() => result.current.cycleTheme(false))
+    act(() => fireEvent.transitionEnd(overlay, { propertyName: 'opacity' }))
+    expect(result.current.theme).toBe('gray')
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+
+    act(() => result.current.cycleTheme(false))
+    act(() => vi.advanceTimersByTime(80))
+
+    expect(result.current.theme).toBe('dark')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
+    expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
+  })
+
+  it('keeps a coordinated theme fade when reduced motion is disabled mid-transition', () => {
     reducedMotion = true
     localStorage.setItem('color-palette:theme', 'light')
     const { result } = renderHook(() => useTheme())
@@ -236,8 +308,12 @@ describe('useTheme', () => {
     reducedMotion = false
     act(() => reducedMotionListener?.({ matches: false } as MediaQueryListEvent))
 
+    expect(result.current.theme).toBe('light')
+    expect(document.documentElement).toHaveAttribute('data-theme-fading')
+
+    act(() => vi.advanceTimersByTime(THEME_FADE_DURATION + 40))
+
     expect(result.current.theme).toBe('dark')
-    expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
     expect(document.documentElement).not.toHaveAttribute('data-theme-fading')
   })
 
