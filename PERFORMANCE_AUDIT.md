@@ -1,6 +1,6 @@
 # PalettePort performance audit
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-12
 
 This is the durable performance record for the desktop application. The goal is not merely to perform well on the development machine. The core palette workflow should remain readable and usable on a slow connection and a low-power device.
 
@@ -40,8 +40,8 @@ These are controlled lab results, not field telemetry. The application correctly
 
 ### A-10 optional-surface split
 
-Measured locally from production builds of `main` at `22e71eb` and
-`perf/lazy-optional-surfaces` on 2026-09-10. Gzip values in the first table are
+Measured locally from production builds of `main` at `276ded3` and
+`perf/lazy-optional-surfaces` on 2026-09-12. Gzip values in the first table are
 Vite's build output; transfer estimates use deterministic `gzip -9` output plus
 the three initially requested core WOFF2 fonts. Browser checks used an isolated
 Chromium preview at 1280 × 800 with a five-color share URL. DOM size is the
@@ -50,11 +50,11 @@ palette settled.
 
 | Initial-load measurement | Before | After | Change |
 |---|---:|---:|---:|
-| JavaScript, minified | 1,323.40 kB | 821.23 kB | −502.17 kB (−38.0%) |
-| JavaScript, gzip | 386.25 kB | 252.37 kB | −133.88 kB (−34.7%) |
-| Estimated initial transfer | 474.3 kB | 341.2 kB | −133.1 kB (−28.1%) |
-| Populated document elements | 1,257 | 731 | −526 (−41.8%) |
-| Closed documentation subtree | 526 | 0 | −526 (−100%) |
+| JavaScript, minified | 1,323.75 kB | 821.67 kB | −502.08 kB (−37.9%) |
+| JavaScript, gzip | 386.40 kB | 252.49 kB | −133.91 kB (−34.7%) |
+| Estimated initial transfer | 474.4 kB | 341.3 kB | −133.1 kB (−28.1%) |
+| Populated document elements | 1,266 | 731 | −535 (−42.3%) |
+| Closed documentation subtree | 535 | 0 | −535 (−100%) |
 
 The production build now emits these entry and async assets (Vite-reported
 sizes):
@@ -63,8 +63,8 @@ sizes):
 |---|---|---:|---:|
 | `index.html` | initial | 3.92 kB | 1.43 kB |
 | `index.css` | initial | 84.65 kB | 14.00 kB |
-| `index` | initial | 821.23 kB | 252.37 kB |
-| `DocsOverlay` | documentation open | 77.54 kB | 17.05 kB |
+| `index` | initial | 821.67 kB | 252.49 kB |
+| `DocsOverlay` | documentation open | 78.84 kB | 17.50 kB |
 | `PalettePreviewOverlay` | palette preview open | 423.49 kB | 117.66 kB |
 | `chart-column` | shared by the two async surfaces | 0.42 kB | 0.30 kB |
 
