@@ -405,6 +405,20 @@ const DOC_NAV: DocNavItem[] = [
 
 type DocPageId = string
 
+const docsSessionState: {
+  activeTab: Tab
+  activePage: DocPageId
+  mainScrollTop: number
+  helpNavScrollTop: number
+  helpContentScrollTop: number
+} = {
+  activeTab: 'about',
+  activePage: 'getting-started',
+  mainScrollTop: 0,
+  helpNavScrollTop: 0,
+  helpContentScrollTop: 0,
+}
+
 /* ---- Doc page utilities ---- */
 
 const noop = () => {}
@@ -1672,13 +1686,29 @@ function DocPageKeyboard() {
   )
 }
 
-function HelpTab() {
-  const [activePage, setActivePage] = useState<DocPageId>('getting-started')
+type HelpTabProps = {
+  activePage: DocPageId
+  onActivePageChange: (pageId: DocPageId) => void
+}
+
+function HelpTab({ activePage, onActivePageChange }: HelpTabProps) {
+  const restoreNavScroll = useCallback((element: HTMLElement | null) => {
+    if (element) element.scrollTop = docsSessionState.helpNavScrollTop
+  }, [])
+  const restoreContentScroll = useCallback((element: HTMLElement | null) => {
+    if (element) element.scrollTop = docsSessionState.helpContentScrollTop
+  }, [])
 
   return (
     <div className="flex flex-1 min-h-0 w-full">
       {/* sidebar */}
-      <nav className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto">
+      <nav
+        ref={restoreNavScroll}
+        className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto"
+        onScroll={(event) => {
+          docsSessionState.helpNavScrollTop = event.currentTarget.scrollTop
+        }}
+      >
         <ul className="space-y-0.5 py-1">
           {DOC_NAV.map((item, i) =>
             item.type === 'section' ? (
@@ -1691,7 +1721,7 @@ function HelpTab() {
               <li key={item.id}>
                 <button
                   type="button"
-                  onClick={() => setActivePage(item.id)}
+                  onClick={() => onActivePageChange(item.id)}
                   className={`block w-full text-left py-1.5 px-2 rounded text-xs font-mono lowercase transition-colors ${
                     activePage === item.id
                       ? 'bg-accent text-accent-foreground'
@@ -1707,7 +1737,13 @@ function HelpTab() {
       </nav>
 
       {/* content */}
-      <div className="flex-1 min-w-0 overflow-y-auto pl-6">
+      <div
+        ref={restoreContentScroll}
+        className="flex-1 min-w-0 overflow-y-auto pl-6"
+        onScroll={(event) => {
+          docsSessionState.helpContentScrollTop = event.currentTarget.scrollTop
+        }}
+      >
         {activePage === 'keyboard' ? (
           <DocPageKeyboard />
         ) : (
@@ -1740,9 +1776,24 @@ function ChangelogTab() {
 }
 
 export default function DocsOverlay({ onClose }: DocsOverlayProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('about')
+  const [activeTab, setActiveTabState] = useState<Tab>(() => docsSessionState.activeTab)
+  const [activePage, setActivePageState] = useState<DocPageId>(() => docsSessionState.activePage)
   const overlayRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  const setActiveTab = useCallback((tab: Tab) => {
+    docsSessionState.activeTab = tab
+    setActiveTabState(tab)
+  }, [])
+
+  const setActivePage = useCallback((pageId: DocPageId) => {
+    docsSessionState.activePage = pageId
+    setActivePageState(pageId)
+  }, [])
+
+  const restoreMainScroll = useCallback((element: HTMLDivElement | null) => {
+    if (element) element.scrollTop = docsSessionState.mainScrollTop
+  }, [])
 
   const restorePreviousFocus = useCallback(() => {
     if (previousFocusRef.current?.isConnected) {
@@ -1861,10 +1912,16 @@ export default function DocsOverlay({ onClose }: DocsOverlayProps) {
       <div className="flex flex-col h-[calc(100vh-57px)] min-h-0">
         {activeTab === 'help' ? (
           <div className="flex-1 flex min-h-0 px-6 py-6">
-            <HelpTab />
+            <HelpTab activePage={activePage} onActivePageChange={setActivePage} />
           </div>
         ) : (
-          <div className="overflow-y-auto flex-1 px-6 py-8">
+          <div
+            ref={restoreMainScroll}
+            className="overflow-y-auto flex-1 px-6 py-8"
+            onScroll={(event) => {
+              docsSessionState.mainScrollTop = event.currentTarget.scrollTop
+            }}
+          >
             <div className="max-w-3xl mx-auto">
               <div className={activeTab === 'about' ? '' : 'hidden'}>
                 <AboutTab />
