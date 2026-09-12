@@ -20,7 +20,7 @@ export default function Hero({ color, onClick }: HeroProps) {
         borderColor: textColor,
         color: textColor,
       }}
-      aria-label="Generate color"
+      aria-label="generate color"
     >
       <Plus className="size-16" strokeWidth={1.5} />
     </button>

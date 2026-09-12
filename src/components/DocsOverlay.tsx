@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useIsPresent } from 'framer-motion'
-import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
+import { X, Copy, Download, Upload, Eye, Sparkles, Blend, Pipette, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2 } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
@@ -9,6 +9,7 @@ import PaletteItem from './PaletteItem'
 import PresetBrowser from './PresetBrowser'
 import GlobalColorRelationshipSelector from './GlobalColorRelationshipSelector'
 import ContrastChecker from './ContrastChecker'
+import AboutTab from './AboutTab'
 import { generateTints, generateShades, generateTones, COLOR_RELATIONSHIPS, PALETTE_PRESETS } from '@/helpers/colorTheory'
 import { EXPORT_FORMATS } from '@/helpers/exportFormats'
 
@@ -26,47 +27,10 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'changelog', label: 'changelog' },
 ]
 
-const FEATURES = [
-  { icon: Copy, label: 'copy formats', desc: 'hex, rgb, hsl, css, tailwind, scss' },
-  { icon: Link, label: 'share via url', desc: 'palettes encoded in shareable links' },
-  { icon: Download, label: 'export', desc: 'css, json, tailwind, scss, ase, aco, gpl, procreate, paint.net' },
-  { icon: Eye, label: 'color blindness', desc: 'simulate how your palette looks to color blind users' },
-  { icon: BarChart3, label: 'contrast checker', desc: 'wcag aa/aaa compliance for all color pairs' },
-  { icon: Sparkles, label: 'presets', desc: 'pastel, neon, earth, jewel, monochrome, warm, cool, muted' },
-  { icon: Type, label: 'color naming', desc: 'every color shows its closest name from 4,000+ entries' },
-  { icon: Blend, label: 'variations', desc: 'tints, shades, and tones for any color' },
-  { icon: Gauge, label: 'harmony score', desc: 'rates how well your colors work together (0–100)' },
-  { icon: Pipette, label: 'color picker', desc: 'pick any color from your screen' },
-  { icon: Layers, label: 'gradient generator', desc: 'build gradients from your palette, export to css/svg/png' },
-  { icon: LayoutTemplate, label: 'palette preview', desc: 'see your colors in title layouts, dashboards, and mockups' },
-  { icon: ImageIcon, label: 'extract from image', desc: 'drop an image to pull out its dominant colors' },
-  { icon: FolderOpen, label: 'collections & tags', desc: 'organize saved palettes into groups and tag them for filtering' },
-  { icon: Keyboard, label: 'keyboard', desc: 'every action has a shortcut' },
-]
-
-const COMPETITOR_ROWS = [
-  { feature: 'max colors', us: '10', coolors: '5 free, ∞ pro ($99)', colorffy: '5' },
-  { feature: 'contrast checker', us: true, coolors: 'pro', colorffy: 'pro ($5/mo)' },
-  { feature: 'palette variations', us: true, coolors: 'pro', colorffy: 'free (limited)' },
-  { feature: 'advanced exports', us: true, coolors: 'pro', colorffy: 'pro' },
-  { feature: 'collections & tags', us: true, coolors: 'pro', colorffy: '3 free, ∞ pro' },
-  { feature: 'palette preview', us: true, coolors: 'pro', colorffy: 'n/a' },
-  { feature: 'harmony score', us: true, coolors: 'n/a', colorffy: 'n/a' },
-  { feature: 'extract from image', us: true, coolors: 'free', colorffy: 'free (limited)' },
-  { feature: 'gradient tools', us: true, coolors: 'free', colorffy: 'free' },
-  { feature: 'dark mode', us: true, coolors: 'pro', colorffy: 'free' },
-  { feature: 'unlimited saves', us: true, coolors: 'pro', colorffy: 'free' },
-  { feature: 'cvd simulation', us: true, coolors: 'free', colorffy: 'n/a' },
-  { feature: 'color naming', us: true, coolors: 'free', colorffy: 'n/a' },
-  { feature: 'keyboard coverage', us: true, coolors: 'partial', colorffy: 'n/a' },
-  { feature: 'art app exports', us: true, coolors: 'n/a', colorffy: 'n/a' },
-  { feature: 'no ads', us: true, coolors: 'pro', colorffy: 'pro' },
-]
-
 const CHANGELOG = [
   {
     version: __APP_VERSION__,
-    title: 'public alpha welcome, identity & image extraction correctness',
+    title: 'public alpha identity, trust & image extraction correctness',
     items: [
       'first visits now open with a compact guide to help and keyboard shortcuts',
       `the public alpha is identified as ${__APP_VERSION__}`,
@@ -74,6 +38,10 @@ const CHANGELOG = [
       'the public alpha supports desktop browsers; mobile ui remains deferred',
       'package metadata and in-app version now share one source',
       'paletteport is licensed under the mit license',
+      'about now explains the desktop alpha scope, browser-local data, storage limits, and project links',
+      'public claims no longer promise offline startup or unlimited browser storage',
+      'share documentation now matches the hyphen-separated url format',
+      'missing export formats now link to the real issue tracker',
       'image extraction now returns deterministic palettes without duplicate swatches',
       'transparent pixels are excluded from extracted colors',
       'images with fewer distinct colors return only the colors available',
@@ -277,117 +245,6 @@ const CHANGELOG = [
   },
 ]
 
-function AboutTab() {
-  return (
-    <div className="space-y-12">
-      {/* hero */}
-      <div className="text-center space-y-3">
-        <h2 className="text-5xl tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
-          PalettePort
-        </h2>
-        <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
-          free color palette tool. no accounts, no ads, no paywalls. everything runs in your browser
-          and stays on your device.
-        </p>
-        <p className="text-muted-foreground text-xs">
-          v{__APP_VERSION__} · public alpha · mit licensed
-        </p>
-        <p className="text-muted-foreground text-xs">
-          desktop browsers supported · mobile ui deferred
-        </p>
-        <p className="text-muted-foreground/50 text-[10px]">missing something? request it.</p>
-      </div>
-
-      {/* feature grid */}
-      <div>
-        <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4 text-center">features</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {FEATURES.map(({ icon: Icon, label, desc }) => (
-            <div key={label} className="bg-card border rounded-lg p-3 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Icon className="size-3.5 text-muted-foreground shrink-0" />
-                <span className="text-xs font-medium">{label}</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* competitor comparison */}
-      <div>
-        <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-4 text-center">what we give free</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-2 pr-4 text-muted-foreground font-normal">feature</th>
-                <th className="text-center py-2 px-3 font-normal">us</th>
-                <th className="text-center py-2 px-3 text-muted-foreground font-normal">coolors</th>
-                <th className="text-center py-2 px-3 text-muted-foreground font-normal">colorffy</th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPETITOR_ROWS.map(({ feature, us, coolors, colorffy }) => (
-                <tr key={feature} className="border-b border-border/50">
-                  <td className="py-2 pr-4">{feature}</td>
-                  <td className="py-2 px-3 text-center">
-                    {us === true ? <CheckCircle2 className="size-3.5 mx-auto text-green-500" /> : <span className="text-green-500 font-medium">{us}</span>}
-                  </td>
-                  <td className="py-2 px-3 text-center text-muted-foreground">
-                    {coolors === 'n/a' ? <XCircle className="size-3.5 mx-auto text-red-500/70" /> : coolors === 'free' ? <CheckCircle2 className="size-3.5 mx-auto text-green-500" /> : coolors}
-                  </td>
-                  <td className="py-2 px-3 text-center text-muted-foreground">
-                    {colorffy === 'n/a' ? <XCircle className="size-3.5 mx-auto text-red-500/70" /> : colorffy === 'free' ? <CheckCircle2 className="size-3.5 mx-auto text-green-500" /> : colorffy === 'free (limited)' ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="size-3.5 text-green-500" /><span className="text-[10px]">(limited)</span></span> : colorffy}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* philosophy */}
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">free forever</h3>
-          <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>
-              no feature gates. no trial periods. no "upgrade to unlock." the tool works offline and costs nothing.
-            </p>
-            <p>
-              donations welcome if you find it useful, but you'll never hit a paywall.
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">your data stays yours</h3>
-          <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>
-              everything is stored in your browser's local storage. we don't have servers, accounts, or analytics.
-              your palettes never leave your device unless you export them yourself.
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xs text-muted-foreground uppercase tracking-widest mb-3 text-center">no ai</h3>
-          <div className="max-w-lg mx-auto space-y-3 text-sm text-muted-foreground leading-relaxed">
-            <p>
-              every color and calculation is deterministic. color theory math, not black boxes.
-            </p>
-            <p className="text-xs opacity-70">
-              (this project was built with ai programming assistance. ai helped write the code, but nothing
-              ai-powered runs in the product.)
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /* Help / documentation structure */
 type DocNavSection = { type: 'section'; label: string }
 type DocNavPage = { type: 'page'; id: string; label: string }
@@ -452,7 +309,7 @@ function Demo({ children, label }: { children: React.ReactNode; label?: string }
   return (
     <div className="border rounded-lg p-4 bg-card/30 my-4 overflow-hidden">
       {label && (
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 block">{label}</span>
+        <span className="text-[10px] text-muted-foreground tracking-widest mb-3 block">{label}</span>
       )}
       <div
         aria-hidden="true"
@@ -518,7 +375,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">quick reference</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">quick reference</span>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <Kbd>A</Kbd>
@@ -634,7 +491,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">shortcuts</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">shortcuts</span>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <Kbd>Z</Kbd>
@@ -711,7 +568,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </Demo>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">modes</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">modes</div>
             <div className="divide-y divide-border">
               {COLOR_RELATIONSHIPS.map((rel) => (
                 <div key={rel.value} className="px-4 py-2.5 flex items-baseline gap-3">
@@ -751,7 +608,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </Demo>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">available presets</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">available presets</div>
             <div className="divide-y divide-border">
               {PALETTE_PRESETS.map((preset) => (
                 <div key={preset.id} className="px-4 py-2.5 flex items-baseline gap-3">
@@ -786,13 +643,13 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">formats</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">formats</div>
             <div className="divide-y divide-border">
               {[
                 { label: 'HEX', example: '#e74c3c' },
                 { label: 'RGB', example: 'rgb(231, 76, 60)' },
                 { label: 'HSL', example: 'hsl(6, 78%, 57%)' },
-                { label: 'CSS Variable', example: '--color-primary: #e74c3c;' },
+                { label: 'css variable', example: '--color-primary: #e74c3c;' },
                 { label: 'Tailwind', example: "'primary': '#e74c3c'" },
                 { label: 'SCSS', example: '$color-primary: #e74c3c;' },
               ].map(({ label, example }) => (
@@ -826,13 +683,13 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">example url</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">example url</span>
             <div className="font-mono text-xs text-muted-foreground break-all bg-muted/50 rounded px-3 py-2">
-              https://example.com/?colors=e74c3c,3498db,2ecc71&locked=100
+              https://example.com/?colors=e74c3c-3498db-2ecc71&amp;locked=1-0-0
             </div>
             <div className="text-[10px] text-muted-foreground space-y-1">
-              <p><span className="text-foreground font-medium">colors</span> — comma-separated hex values (no # prefix)</p>
-              <p><span className="text-foreground font-medium">locked</span> — binary string (1 = locked, 0 = unlocked)</p>
+              <p><span className="text-foreground font-medium">colors</span> — hyphen-separated hex values (no # prefix)</p>
+              <p><span className="text-foreground font-medium">locked</span> — hyphen-separated values (1 = locked, 0 = unlocked)</p>
             </div>
           </div>
 
@@ -855,7 +712,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 
           <div className="space-y-4 my-4">
             <div className="border rounded-lg overflow-hidden">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
+              <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
                 <Copy className="size-3" />
                 code formats — copied to clipboard
               </div>
@@ -872,7 +729,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             </div>
 
             <div className="border rounded-lg overflow-hidden">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
+              <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2 flex items-center gap-2">
                 <Download className="size-3" />
                 art app formats — downloaded as files
               </div>
@@ -922,7 +779,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">browser support</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">browser support</div>
             <div className="divide-y divide-border">
               <div className="px-4 py-2.5">
                 <span className="text-xs font-mono font-medium lowercase">chromium</span>
@@ -1012,7 +869,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
                 </div>
 
                 <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-4">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest">variations of {sourceColor}</span>
+                  <span className="text-[10px] text-muted-foreground tracking-widest">variations of {sourceColor}</span>
                   {[
                     { label: 'tints', desc: 'lighter — lightness increased toward white', colors: tints },
                     { label: 'shades', desc: 'darker — lightness decreased toward black', colors: shades },
@@ -1072,7 +929,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">what stays visible</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">what stays visible</span>
             <div className="text-sm text-muted-foreground leading-relaxed space-y-2">
               <p>
                 focus rings, selected states, lock indicators, dialog focus handling, and loading feedback remain available.
@@ -1095,7 +952,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">simulation modes</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">simulation modes</div>
             <div className="divide-y divide-border">
               {[
                 { label: 'deuteranopia', desc: 'reduced green sensitivity — the most common form of color blindness, affecting ~6% of males. reds and greens appear similar.' },
@@ -1137,7 +994,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </Demo>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">wcag levels</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">wcag levels</span>
             <div className="space-y-2 text-sm">
               <div className="flex items-baseline gap-3">
                 <span className="font-mono text-xs font-medium w-12 shrink-0">aaa</span>
@@ -1196,7 +1053,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">open dialog</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">open dialog</span>
             <div className="space-y-2 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <Kbd>↑</Kbd><Kbd>↓</Kbd>
@@ -1224,7 +1081,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">storage</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">storage</span>
             <div className="text-sm text-muted-foreground space-y-2">
               <p>
                 <code className="text-xs bg-muted px-1 rounded">localStorage</code> under <code className="text-xs bg-muted px-1 rounded">color-palette:saved</code>. persists across sessions but browser/domain specific. back up with import/export.
@@ -1347,7 +1204,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">file format</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">file format</span>
             <pre className="font-mono text-[10px] text-muted-foreground bg-muted/50 rounded p-3 overflow-x-auto whitespace-pre">{`{
   "version": "1.0",
   "exportedAt": "2025-01-15T12:00:00.000Z",
@@ -1380,7 +1237,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden my-4">
-            <div className="text-[10px] text-muted-foreground uppercase tracking-widest px-4 pt-3 pb-2">themes</div>
+            <div className="text-[10px] text-muted-foreground tracking-widest px-4 pt-3 pb-2">themes</div>
             <div className="divide-y divide-border">
               <div className="px-4 py-3 flex items-center gap-3">
                 <div className="size-8 rounded-full border border-border" style={{ backgroundColor: '#fafafa' }} />
@@ -1507,7 +1364,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           </div>
 
           <div className="border rounded-lg p-4 bg-card/30 my-4 space-y-3">
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">confirming and cancelling</span>
+            <span className="text-[10px] text-muted-foreground tracking-widest">confirming and cancelling</span>
             <div className="space-y-2 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <Kbd>enter</Kbd>
@@ -1767,7 +1624,7 @@ function HelpTab({ activePage, onActivePageChange }: HelpTabProps) {
           {DOC_NAV.map((item, i) =>
             item.type === 'section' ? (
               <li key={i} className="pt-3 pb-1 first:pt-0">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                <span className="text-[10px] text-muted-foreground tracking-widest font-medium">
                   {item.label}
                 </span>
               </li>
@@ -1811,7 +1668,7 @@ function HelpTab({ activePage, onActivePageChange }: HelpTabProps) {
 function ChangelogTab() {
   return (
     <div className="space-y-8 max-w-lg mx-auto">
-      <h3 className="text-xs text-muted-foreground uppercase tracking-widest text-center">changelog</h3>
+      <h3 className="text-xs text-muted-foreground tracking-widest text-center">changelog</h3>
       {CHANGELOG.map((entry) => (
         <div key={entry.version} className="space-y-2">
           <div className="flex items-baseline gap-2">

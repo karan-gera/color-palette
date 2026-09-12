@@ -48,13 +48,13 @@ export default function ColorFormatMenu({ color, className }: ColorFormatMenuPro
         <button
           type="button"
           className={`font-mono text-xs text-muted-foreground uppercase hover:text-foreground transition-colors cursor-pointer ${className ?? ''}`}
-          aria-label={`Copy color ${color} in different formats`}
+          aria-label={`copy color ${color} in different formats`}
         >
           {color}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center" className="w-64">
-        <DropdownMenuLabel className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground select-none pointer-events-none pb-1">
+        <DropdownMenuLabel className="font-mono text-[9px] tracking-widest text-muted-foreground select-none pointer-events-none pb-1">
           copy as
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -84,7 +84,7 @@ export default function ColorFormatMenu({ color, className }: ColorFormatMenuPro
               className="flex items-center justify-between gap-2 cursor-pointer"
             >
               <div className="flex flex-col">
-                <span className="font-mono text-xs">CSS Name</span>
+                <span className="font-mono text-xs">css name</span>
                 <span className="font-mono text-[10px] text-muted-foreground">{cssName}</span>
               </div>
               {copiedFormat === 'css-name' ? (

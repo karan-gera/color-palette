@@ -6,7 +6,7 @@ This file complements `CLAUDE.md` (project architecture, naming conventions, tec
 
 ## Git Commits
 
-**Never commit unless explicitly asked.** If the user asks for a commit message, provide the message text only — do not run `git commit`. Wait for explicit instructions like "commit this" or "make the commit" before actually committing.
+Local commits are encouraged when they keep completed work organized and reviewable. Split work into semantically coherent commits and do not include unrelated user changes. Pushing, opening or updating a pull request, and merging into `main` still require explicit user approval.
 
 ---
 

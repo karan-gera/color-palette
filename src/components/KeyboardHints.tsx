@@ -39,7 +39,7 @@ function ShortcutRow({ shortcut, colorCount }: { shortcut: ShortcutDef; colorCou
 function ShortcutGroupSection({ group, colorCount }: { group: ShortcutGroup; colorCount: number }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <h3 className="text-[9px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-wider mb-0.5">
+      <h3 className="text-[9px] font-mono font-semibold text-muted-foreground/60 tracking-wider mb-0.5">
         {group.label}
       </h3>
       {group.shortcuts.map((shortcut) => (

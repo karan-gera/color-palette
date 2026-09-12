@@ -434,7 +434,7 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
       {/* Left: role editor + font selector */}
       <div className="w-64 shrink-0 border-r border-border/50 bg-background flex flex-col p-4">
 
-        <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest mb-3">color roles</p>
+        <p className="font-mono text-xs text-muted-foreground tracking-widest mb-3">color roles</p>
         <div className="flex flex-col gap-1">
           {UI_ROLE_LABELS.map(role => (
             <RoleSwatchPicker
@@ -450,7 +450,7 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
 
         <div className="w-full h-px bg-border/50 my-4 shrink-0" />
 
-        <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest mb-2">font</p>
+        <p className="font-mono text-xs text-muted-foreground tracking-widest mb-2">font</p>
         <div className="flex flex-wrap gap-1">
           {FONTS.map(font => (
             <button
@@ -471,7 +471,7 @@ function UIElementsMode({ palette, roles, colors, onRolesChange }: {
 
         <div className="w-full h-px bg-border/50 my-4 shrink-0" />
 
-        <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest mb-2">corner radius</p>
+        <p className="font-mono text-xs text-muted-foreground tracking-widest mb-2">corner radius</p>
         <div className="flex items-center gap-2">
           <input
             type="range" min="0" max="1.5" step="0.05"

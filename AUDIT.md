@@ -18,7 +18,7 @@ Mobile UI and responsive redesign are excluded from this audit and deferred unti
 ## Desktop launch blockers
 
 - [x] Fix the unreachable `shift+cmd/ctrl+e` image-export shortcut and add regression coverage for `useKeyboardShortcuts`.
-- [ ] Replace the placeholder `https://github.com/your-repo/issues` request link in `ExportDialog.tsx`.
+- [x] Replace the placeholder `https://github.com/your-repo/issues` request link in `ExportDialog.tsx`.
 - [x] Complete the core accessibility pass:
   - [x] Keep the closed docs overlay out of the tab order and accessibility tree; add appropriate modal semantics and focus behavior while open.
   - [x] Add accessible names to icon-only controls in the header, presets, palette actions, editing actions, and delete actions.
@@ -27,7 +27,7 @@ Mobile UI and responsive redesign are excluded from this audit and deferred unti
   - [x] Give the custom gradient export overlay modal semantics, escape handling, focus containment, and focus restoration.
   - [x] Remove duplicate CVD SVG filter IDs.
 - [x] Remove the five Google Fonts runtime requests from `PalettePreviewOverlay.tsx`. Official Latin variable WOFF2 files and their OFL licenses are now self-hosted under `public/fonts/preview`.
-- [ ] Either add and test an offline boot/cache strategy or replace the broad “works offline” claim with the narrower, verified “runs in your browser” / local-first language.
+- [x] Either add and test an offline boot/cache strategy or replace the broad “works offline” claim with the narrower, verified “runs in your browser” / local-first language.
 - [ ] Add an actual MIT `LICENSE` file and reconcile package version `0.0.0` with the in-app changelog version.
 - [x] Triage and patch dependency findings. The 2026-09-12 recheck found 20
       findings (3 critical, 12 high, 4 moderate, and 1 low), including 6 high
@@ -41,10 +41,10 @@ Mobile UI and responsive redesign are excluded from this audit and deferred unti
 
 ## Documentation and product-claim fixes
 
-- [ ] Correct the share-link example in `DocsOverlay.tsx`; implementation uses hyphen-separated colors, while the example uses commas.
+- [x] Correct the share-link example in `DocsOverlay.tsx`; implementation uses hyphen-separated colors, while the example uses commas.
 - [ ] Remove, source, or date-stamp the competitor matrix. Its Coolors `$99` claim and several plan/feature limits are stale. Current first-party research and replacement recommendations are preserved in `COMPETITOR_RESEARCH.md`.
-- [ ] Correct remaining user-visible capitalization that violates the lowercase UI convention.
-- [ ] Make the About-page feature-request and donation language point to real destinations or remove it.
+- [x] Correct remaining user-visible capitalization that violates the lowercase UI convention.
+- [x] Make the About-page feature-request and donation language point to real destinations or remove it.
 - [x] Rewrite `TODO.md` as an active alpha/beta/v1 roadmap. Release work now has stable task IDs and acceptance criteria; speculative product work is explicitly deferred. `RELEASE_ROADMAP.html` presents the same release gates and audit findings as a read-only engineering report.
 
 ## Tests and release hardening
