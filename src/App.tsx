@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { LayoutGroup, motion, AnimatePresence } from 'framer-motion'
 import Header from '@/components/Header'
 import { type CVDToggleHandle } from '@/components/CVDToggle'
@@ -44,13 +44,36 @@ type OverlayLoadingFallbackProps = {
 }
 
 function OverlayLoadingFallback({ label }: OverlayLoadingFallbackProps) {
+  const fallbackRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const activeElement = document.activeElement
+    const previousFocus = activeElement instanceof HTMLElement ? activeElement : null
+    fallbackRef.current?.focus()
+
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        fallbackRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', trapFocus)
+    return () => {
+      document.removeEventListener('keydown', trapFocus)
+      if (previousFocus?.isConnected) previousFocus.focus()
+    }
+  }, [])
+
   return (
     <div
+      ref={fallbackRef}
       className="fixed inset-0 z-[9997] bg-background flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       aria-label={label}
       aria-busy="true"
+      tabIndex={-1}
     >
       <p className="font-mono text-sm text-muted-foreground lowercase" role="status" aria-live="polite">
         {label}

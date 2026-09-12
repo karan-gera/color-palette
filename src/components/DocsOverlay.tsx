@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useIsPresent } from 'framer-motion'
 import { X, Copy, Link, Download, Upload, Eye, BarChart3, Keyboard, Sparkles, Type, Blend, Pipette, CheckCircle2, XCircle, Pencil, RefreshCw, Trash2, Plus, Sun, Moon, Circle, Undo2, Redo2, Layers, ImageIcon, LayoutTemplate, Gauge, FolderOpen } from 'lucide-react'
 import { SHORTCUT_GROUPS } from '@/hooks/useKeyboardShortcuts'
 import { getModifierLabel } from '@/helpers/platform'
@@ -1780,8 +1780,17 @@ export default function DocsOverlay({ onClose }: DocsOverlayProps) {
   const [activePage, setActivePageState] = useState<DocPageId>(() => docsSessionState.activePage)
   const overlayRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const isPresent = useIsPresent()
 
   const setActiveTab = useCallback((tab: Tab) => {
+    if (docsSessionState.activeTab === 'help' && tab !== 'help') {
+      docsSessionState.activePage = 'getting-started'
+      docsSessionState.helpNavScrollTop = 0
+      docsSessionState.helpContentScrollTop = 0
+      setActivePageState('getting-started')
+    } else if (docsSessionState.activeTab !== 'help' && tab === 'help') {
+      docsSessionState.mainScrollTop = 0
+    }
     docsSessionState.activeTab = tab
     setActiveTabState(tab)
   }, [])
@@ -1808,6 +1817,8 @@ export default function DocsOverlay({ onClose }: DocsOverlayProps) {
   }, [onClose, restorePreviousFocus])
 
   useEffect(() => {
+    if (!isPresent) return
+
     const overlay = overlayRef.current
     if (!overlay) return
 
@@ -1863,16 +1874,18 @@ export default function DocsOverlay({ onClose }: DocsOverlayProps) {
       document.removeEventListener('keydown', handleKeyDown)
       restorePreviousFocus()
     }
-  }, [handleClose, restorePreviousFocus])
+  }, [handleClose, isPresent, restorePreviousFocus])
 
   return (
     <motion.div
       ref={overlayRef}
       role="dialog"
-      aria-modal="true"
+      aria-modal={isPresent ? 'true' : undefined}
       aria-label="paletteport documentation"
+      aria-hidden={!isPresent}
+      inert={!isPresent}
       tabIndex={-1}
-      className="fixed inset-0 z-[9997] bg-background"
+      className={`fixed inset-0 z-[9997] bg-background ${isPresent ? '' : 'pointer-events-none'}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
