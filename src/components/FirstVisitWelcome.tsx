@@ -41,7 +41,7 @@ export default function FirstVisitWelcome({ open, onDismiss, onOpenHelp }: First
                 className="max-w-[270px] text-[34px] leading-[1.05] tracking-[-0.025em]"
                 style={{ fontFamily: 'var(--font-serif)' }}
               >
-                welcome to paletteport.
+                welcome to Palette<em style={{ fontStyle: 'italic', opacity: 0.65 }}>Port</em>.
               </DialogTitle>
               <DialogDescription className="mt-4 font-mono text-xs leading-6">
                 use the ? button or <Key>{helpShortcut}</Key> for help. open the shortcuts tray or press <Key>/</Key> to see every command.
