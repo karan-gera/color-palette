@@ -46,7 +46,7 @@ export default function HarmonyScore({ colors, expanded, onToggle }: HarmonyScor
 
       <div
         className={[
-          'overflow-hidden transition-all duration-300 ease-out',
+          'overflow-hidden transition-all duration-300 ease-out reduced-motion-instant',
           expanded ? 'max-h-32 opacity-100 mt-1' : 'max-h-0 opacity-0',
         ].join(' ')}
       >

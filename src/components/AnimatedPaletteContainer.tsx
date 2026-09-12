@@ -2,6 +2,7 @@ import { LayoutGroup, AnimatePresence, motion } from 'framer-motion'
 import AnimatedPaletteItem from './AnimatedPaletteItem'
 import AddColor from './AddColor'
 import { getRowSplit, MAX_COLORS, BLUEPRINT_COLOR } from '@/helpers/colorTheory'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 const BLUEPRINT_GRID_SIZE = 20
 const BLUEPRINT_BG = `
@@ -55,6 +56,7 @@ export default function AnimatedPaletteContainer({
   swapSelection,
   onSwapClick,
 }: AnimatedPaletteContainerProps) {
+  const prefersReducedMotion = usePrefersReducedMotion()
   const showAddButton = colors.length < MAX_COLORS && !swapMode
 
   const [row1Count] = getRowSplit(colors.length)
@@ -89,8 +91,8 @@ export default function AnimatedPaletteContainer({
   return (
     <LayoutGroup>
       <motion.div
-        layout
-        transition={{
+        layout={!prefersReducedMotion}
+        transition={prefersReducedMotion ? { duration: 0 } : {
           layout: {
             type: 'spring',
             stiffness: 300,
@@ -117,17 +119,17 @@ export default function AnimatedPaletteContainer({
         <div id="palette-container" className={`flex flex-col items-center${hasRow2 ? ' gap-8' : ''}`}>
           {/* Row 1 — always visible */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row1Colors.map((color, i) => renderItem(color, row1Ids[i], i))}
               {!hasRow2 && showAddButton && (
                 <motion.div
                   key="add-color-button"
-                  layout
-                  layoutId="add-color-button"
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  layout={!prefersReducedMotion}
+                  layoutId={prefersReducedMotion ? undefined : 'add-color-button'}
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.8 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                 >
                   <AddColor onAdd={onAdd} />
                 </motion.div>
@@ -139,17 +141,17 @@ export default function AnimatedPaletteContainer({
               Mounting it conditionally causes a one-frame delay where Framer must wait for the
               new parent to appear before it can start layout animations for the whole group. */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row2Colors.map((color, i) => renderItem(color, row2Ids[i], row1Count + i))}
               {hasRow2 && showAddButton && (
                 <motion.div
                   key="add-color-button"
-                  layout
-                  layoutId="add-color-button"
-                  initial={{ opacity: 0, scale: 0.8 }}
+                  layout={!prefersReducedMotion}
+                  layoutId={prefersReducedMotion ? undefined : 'add-color-button'}
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.8 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 400, damping: 32 }}
                 >
                   <AddColor onAdd={onAdd} />
                 </motion.div>

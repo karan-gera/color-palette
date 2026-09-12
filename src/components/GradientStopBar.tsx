@@ -135,7 +135,7 @@ export default function GradientStopBar({
                 data-stop-handle
                 className={[
                   'cvd-color w-4 h-6 rounded-sm border-2 cursor-grab active:cursor-grabbing',
-                  'transition-all duration-100 touch-none',
+                  'transition-all duration-100 reduced-motion-instant reduced-motion-no-transform touch-none',
                   isSelected
                     ? 'border-foreground scale-110 shadow-md'
                     : 'border-foreground/50 hover:border-foreground hover:scale-105',

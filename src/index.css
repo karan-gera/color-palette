@@ -230,6 +230,66 @@
   opacity: 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  body,
+  .cvd-color,
+  .cvd-color.editing {
+    transition: none;
+  }
+
+  /* State changes remain visible, but decorative movement and delays are removed. */
+  .reduced-motion-instant {
+    animation-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reduced-motion-no-transform {
+    transform: none !important;
+  }
+
+  [data-cvd-transitioning] .cvd-color {
+    opacity: 1;
+  }
+}
+
+/* Keyboard theme cycling and reduced-motion theme changes are covered by one
+   compositor-only veil. Keeping the
+   veil above the whole app prevents independently painted control fills and
+   active states from appearing between the old and new theme frames. */
+.theme-fade-overlay {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--theme-fade-background, var(--background));
+  transition: opacity 150ms ease-out;
+}
+
+[data-theme-fading] .theme-fade-overlay {
+  opacity: 1;
+}
+
+/* The regular body transition is longer than the veil. Apply its new theme
+   color while covered so it cannot remain visibly between themes on reveal. */
+[data-theme-fading] body {
+  transition: none;
+}
+
+/* Keep the functional height transition available, but do not let this fixed
+   background trail the body during a coordinated theme fade. */
+[data-theme-fading] .theme-background-surface {
+  transition-property: height;
+}
+
 [data-cvd="deuteranopia"] .cvd-color {
   filter: url(#cvd-deuteranopia);
 }

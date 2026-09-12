@@ -155,6 +155,7 @@ describe('useKeyboardShortcuts', () => {
     fireEvent.keyDown(window, { key: '?', shiftKey: true })
 
     expect(config.onCycleTheme).toHaveBeenCalledOnce()
+    expect(config.onCycleTheme).toHaveBeenCalledWith(false)
     expect(config.onCycleCVD).toHaveBeenCalledOnce()
     expect(config.onCyclePreset).toHaveBeenCalledOnce()
     expect(config.onPresetReroll).toHaveBeenCalledOnce()
@@ -162,6 +163,14 @@ describe('useKeyboardShortcuts', () => {
     expect(config.onCycleContrastTab).toHaveBeenCalledOnce()
     expect(config.onToggleHints).toHaveBeenCalledOnce()
     expect(config.onToggleDocs).toHaveBeenCalledOnce()
+  })
+
+  it('passes browser key-repeat state to theme cycling', () => {
+    const config = renderShortcuts()
+
+    fireEvent.keyDown(window, { key: 't', repeat: true })
+
+    expect(config.onCycleTheme).toHaveBeenCalledWith(true)
   })
 
   it('keeps global view shortcuts available outside palette view', () => {
