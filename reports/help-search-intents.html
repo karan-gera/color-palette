@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help search intent matching — implementation report</title>
+  <style>
+    :root { color-scheme: dark; --bg:#050505; --panel:#0d0d0d; --panel2:#151515; --line:#343434; --text:#f5f5f5; --muted:#a8a8a8; --accent:#ff70c8; --good:#78e08f; --warn:#ffd166; }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body { margin: 0; color: var(--text); background: var(--bg); font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .wrap { width: min(1180px, calc(100% - 32px)); margin: auto; padding: 32px 0 64px; }
+    header { border-bottom: 1px solid var(--line); padding-bottom: 24px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; }
+    h1 { max-width: 900px; margin: 8px 0 10px; font-size: clamp(30px, 6vw, 64px); line-height: 1.02; letter-spacing: -.05em; }
+    h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: -.025em; }
+    h3 { margin: 0 0 8px; font-size: 14px; }
+    p { max-width: 82ch; }
+    .muted, small { color: var(--muted); }
+    .status { display: inline-flex; gap: 8px; align-items: center; border: 1px solid #2f6d3d; background: #0a1b0f; color: var(--good); padding: 5px 9px; border-radius: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 20px; }
+    section { padding: 30px 0; border-bottom: 1px solid var(--line); }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; }
+    .metric { grid-column: span 3; padding: 16px; border: 1px solid var(--line); background: var(--panel); }
+    .metric strong { display: block; font-size: 28px; line-height: 1.15; }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .card { border: 1px solid var(--line); background: var(--panel); padding: 16px; }
+    .span-4 { grid-column: span 4; } .span-6 { grid-column: span 6; } .span-8 { grid-column: span 8; } .span-12 { grid-column: span 12; }
+    .pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; counter-reset: step; }
+    .step { position: relative; min-height: 130px; padding: 38px 14px 14px; border: 1px solid var(--line); background: var(--panel); }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; top: 12px; left: 14px; color: var(--accent); }
+    .step:not(:last-child)::after { content: "→"; position: absolute; right: -10px; top: 50%; z-index: 2; color: var(--accent); background: var(--bg); }
+    .bar-row { display: grid; grid-template-columns: minmax(120px, 190px) 1fr 48px; gap: 10px; align-items: center; margin: 8px 0; }
+    .bar-track { height: 13px; border: 1px solid var(--line); background: #080808; }
+    .bar { height: 100%; background: var(--accent); }
+    .score-row { display: grid; grid-template-columns: 130px 60px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px dotted var(--line); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    code { color: #ffd6ef; background: #1a1017; padding: 2px 5px; border-radius: 3px; }
+    .route { display: inline-block; color: var(--good); }
+    .matrix { display: grid; grid-template-columns: 1fr auto; gap: 0; border: 1px solid var(--line); }
+    .matrix > div { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    .pass { color: var(--good); font-weight: 700; }
+    .note { border-left: 3px solid var(--warn); padding: 10px 14px; background: #171307; color: #f5e5ad; }
+    .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+    input { width: min(420px, 100%); padding: 9px 11px; border: 1px solid var(--line); background: #090909; color: var(--text); font: inherit; }
+    details { border: 1px solid var(--line); background: var(--panel); padding: 10px 14px; }
+    summary { cursor: pointer; color: var(--accent); }
+    ul { padding-left: 20px; }
+    footer { padding-top: 24px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 800px) { .metric { grid-column: span 6; } .span-4,.span-6,.span-8 { grid-column: span 12; } .pipeline { grid-template-columns: 1fr; } .step:not(:last-child)::after { content:"↓"; top:auto; bottom:-14px; right:50%; } }
+    @media (max-width: 520px) { .wrap { width: min(100% - 20px, 1180px); } .metric { grid-column: span 12; } .bar-row { grid-template-columns: 105px 1fr 38px; font-size: 12px; } th:nth-child(3), td:nth-child(3) { display:none; } }
+    @media print { :root { color-scheme: light; --bg:#fff; --panel:#fff; --panel2:#f5f5f5; --line:#bbb; --text:#000; --muted:#444; --accent:#8d0059; --good:#126b29; } nav,.controls { display:none; } .wrap { width:100%; } section { break-inside:avoid; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">implementation report · observed 2026-09-12</div>
+      <h1>help search now maps user intent, not just literal feature names.</h1>
+      <p class="muted">Branch <code>feat/help-search-intents</code> · commit <code>2253a9e</code> · PR <a href="https://github.com/karan-gera/color-palette/pull/16">#16</a></p>
+      <div class="status"><span class="dot"></span> open · mergeable · CI quality check passed</div>
+      <nav aria-label="Report sections">
+        <a href="#scope">scope</a><a href="#pipeline">matching pipeline</a><a href="#coverage">coverage</a><a href="#routes">example routes</a><a href="#evidence">verification</a><a href="#review">review notes</a>
+      </nav>
+    </header>
+
+    <section id="scope">
+      <h2>current state</h2>
+      <div class="grid">
+        <div class="metric"><strong>25</strong><span>help pages indexed</span></div>
+        <div class="metric"><strong>480</strong><span>curated intent aliases</span></div>
+        <div class="metric"><strong>62</strong><span>related-page edges</span></div>
+        <div class="metric"><strong>34</strong><span>search regression tests</span></div>
+        <div class="card span-8">
+          <h3>what changed</h3>
+          <p>The index now captures tasks, colloquial phrasing, creative-app names, file formats, acronyms, alternate spellings, accessibility language, and platform shortcut vocabulary. Exact aliases are scored independently instead of being flattened into one keyword blob.</p>
+        </div>
+        <div class="card span-4">
+          <h3>review decision</h3>
+          <p>PR #16 is ready for review. It is not merged into <code>main</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pipeline">
+      <h2>matching pipeline</h2>
+      <div class="pipeline" aria-label="Search matching sequence">
+        <div class="step"><h3>normalize</h3><p class="muted">lowercase, strip punctuation, fold diacritics, preserve compact equivalence</p></div>
+        <div class="step"><h3>remove filler</h3><p class="muted">ignore conversational words such as “how”, “do”, “my”, and “to” when meaningful terms remain</p></div>
+        <div class="step"><h3>score phrases</h3><p class="muted">reward an exact full-query alias before scoring individual query terms</p></div>
+        <div class="step"><h3>fuzzy-match</h3><p class="muted">bounded edit distance handles insertions, deletions, substitutions, and transpositions</p></div>
+        <div class="step"><h3>rank</h3><p class="muted">require every meaningful term, then sort by score and title</p></div>
+      </div>
+      <div class="grid" style="margin-top:12px">
+        <div class="card span-6">
+          <h3>field weights</h3>
+          <div class="score-row"><span>title</span><strong>8</strong><span class="muted">primary semantic signal</span></div>
+          <div class="score-row"><span>shortcut</span><strong>6</strong><span class="muted">exact keyboard intent</span></div>
+          <div class="score-row"><span>keyword</span><strong>5</strong><span class="muted">curated user vocabulary</span></div>
+          <div class="score-row"><span>summary</span><strong>4</strong><span class="muted">article description</span></div>
+          <div class="score-row"><span>section</span><strong>3</strong><span class="muted">broad fallback context</span></div>
+        </div>
+        <div class="card span-6">
+          <h3>match multipliers</h3>
+          <div class="score-row"><span>exact</span><strong>×8</strong><span class="muted">includes compact punctuation equivalence</span></div>
+          <div class="score-row"><span>prefix</span><strong>×5</strong><span class="muted">query begins the indexed value</span></div>
+          <div class="score-row"><span>contains</span><strong>×3</strong><span class="muted">query appears within the value</span></div>
+          <div class="score-row"><span>fuzzy</span><strong>×1</strong><span class="muted">distance 1 at 4+ chars; distance 2 at 8+ chars</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="coverage">
+      <h2>intent vocabulary by help section</h2>
+      <p class="muted">Exact keyword counts from <code>HELP_CONTENT</code>. Bar width is relative to the largest section (color tools, 164).</p>
+      <div class="card">
+        <div class="bar-row"><span>basics</span><div class="bar-track"><div class="bar" style="width:51.8%"></div></div><strong>85</strong></div>
+        <div class="bar-row"><span>storage</span><div class="bar-track"><div class="bar" style="width:40.2%"></div></div><strong>66</strong></div>
+        <div class="bar-row"><span>copy &amp; share</span><div class="bar-track"><div class="bar" style="width:21.3%"></div></div><strong>35</strong></div>
+        <div class="bar-row"><span>export</span><div class="bar-track"><div class="bar" style="width:27.4%"></div></div><strong>45</strong></div>
+        <div class="bar-row"><span>color tools</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>164</strong></div>
+        <div class="bar-row"><span>accessibility</span><div class="bar-track"><div class="bar" style="width:32.3%"></div></div><strong>53</strong></div>
+        <div class="bar-row"><span>reference</span><div class="bar-track"><div class="bar" style="width:19.5%"></div></div><strong>32</strong></div>
+      </div>
+      <details style="margin-top:12px">
+        <summary>page-level counts</summary>
+        <div class="grid" style="margin-top:12px">
+          <div class="card span-4">export <strong>45</strong><br><small>largest app/format catch-all</small></div>
+          <div class="card span-4">gradient <strong>28</strong><br><small>stops, direction, aspect, output</small></div>
+          <div class="card span-4">preview <strong>28</strong><br><small>mockups, contexts, interface roles</small></div>
+          <div class="card span-4">edit mode <strong>23</strong></div>
+          <div class="card span-4">copy formats <strong>20</strong></div>
+          <div class="card span-4">contrast <strong>20</strong></div>
+          <div class="card span-12"><small>remaining pages contain 14–20 aliases each; total = 480 across all 25 pages.</small></div>
+        </div>
+      </details>
+    </section>
+
+    <section id="routes">
+      <h2>representative query routes</h2>
+      <div class="controls"><label for="route-filter">filter examples</label><input id="route-filter" type="search" placeholder="try clip, palette, contrast…"></div>
+      <div class="card" style="padding:0;overflow:auto">
+        <table id="routes-table">
+          <thead><tr><th>user query</th><th>top result</th><th>intent class</th></tr></thead>
+          <tbody>
+            <tr><td>how do i export to clip studio paint</td><td class="route">export →</td><td>natural language + app</td></tr>
+            <tr><td>csp</td><td class="route">export →</td><td>acronym</td></tr>
+            <tr><td>photoshp swatches</td><td class="route">export →</td><td>typo + workflow</td></tr>
+            <tr><td>paint.net / paintnet</td><td class="route">export →</td><td>punctuation equivalence</td></tr>
+            <tr><td>move palettes to another computer</td><td class="route">import / export palettes →</td><td>migration task</td></tr>
+            <tr><td>send palette link to teammate</td><td class="route">share via url →</td><td>collaboration task</td></tr>
+            <tr><td>copy css vars</td><td class="route">copy formats →</td><td>developer vocabulary</td></tr>
+            <tr><td>colors from photo</td><td class="route">extract from image →</td><td>media workflow</td></tr>
+            <tr><td>pick pixel from screen</td><td class="route">color picker →</td><td>tool synonym</td></tr>
+            <tr><td>what color is this</td><td class="route">color naming →</td><td>question phrasing</td></tr>
+            <tr><td>why do these colors clash</td><td class="route">harmony score →</td><td>diagnostic intent</td></tr>
+            <tr><td>text is hard to read</td><td class="route">contrast checker →</td><td>accessibility symptom</td></tr>
+            <tr><td>red green color blind</td><td class="route">color blindness →</td><td>accessibility vocabulary</td></tr>
+            <tr><td>turn off animation</td><td class="route">reduced motion →</td><td>preference task</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <h2>verification evidence</h2>
+      <div class="grid">
+        <div class="span-6 matrix">
+          <div>TypeScript + Vite production build</div><div class="pass">PASS</div>
+          <div>full Vitest suite</div><div class="pass">486 PASS</div>
+          <div>search helper suite</div><div class="pass">34 PASS</div>
+          <div>GitHub Actions quality job</div><div class="pass">PASS</div>
+          <div>PR mergeability</div><div class="pass">MERGEABLE</div>
+        </div>
+        <div class="span-6 card">
+          <h3>manual browser smoke</h3>
+          <p>Observed the natural-language Clip Studio Paint query produce one result, then opened the export article containing the Adobe ASE import route.</p>
+          <p class="muted">The export contextual rail was also checked after moving platform-specific shortcut spellings into invisible keyword metadata.</p>
+        </div>
+      </div>
+      <p class="note"><strong>Known baseline:</strong> lint reports the documented pre-existing <code>CircleWipeOverlay.tsx</code> effect-dependency warning. No warning originates from a file changed by this branch.</p>
+    </section>
+
+    <section id="review">
+      <h2>review notes and tradeoffs</h2>
+      <div class="grid">
+        <div class="card span-4"><h3>curated index</h3><p>Aliases are explicit and auditable. New help pages still require deliberate vocabulary maintenance.</p></div>
+        <div class="card span-4"><h3>bounded fuzziness</h3><p>No search dependency was added. Short terms remain strict to limit noisy matches; longer terms tolerate up to two edits.</p></div>
+        <div class="card span-4"><h3>AND semantics</h3><p>Every meaningful query term must match one page. This keeps results precise but may return nothing for mixed unrelated intents.</p></div>
+        <div class="card span-6"><h3>source files</h3><ul><li><a href="../src/helpers/helpSearch.ts">matching and ranking</a></li><li><a href="../src/components/helpContentIndex.ts">intent vocabulary and relationships</a></li><li><a href="../src/__tests__/helpers/helpSearch.test.ts">regression matrix</a></li></ul></div>
+        <div class="card span-6"><h3>change footprint</h3><p><strong>5 files</strong> · 141 insertions · 44 deletions</p><p class="muted">Includes implementation, test coverage, changelog copy, and TODO completion notes.</p></div>
+      </div>
+    </section>
+
+    <footer>Standalone report. Metrics are observed from commit <code>2253a9e</code>; this file is a review artifact and is not the project source of truth.</footer>
+  </main>
+  <script>
+    const filter = document.querySelector('#route-filter');
+    const rows = [...document.querySelectorAll('#routes-table tbody tr')];
+    filter.addEventListener('input', () => {
+      const query = filter.value.trim().toLowerCase();
+      rows.forEach(row => { row.hidden = query !== '' && !row.textContent.toLowerCase().includes(query); });
+    });
+  </script>
+</body>
+</html>
