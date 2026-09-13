@@ -36,7 +36,7 @@ const CHANGELOG = [
       'unexpected render failures now show a readable recovery screen instead of a blank app',
       'try again and reload actions preserve local palettes; clearing site data remains a manual last resort',
       'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
-      'help search matches page titles, feature terms, descriptions, and keyboard shortcuts',
+      'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',
       'documentation accents use pale magenta in light mode and low-luminance berry surfaces in dark modes',
       'first visits now open with a compact guide to help and keyboard shortcuts',
       `the public alpha is identified as ${__APP_VERSION__}`,
