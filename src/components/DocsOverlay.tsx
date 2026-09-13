@@ -33,6 +33,8 @@ const CHANGELOG = [
     version: __APP_VERSION__,
     title: 'public alpha readiness',
     items: [
+      'unexpected render failures now show a readable recovery screen instead of a blank app',
+      'try again and reload actions preserve local palettes; clearing site data remains a manual last resort',
       'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
       'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',
       'documentation accents use pale magenta in light mode and low-luminance berry surfaces in dark modes',
@@ -49,6 +51,7 @@ const CHANGELOG = [
       'image extraction now returns deterministic palettes without duplicate swatches',
       'transparent pixels are excluded from extracted colors',
       'images with fewer distinct colors return only the colors available',
+      'palette rerolls fade smoothly while reduced-motion mode updates immediately',
     ],
   },
   {
@@ -286,6 +289,7 @@ const DOC_NAV: DocNavItem[] = [
   { type: 'page', id: 'contrast', label: 'contrast checker' },
   { type: 'section', label: 'reference' },
   { type: 'page', id: 'theme', label: 'theme' },
+  { type: 'page', id: 'error-recovery', label: 'error recovery' },
   { type: 'page', id: 'keyboard', label: 'keyboard shortcuts' },
 ]
 
@@ -422,6 +426,9 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
               each color is a circle with controls below it. max 10 colors.
+            </p>
+            <p>
+              rerolled colors fade to their new values without moving the palette. if your operating system requests reduced motion, color changes update immediately.
             </p>
           </div>
 
@@ -1286,6 +1293,44 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             <p>
               "vs backgrounds" tests all three themes regardless of which is active.
             </p>
+          </div>
+        </DocArticle>
+      )
+
+    case 'error-recovery':
+      return (
+        <DocArticle title={title}>
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <p>
+              if an unexpected render failure interrupts the workspace, paletteport shows a recovery screen instead of leaving a blank page.
+            </p>
+          </div>
+
+          <Demo label="recovery actions">
+            <div className="w-full max-w-sm rounded-lg border border-border/80 bg-card p-5 text-left shadow-sm">
+              <div className="mb-4 flex items-center gap-2" aria-hidden="true">
+                {['#e06c75', '#e5c07b', '#98c379', '#61afef', '#c678dd'].map((color) => (
+                  <span key={color} className="size-5 rounded-full" style={{ backgroundColor: color }} />
+                ))}
+              </div>
+              <p className="font-mono text-sm text-foreground">something went wrong</p>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">your saved palettes stay in this browser.</p>
+              <div className="mt-4 flex gap-2">
+                <span className="rounded-md bg-primary px-3 py-1.5 text-[10px] text-primary-foreground">try again</span>
+                <span className="rounded-md border border-border px-3 py-1.5 text-[10px] text-foreground">reload app</span>
+              </div>
+            </div>
+          </Demo>
+
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
+            <h3 className="text-sm font-medium text-foreground lowercase">try again</h3>
+            <p>restarts the failed render in the current page. this does not clear saved palettes, collections, or other browser-local data.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">reload app</h3>
+            <p>starts a fresh browser session. use this when the failure was temporary or after closing another tab that may be competing for resources.</p>
+
+            <h3 className="text-sm font-medium text-foreground lowercase mt-4">last resort</h3>
+            <p>if the failure returns after reload, back up any palettes you can reach before using your browser’s site-data controls. clearing site data is manual and permanently removes local palettes.</p>
           </div>
         </DocArticle>
       )
