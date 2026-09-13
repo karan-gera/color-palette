@@ -17,20 +17,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    {
-      name: "serve-landing",
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          const url = (req.url ?? "").split("?")[0]
-          if (url === "/landing" || url === "/landing/") {
-            res.setHeader("Content-Type", "text/html")
-            res.end(fs.readFileSync(path.resolve(__dirname, "public/landing/index.html"), "utf-8"))
-            return
-          }
-          next()
-        })
-      },
-    },
   ],
   resolve: {
     alias: {
