@@ -203,6 +203,10 @@ release issue remains.
     for page sections, shortcuts, and related pages.
   - Added fuzzy help search across page titles, descriptions, feature synonyms,
     and keyboard shortcuts, with keyboard selection and direct page navigation.
+  - Expanded help search intent mapping across every page with workflow phrases,
+    creative-app names, file formats, acronyms, alternate spellings, and typo-tolerant routing.
+    Exact aliases now rank ahead of incidental prose, and table-driven regressions cover
+    representative tasks across the complete manual.
   - Help remains part of the lazy documentation chunk and the closed overlay
     remains outside the DOM. Verified the layout and interaction model at the
     supported desktop zoom equivalents with reduced motion enabled and disabled.

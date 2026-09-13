@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { HELP_CONTENT } from '@/components/helpContentIndex'
 import { searchHelp, type HelpSearchEntry } from '@/helpers/helpSearch'
 
 const entries: HelpSearchEntry[] = [
@@ -21,6 +22,7 @@ describe('searchHelp', () => {
 
   it('tolerates short typos within a token', () => {
     expect(searchHelp(entries, 'cntrast')[0].id).toBe('contrast')
+    expect(searchHelp(entries, 'contrsat')[0].id).toBe('contrast')
   })
 
   it('does not match scattered letters across unrelated prose', () => {
@@ -29,5 +31,48 @@ describe('searchHelp', () => {
 
   it('requires every query term to match the same entry', () => {
     expect(searchHelp(entries, 'copy link').map((entry) => entry.id)).toEqual(['share'])
+  })
+
+  it('ignores conversational filler words in multi-word queries', () => {
+    expect(searchHelp(HELP_CONTENT, 'how do i export to clip studio paint')[0]?.id).toBe('export')
+    expect(searchHelp(HELP_CONTENT, 'where are my palettes stored')[0]?.id).toBe('save-open')
+  })
+
+  it('matches punctuation and compact spellings consistently', () => {
+    expect(searchHelp(HELP_CONTENT, 'paint.net')[0]?.id).toBe('export')
+    expect(searchHelp(HELP_CONTENT, 'paintnet')[0]?.id).toBe('export')
+    expect(searchHelp(HELP_CONTENT, 'clipstudio')[0]?.id).toBe('export')
+  })
+
+  it.each([
+    ['make my first palette', 'getting-started'],
+    ['freeze color', 'palette'],
+    ['cmd z', 'undo-redo'],
+    ['colors that go together', 'relationships'],
+    ['earth tones', 'presets'],
+    ['lost palette', 'save-open'],
+    ['organize palettes into folders', 'collections'],
+    ['filter saved palettes by label', 'tags'],
+    ['move palettes to another computer', 'backup'],
+    ['copy css vars', 'copy-formats'],
+    ['send palette link to teammate', 'share'],
+    ['clip studio paint', 'export'],
+    ['csp', 'export'],
+    ['photoshp swatches', 'export'],
+    ['change exact oklch value', 'edit-mode'],
+    ['gradient wallpaper', 'gradient'],
+    ['see colors in a ui mockup', 'preview'],
+    ['colors from photo', 'extract'],
+    ['pick pixel from screen', 'color-picker'],
+    ['what color is this', 'color-naming'],
+    ['make this color lighter', 'variations'],
+    ['why do these colors clash', 'harmony'],
+    ['turn off animation', 'reduced-motion'],
+    ['red green color blind', 'color-blindness'],
+    ['text is hard to read', 'contrast'],
+    ['switch to dark mode', 'theme'],
+    ['keyboard cheat sheet', 'keyboard'],
+  ])('routes the intent %s to %s', (query, expectedId) => {
+    expect(searchHelp(HELP_CONTENT, query)[0]?.id).toBe(expectedId)
   })
 })
