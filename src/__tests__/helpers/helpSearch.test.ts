@@ -75,4 +75,26 @@ describe('searchHelp', () => {
   ])('routes the intent %s to %s', (query, expectedId) => {
     expect(searchHelp(HELP_CONTENT, query)[0]?.id).toBe(expectedId)
   })
+
+  it.each([
+    ['make a color palette', 'getting-started'],
+    ['color combinations', 'relationships'],
+    ['palette folders', 'collections'],
+    ['save my colors', 'save-open'],
+    ['backup palettes', 'backup'],
+    ['share link', 'share'],
+    ['copy colors to clipboard', 'copy-formats'],
+    ['export colors', 'export'],
+    ['save as png', 'export'],
+  ])('covers broader natural-language intent %s → %s', (query, expectedId) => {
+    expect(searchHelp(HELP_CONTENT, query)[0]?.id).toBe(expectedId)
+  })
+
+  it.each([
+    ['how do i save a palette', 'save-open'],
+    ['how do i organize saved palettes', 'collections'],
+    ['how do i share a palette', 'share'],
+  ])('keeps adjacent intents distinct for %s', (query, expectedId) => {
+    expect(searchHelp(HELP_CONTENT, query)[0]?.id).toBe(expectedId)
+  })
 })
