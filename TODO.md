@@ -34,10 +34,10 @@ Update this file when work lands; do not add duplicate speculative plans here.
 
 ### Test baseline
 
-- 452 active tests pass.
+- 457 active tests pass.
 - 42 TODO tests remain: 4 real future gradient cases and 38 stale cases for
   shipped behavior.
-- Coverage: 82.72% statements, 76.76% branches, 78.82% functions, 83.51% lines.
+- Coverage: 87.01% statements, 80.59% branches, 85.21% functions, 87.93% lines.
 - Storage is 96.42% covered by line; image export is 99.18%; image extraction is
   100% covered by line.
 - Build passes. Lint passes with the accepted `CircleWipeOverlay.tsx` warning.
@@ -132,10 +132,16 @@ release issue remains.
   - Vite `base`, redirect behavior, `CNAME`, landing links, canonical URL, Open
     Graph URLs, favicon, and title have been reconciled for the root domain.
   - Mobile is explicitly unsupported/deferred in the app, About page, and README.
-- [ ] **A-02 P0 — restore palette reroll fades.**
-  - Locate the regression in the animated palette path.
-  - Verify reroll-all, reroll-one, preset, and relationship changes.
-  - Verify reduced-motion mode is immediate rather than animated.
+- [x] **A-02 P0 — restore palette reroll fades. ✅**
+  - The regression came from the CVD opacity rule overriding the circle's broader
+    transition; the shared `.cvd-color` rule now explicitly interpolates the
+    background, border, and foreground colors over 200 ms.
+  - Reroll-one, reroll-all, and relationship changes retain every color ID; preset
+    changes retain IDs for stationary circles so existing DOM nodes can interpolate.
+  - Reduced-motion CSS removes the color transition, while inline editing remains
+    immediate so typed color previews do not lag.
+  - Added regression coverage for palette and preset identity preservation and
+    verified the rendered transitions in isolated Chromium.
 - [x] **A-03 P0 — add release identity and license.**
   - Add the actual MIT `LICENSE` file.
   - Choose a SemVer prerelease and align `package.json`, docs, and changelog.

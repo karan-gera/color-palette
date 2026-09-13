@@ -71,11 +71,38 @@ describe('usePaletteColors', () => {
     seedHistory([['#111111', '#222222']])
     vi.spyOn(Math, 'random').mockReturnValue(0.5)
     const { result } = renderHook(() => usePaletteColors())
+    const originalIds = result.current.colorIds
 
     act(() => result.current.rerollAt(0))
 
     expect(result.current.history).toHaveLength(2)
     expect(result.current.current?.[1]).toBe('#222222')
+    expect(result.current.colorIds).toEqual(originalIds)
+  })
+
+  it('preserves color identities when rerolling the palette', () => {
+    seedHistory([['#111111', '#222222', '#333333']])
+    vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    const { result } = renderHook(() => usePaletteColors())
+    const originalIds = result.current.colorIds
+
+    act(() => result.current.toggleLockAt(1))
+    act(() => result.current.rerollAll())
+
+    expect(result.current.current?.[1]).toBe('#222222')
+    expect(result.current.colorIds).toEqual(originalIds)
+  })
+
+  it('preserves color identities when changing the relationship', () => {
+    seedHistory([['#111111', '#222222', '#333333']])
+    vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    const { result } = renderHook(() => usePaletteColors())
+    const originalIds = result.current.colorIds
+
+    act(() => result.current.handleRelationshipChange('triadic'))
+
+    expect(result.current.globalRelationship).toBe('triadic')
+    expect(result.current.colorIds).toEqual(originalIds)
   })
 
   it('deletes color, lock state, and id at the same index', () => {

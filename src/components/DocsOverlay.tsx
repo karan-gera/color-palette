@@ -49,6 +49,7 @@ const CHANGELOG = [
       'image extraction now returns deterministic palettes without duplicate swatches',
       'transparent pixels are excluded from extracted colors',
       'images with fewer distinct colors return only the colors available',
+      'palette rerolls fade smoothly while reduced-motion mode updates immediately',
     ],
   },
   {
@@ -422,6 +423,9 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
           <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-prose">
             <p>
               each color is a circle with controls below it. max 10 colors.
+            </p>
+            <p>
+              rerolled colors fade to their new values without moving the palette. if your operating system requests reduced motion, color changes update immediately.
             </p>
           </div>
 
