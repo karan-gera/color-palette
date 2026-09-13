@@ -10,6 +10,7 @@ import PresetBrowser from './PresetBrowser'
 import GlobalColorRelationshipSelector from './GlobalColorRelationshipSelector'
 import ContrastChecker from './ContrastChecker'
 import AboutTab from './AboutTab'
+import HelpBrowser from './HelpBrowser'
 import { generateTints, generateShades, generateTones, COLOR_RELATIONSHIPS, PALETTE_PRESETS } from '@/helpers/colorTheory'
 import { EXPORT_FORMATS } from '@/helpers/exportFormats'
 
@@ -30,8 +31,10 @@ const TABS: { id: Tab; label: string }[] = [
 const CHANGELOG = [
   {
     version: __APP_VERSION__,
-    title: 'public alpha identity, trust & image extraction correctness',
+    title: 'public alpha readiness',
     items: [
+      'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
+      'help search matches page titles, feature terms, descriptions, and keyboard shortcuts',
       'first visits now open with a compact guide to help and keyboard shortcuts',
       `the public alpha is identified as ${__APP_VERSION__}`,
       'the production address is paletteport.app',
@@ -331,7 +334,7 @@ function Kbd({ children }: { children: React.ReactNode }) {
 function DocArticle({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <article className="space-y-6">
-      <h2 className="text-2xl tracking-tight lowercase" style={{ fontFamily: 'var(--font-serif)' }}>{title}</h2>
+      <h2 className="text-4xl tracking-tight lowercase md:text-5xl" style={{ fontFamily: 'var(--font-serif)' }}>{title}</h2>
       {children}
     </article>
   )
@@ -1570,7 +1573,7 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
 function DocPageKeyboard() {
   return (
     <article className="space-y-6">
-      <h2 className="text-2xl tracking-tight lowercase" style={{ fontFamily: 'var(--font-serif)' }}>keyboard shortcuts</h2>
+      <h2 className="text-4xl tracking-tight lowercase md:text-5xl" style={{ fontFamily: 'var(--font-serif)' }}>keyboard shortcuts</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
         {SHORTCUT_GROUPS.map((group) => (
           <div key={group.label}>
@@ -1603,65 +1606,17 @@ type HelpTabProps = {
 }
 
 function HelpTab({ activePage, onActivePageChange }: HelpTabProps) {
-  const restoreNavScroll = useCallback((element: HTMLElement | null) => {
-    if (element) element.scrollTop = docsSessionState.helpNavScrollTop
-  }, [])
-  const restoreContentScroll = useCallback((element: HTMLElement | null) => {
-    if (element) element.scrollTop = docsSessionState.helpContentScrollTop
-  }, [])
-
   return (
-    <div className="flex flex-1 min-h-0 w-full">
-      {/* sidebar */}
-      <nav
-        ref={restoreNavScroll}
-        className="w-48 shrink-0 pr-4 border-r border-border overflow-y-auto"
-        onScroll={(event) => {
-          docsSessionState.helpNavScrollTop = event.currentTarget.scrollTop
-        }}
-      >
-        <ul className="space-y-0.5 py-1">
-          {DOC_NAV.map((item, i) =>
-            item.type === 'section' ? (
-              <li key={i} className="pt-3 pb-1 first:pt-0">
-                <span className="text-[10px] text-muted-foreground tracking-widest font-medium">
-                  {item.label}
-                </span>
-              </li>
-            ) : (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => onActivePageChange(item.id)}
-                  className={`block w-full text-left py-1.5 px-2 rounded text-xs font-mono lowercase transition-colors ${
-                    activePage === item.id
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              </li>
-            )
-          )}
-        </ul>
-      </nav>
-
-      {/* content */}
-      <div
-        ref={restoreContentScroll}
-        className="flex-1 min-w-0 overflow-y-auto pl-6"
-        onScroll={(event) => {
-          docsSessionState.helpContentScrollTop = event.currentTarget.scrollTop
-        }}
-      >
-        {activePage === 'keyboard' ? (
-          <DocPageKeyboard />
-        ) : (
-          <DocPageContent pageId={activePage} />
-        )}
-      </div>
-    </div>
+    <HelpBrowser
+      activePage={activePage}
+      onActivePageChange={onActivePageChange}
+      navScrollTop={docsSessionState.helpNavScrollTop}
+      contentScrollTop={docsSessionState.helpContentScrollTop}
+      onNavScroll={(scrollTop) => { docsSessionState.helpNavScrollTop = scrollTop }}
+      onContentScroll={(scrollTop) => { docsSessionState.helpContentScrollTop = scrollTop }}
+    >
+      {activePage === 'keyboard' ? <DocPageKeyboard /> : <DocPageContent pageId={activePage} />}
+    </HelpBrowser>
   )
 }
 
@@ -1717,6 +1672,7 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
 
   const setActivePage = useCallback((pageId: DocPageId) => {
     docsSessionState.activePage = pageId
+    docsSessionState.helpContentScrollTop = 0
     setActivePageState(pageId)
   }, [])
 
@@ -1812,8 +1768,9 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
       transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
     >
       {/* top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <div className="flex items-center gap-1">
+      <div className="grid min-h-16 grid-cols-[1fr_auto_1fr] items-center border-b px-5">
+        <span className="text-xl" style={{ fontFamily: 'var(--font-serif)' }}>paletteport</span>
+        <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -1821,10 +1778,10 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
               onClick={() => setActiveTab(tab.id)}
               aria-current={activeTab === tab.id ? 'page' : undefined}
               data-docs-active={activeTab === tab.id}
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+              className={`min-h-9 px-3 py-2 text-xs rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-card text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-[#c9367b] text-white'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               {tab.label}
@@ -1835,18 +1792,16 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
           type="button"
           onClick={handleClose}
           aria-label="close documentation"
-          className="text-muted-foreground hover:text-foreground transition-colors p-1"
+          className="justify-self-end rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
 
       {/* scrollable content */}
-      <div className="flex flex-col h-[calc(100vh-57px)] min-h-0">
+      <div className="flex flex-col h-[calc(100vh-65px)] min-h-0">
         {activeTab === 'help' ? (
-          <div className="flex-1 flex min-h-0 px-6 py-6">
-            <HelpTab activePage={activePage} onActivePageChange={setActivePage} />
-          </div>
+          <HelpTab activePage={activePage} onActivePageChange={setActivePage} />
         ) : (
           <div
             ref={restoreMainScroll}
