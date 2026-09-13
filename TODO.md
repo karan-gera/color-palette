@@ -248,9 +248,9 @@ release issue remains.
   - Activated 29 pixel-level tests, including the canvas sampling bridge and
     duplicate-centroid repair; extraction now has 100% line coverage.
 
-### ✅ Alpha verification
+### Alpha verification
 
-- [x] **A-14 P0 — cut and verify an alpha candidate. ✅**
+- [ ] **A-14 P0 — cut and verify an alpha candidate.**
   - `npm run build`, `npm run lint`, `npm test`, and `npm run test:coverage` pass.
   - Helium clean-profile smoke: add, lock, reroll, relationship, undo/redo,
     save/open, share, export, image export, gradient, extraction, reload.
@@ -270,6 +270,9 @@ release issue remains.
     link return successfully, and observed app resources remain same-origin.
   - Desktop-only and no-offline-boot constraints are published in the readme and
     in-app about/changelog content.
+  - Manual sign-off remaining: use Helium's native eyedropper to select a screen
+    pixel, then confirm with VoiceOver that dialogs, previews, status notifications,
+    and the recovery alert are announced coherently and retain focus as expected.
 
 ## Public beta gate
 
