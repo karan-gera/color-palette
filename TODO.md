@@ -248,9 +248,9 @@ release issue remains.
   - Activated 29 pixel-level tests, including the canvas sampling bridge and
     duplicate-centroid repair; extraction now has 100% line coverage.
 
-### Alpha verification
+### ✅ Alpha verification
 
-- [ ] **A-14 P0 — cut and verify an alpha candidate.**
+- [x] **A-14 P0 — cut and verify an alpha candidate. ✅**
   - `npm run build`, `npm run lint`, `npm test`, and `npm run test:coverage` pass.
   - Helium clean-profile smoke: add, lock, reroll, relationship, undo/redo,
     save/open, share, export, image export, gradient, extraction, reload.
@@ -259,6 +259,17 @@ release issue remains.
   - Live Pages assets and links return successfully; no unexpected third-party
     runtime requests appear.
   - Publish known alpha constraints: desktop only and no offline boot.
+  - Verified `0.22.0-alpha.1` from a temporary Helium profile against the local
+    production build; the full mouse and keyboard workflows above completed,
+    including PNG extraction, clipboard sharing, downloads, and reload persistence.
+  - Added reusable modal focus containment for palette and gradient previews,
+    with regression coverage for initial focus, tab trapping, escape, and focus
+    restoration. Transient notifications now announce through a polite status region.
+  - Final gates: 510 tests pass; coverage is 87.48% statements and 88.43% lines.
+    The live app, landing page, fonts, images, lazy chunks, repository, and issue
+    link return successfully, and observed app resources remain same-origin.
+  - Desktop-only and no-offline-boot constraints are published in the readme and
+    in-app about/changelog content.
 
 ## Public beta gate
 

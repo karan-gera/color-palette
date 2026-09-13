@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useModalOverlayFocus } from '@/hooks/useModalOverlayFocus'
 
 type PreviewMode = 'mosaic' | 'ui' | 'title'
 type TitleLayout = 'hero' | 'editorial' | 'poster'
@@ -767,6 +768,7 @@ function TitlePoster({ heading, subtitle, onHeadingChange, onSubtitleChange, col
 
 export default function PalettePreviewOverlay({ palette, onClose }: PalettePreviewOverlayProps) {
   const prefersReducedMotion = usePrefersReducedMotion()
+  const overlayRef = useModalOverlayFocus({ onClose })
   const [mode, setMode] = useState<PreviewMode>(
     () => (localStorage.getItem(MODE_KEY) as PreviewMode | null) ?? 'mosaic'
   )
@@ -850,6 +852,11 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
 
   return (
     <motion.div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="palette preview"
+      tabIndex={-1}
       className="fixed inset-0 z-[9997] bg-background flex flex-col"
       initial={prefersReducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -909,6 +916,7 @@ export default function PalettePreviewOverlay({ palette, onClose }: PalettePrevi
 
           {/* Close — pushed to the right */}
           <Button
+            data-overlay-initial-focus
             variant="outline"
             size="icon-sm"
             onClick={onClose}
