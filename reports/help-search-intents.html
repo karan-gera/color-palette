@@ -62,7 +62,7 @@
     <header>
       <div class="eyebrow">implementation report · observed 2026-09-12</div>
       <h1>help search now maps user intent, not just literal feature names.</h1>
-      <p class="muted">Branch <code>feat/help-search-intents</code> · commit <code>2253a9e</code> · PR <a href="https://github.com/karan-gera/color-palette/pull/16">#16</a></p>
+      <p class="muted">Branch <code>feat/help-search-intents</code> · commit <code>d6485bd</code> · PR <a href="https://github.com/karan-gera/color-palette/pull/16">#16</a></p>
       <div class="status"><span class="dot"></span> open · mergeable · CI quality check passed</div>
       <nav aria-label="Report sections">
         <a href="#scope">scope</a><a href="#pipeline">matching pipeline</a><a href="#coverage">coverage</a><a href="#routes">example routes</a><a href="#evidence">verification</a><a href="#review">review notes</a>
@@ -73,9 +73,9 @@
       <h2>current state</h2>
       <div class="grid">
         <div class="metric"><strong>25</strong><span>help pages indexed</span></div>
-        <div class="metric"><strong>480</strong><span>curated intent aliases</span></div>
+        <div class="metric"><strong>509</strong><span>curated intent aliases</span></div>
         <div class="metric"><strong>62</strong><span>related-page edges</span></div>
-        <div class="metric"><strong>34</strong><span>search regression tests</span></div>
+        <div class="metric"><strong>46</strong><span>search regression tests</span></div>
         <div class="card span-8">
           <h3>what changed</h3>
           <p>The index now captures tasks, colloquial phrasing, creative-app names, file formats, acronyms, alternate spellings, accessibility language, and platform shortcut vocabulary. Exact aliases are scored independently instead of being flattened into one keyword blob.</p>
@@ -119,10 +119,10 @@
       <h2>intent vocabulary by help section</h2>
       <p class="muted">Exact keyword counts from <code>HELP_CONTENT</code>. Bar width is relative to the largest section (color tools, 164).</p>
       <div class="card">
-        <div class="bar-row"><span>basics</span><div class="bar-track"><div class="bar" style="width:51.8%"></div></div><strong>85</strong></div>
-        <div class="bar-row"><span>storage</span><div class="bar-track"><div class="bar" style="width:40.2%"></div></div><strong>66</strong></div>
-        <div class="bar-row"><span>copy &amp; share</span><div class="bar-track"><div class="bar" style="width:21.3%"></div></div><strong>35</strong></div>
-        <div class="bar-row"><span>export</span><div class="bar-track"><div class="bar" style="width:27.4%"></div></div><strong>45</strong></div>
+        <div class="bar-row"><span>basics</span><div class="bar-track"><div class="bar" style="width:59.8%"></div></div><strong>98</strong></div>
+        <div class="bar-row"><span>storage</span><div class="bar-track"><div class="bar" style="width:45.7%"></div></div><strong>75</strong></div>
+        <div class="bar-row"><span>copy &amp; share</span><div class="bar-track"><div class="bar" style="width:22.6%"></div></div><strong>37</strong></div>
+        <div class="bar-row"><span>export</span><div class="bar-track"><div class="bar" style="width:30.5%"></div></div><strong>50</strong></div>
         <div class="bar-row"><span>color tools</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>164</strong></div>
         <div class="bar-row"><span>accessibility</span><div class="bar-track"><div class="bar" style="width:32.3%"></div></div><strong>53</strong></div>
         <div class="bar-row"><span>reference</span><div class="bar-track"><div class="bar" style="width:19.5%"></div></div><strong>32</strong></div>
@@ -130,13 +130,13 @@
       <details style="margin-top:12px">
         <summary>page-level counts</summary>
         <div class="grid" style="margin-top:12px">
-          <div class="card span-4">export <strong>45</strong><br><small>largest app/format catch-all</small></div>
+          <div class="card span-4">export <strong>50</strong><br><small>largest app/format catch-all</small></div>
           <div class="card span-4">gradient <strong>28</strong><br><small>stops, direction, aspect, output</small></div>
           <div class="card span-4">preview <strong>28</strong><br><small>mockups, contexts, interface roles</small></div>
           <div class="card span-4">edit mode <strong>23</strong></div>
           <div class="card span-4">copy formats <strong>20</strong></div>
           <div class="card span-4">contrast <strong>20</strong></div>
-          <div class="card span-12"><small>remaining pages contain 14–20 aliases each; total = 480 across all 25 pages.</small></div>
+          <div class="card span-12"><small>remaining pages contain 14–22 aliases each; total = 509 across all 25 pages.</small></div>
         </div>
       </details>
     </section>
@@ -173,7 +173,7 @@
         <div class="span-6 matrix">
           <div>TypeScript + Vite production build</div><div class="pass">PASS</div>
           <div>full Vitest suite</div><div class="pass">486 PASS</div>
-          <div>search helper suite</div><div class="pass">34 PASS</div>
+          <div>search helper suite</div><div class="pass">46 PASS</div>
           <div>GitHub Actions quality job</div><div class="pass">PASS</div>
           <div>PR mergeability</div><div class="pass">MERGEABLE</div>
         </div>
@@ -192,12 +192,13 @@
         <div class="card span-4"><h3>curated index</h3><p>Aliases are explicit and auditable. New help pages still require deliberate vocabulary maintenance.</p></div>
         <div class="card span-4"><h3>bounded fuzziness</h3><p>No search dependency was added. Short terms remain strict to limit noisy matches; longer terms tolerate up to two edits.</p></div>
         <div class="card span-4"><h3>AND semantics</h3><p>Every meaningful query term must match one page. This keeps results precise but may return nothing for mixed unrelated intents.</p></div>
+        <div class="card span-12"><h3>widest safe pass</h3><p>Coverage grew to 509 aliases with natural creation, storage, sharing, and export phrasing. A collision test exposed “organize saved palettes” routing to tags; the ambiguous tag alias was removed and the collections phrase was made explicit.</p></div>
         <div class="card span-6"><h3>source files</h3><ul><li><a href="../src/helpers/helpSearch.ts">matching and ranking</a></li><li><a href="../src/components/helpContentIndex.ts">intent vocabulary and relationships</a></li><li><a href="../src/__tests__/helpers/helpSearch.test.ts">regression matrix</a></li></ul></div>
-        <div class="card span-6"><h3>change footprint</h3><p><strong>5 files</strong> · 141 insertions · 44 deletions</p><p class="muted">Includes implementation, test coverage, changelog copy, and TODO completion notes.</p></div>
+        <div class="card span-6"><h3>change footprint</h3><p><strong>6 files</strong> · 374 insertions · 44 deletions</p><p class="muted">Includes implementation, expanded regression coverage, report, changelog copy, and TODO completion notes.</p></div>
       </div>
     </section>
 
-    <footer>Standalone report. Metrics are observed from commit <code>2253a9e</code>; this file is a review artifact and is not the project source of truth.</footer>
+    <footer>Standalone report. Metrics are observed from commit <code>d6485bd</code>; this file is a review artifact and is not the project source of truth.</footer>
   </main>
   <script>
     const filter = document.querySelector('#route-filter');
