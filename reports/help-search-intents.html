@@ -62,7 +62,7 @@
     <header>
       <div class="eyebrow">implementation report · observed 2026-09-12</div>
       <h1>help search now maps user intent, not just literal feature names.</h1>
-      <p class="muted">Branch <code>feat/help-search-intents</code> · commit <code>d6485bd</code> · PR <a href="https://github.com/karan-gera/color-palette/pull/16">#16</a></p>
+      <p class="muted">Branch <code>feat/help-search-intents</code> · commit <code>92451e8</code> · PR <a href="https://github.com/karan-gera/color-palette/pull/16">#16</a></p>
       <div class="status"><span class="dot"></span> open · mergeable · CI quality check passed</div>
       <nav aria-label="Report sections">
         <a href="#scope">scope</a><a href="#pipeline">matching pipeline</a><a href="#coverage">coverage</a><a href="#routes">example routes</a><a href="#evidence">verification</a><a href="#review">review notes</a>
@@ -72,9 +72,9 @@
     <section id="scope">
       <h2>current state</h2>
       <div class="grid">
-        <div class="metric"><strong>25</strong><span>help pages indexed</span></div>
-        <div class="metric"><strong>509</strong><span>curated intent aliases</span></div>
-        <div class="metric"><strong>62</strong><span>related-page edges</span></div>
+        <div class="metric"><strong>26</strong><span>help pages indexed</span></div>
+        <div class="metric"><strong>515</strong><span>curated intent aliases</span></div>
+        <div class="metric"><strong>64</strong><span>related-page edges</span></div>
         <div class="metric"><strong>46</strong><span>search regression tests</span></div>
         <div class="card span-8">
           <h3>what changed</h3>
@@ -125,7 +125,7 @@
         <div class="bar-row"><span>export</span><div class="bar-track"><div class="bar" style="width:30.5%"></div></div><strong>50</strong></div>
         <div class="bar-row"><span>color tools</span><div class="bar-track"><div class="bar" style="width:100%"></div></div><strong>164</strong></div>
         <div class="bar-row"><span>accessibility</span><div class="bar-track"><div class="bar" style="width:32.3%"></div></div><strong>53</strong></div>
-        <div class="bar-row"><span>reference</span><div class="bar-track"><div class="bar" style="width:19.5%"></div></div><strong>32</strong></div>
+        <div class="bar-row"><span>reference</span><div class="bar-track"><div class="bar" style="width:23.2%"></div></div><strong>38</strong></div>
       </div>
       <details style="margin-top:12px">
         <summary>page-level counts</summary>
@@ -136,7 +136,8 @@
           <div class="card span-4">edit mode <strong>23</strong></div>
           <div class="card span-4">copy formats <strong>20</strong></div>
           <div class="card span-4">contrast <strong>20</strong></div>
-          <div class="card span-12"><small>remaining pages contain 14–22 aliases each; total = 509 across all 25 pages.</small></div>
+          <div class="card span-4">error recovery <strong>6</strong></div>
+          <div class="card span-12"><small>remaining pages contain 14–22 aliases each; total = 515 across all 26 pages.</small></div>
         </div>
       </details>
     </section>
@@ -172,7 +173,7 @@
       <div class="grid">
         <div class="span-6 matrix">
           <div>TypeScript + Vite production build</div><div class="pass">PASS</div>
-          <div>full Vitest suite</div><div class="pass">486 PASS</div>
+          <div>full Vitest suite</div><div class="pass">506 PASS</div>
           <div>search helper suite</div><div class="pass">46 PASS</div>
           <div>GitHub Actions quality job</div><div class="pass">PASS</div>
           <div>PR mergeability</div><div class="pass">MERGEABLE</div>
@@ -198,7 +199,7 @@
       </div>
     </section>
 
-    <footer>Standalone report. Metrics are observed from commit <code>d6485bd</code>; this file is a review artifact and is not the project source of truth.</footer>
+    <footer>Standalone report. Metrics are observed from commit <code>92451e8</code>; this file is a review artifact and is not the project source of truth.</footer>
   </main>
   <script>
     const filter = document.querySelector('#route-filter');
