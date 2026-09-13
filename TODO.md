@@ -186,7 +186,7 @@ release issue remains.
   - Split About into its own component while preserving lazy Help/About loading.
   - Verified link destinations, tab order, focus containment, reduced-motion
     treatment, and no horizontal overflow at 100%, 125%, 150%, and 200% zoom equivalents.
-- [ ] **A-09 P1 — redesign the Help page from the ground up.**
+- [x] **A-09 P1 — redesign the Help page from the ground up. ✅**
   - Audit the existing information architecture, navigation, demos, and copy
     against the tasks people actually need to complete.
   - Replace the current Help experience with a clearer structure and interaction
@@ -198,6 +198,17 @@ release issue remains.
     not regress the startup and DOM budgets established by A-12 and B-01.
   - Validate the new experience with task-based desktop usability, focus, zoom,
     and reduced-motion smoke tests.
+  - Replaced the narrow two-column browser with a responsive manual layout that
+    uses a persistent page index, a wide reading surface, and a contextual rail
+    for page sections, shortcuts, and related pages.
+  - Added fuzzy help search across page titles, descriptions, feature synonyms,
+    and keyboard shortcuts, with keyboard selection and direct page navigation.
+  - Help remains part of the lazy documentation chunk and the closed overlay
+    remains outside the DOM. Verified the layout and interaction model at the
+    supported desktop zoom equivalents with reduced motion enabled and disabled.
+  - Magenta documentation accents use separate light, gray, and dark tokens so
+    dark themes keep large surfaces low-luminance and reserve brighter pink for
+    text, focus, and small active controls.
 
 ### Failure containment and constrained-device minimum
 
