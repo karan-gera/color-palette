@@ -270,9 +270,19 @@ release issue remains.
     link return successfully, and observed app resources remain same-origin.
   - Desktop-only and no-offline-boot constraints are published in the readme and
     in-app about/changelog content.
-  - Manual sign-off remaining: use Helium's native eyedropper to select a screen
-    pixel, then confirm with VoiceOver that dialogs, previews, status notifications,
-    and the recovery alert are announced coherently and retain focus as expected.
+  - Helium native eyedropper sign-off is complete: a screen pixel selected through
+    the picker produced the same hex as adding that color directly.
+  - VoiceOver checkpoint: macOS's AppleScript `last phrase` API confirmed the save
+    dialog as a named dialog and both preview overlays as dialogs. Repeated tabbing
+    stayed inside each preview, and closing restored focus to the preview trigger.
+    The recovery screen is exposed as an alert named "something went wrong".
+  - VoiceOver sign-off still needs the transient status announcement captured; the
+    API returned the focused-control hint or an empty last phrase after link-copy.
+    Also recheck whether controlled open/save dialogs should restore their trigger:
+    closing them returned focus to the web-content root in the Helium smoke.
+  - Resume cleanup: VoiceOver, Quick Start, and VoiceOver Utility were stopped. The
+    temporary "allow VoiceOver to be controlled with AppleScript" preference still
+    needs to be restored to off after the remaining checks.
 
 ## Public beta gate
 
