@@ -206,6 +206,9 @@ release issue remains.
   - Help remains part of the lazy documentation chunk and the closed overlay
     remains outside the DOM. Verified the layout and interaction model at the
     supported desktop zoom equivalents with reduced motion enabled and disabled.
+  - Magenta documentation accents use separate light, gray, and dark tokens so
+    dark themes keep large surfaces low-luminance and reserve brighter pink for
+    text, focus, and small active controls.
 
 ### Failure containment and constrained-device minimum
 

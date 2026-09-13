@@ -76,7 +76,7 @@ export default function HelpBrowser({ activePage, children, onActivePageChange, 
             <div className="flex flex-wrap gap-2">
               {(HELP_CONTENT.find((entry) => entry.id === activePage)?.related ?? []).map((pageId) => {
                 const entry = HELP_CONTENT.find((item) => item.id === pageId)
-                return entry ? <button key={pageId} type="button" onClick={() => selectPage(pageId)} className="rounded-md border bg-card px-3 py-2 text-xs hover:bg-muted">{entry.title}</button> : null
+                return entry ? <button key={pageId} type="button" onClick={() => selectPage(pageId)} className="rounded-md border border-[var(--docs-accent-border)] bg-[var(--docs-accent-surface)] px-3 py-2 text-xs hover:bg-[var(--docs-accent-surface-strong)]">{entry.title}</button> : null
               })}
             </div>
           </div>

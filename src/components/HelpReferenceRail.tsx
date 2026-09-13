@@ -55,11 +55,11 @@ export default function HelpReferenceRail({ activePage, headings, onSelectPage, 
         </section>
       )}
       {related.length > 0 && (
-        <section className="rounded-lg border border-[#dfa5c1] bg-[#f5dce9] p-4 text-[#351126]">
-          <h2 className="mb-2 text-[11px] font-normal tracking-[0.14em] text-[#a52460]">related pages</h2>
+        <section className="rounded-lg border border-[var(--docs-accent-border)] bg-[var(--docs-accent-surface)] p-4">
+          <h2 className="mb-2 text-[11px] font-normal tracking-[0.14em] text-[var(--docs-accent-text)]">related pages</h2>
           <div className="divide-y">
             {related.map((item) => (
-              <button key={item.id} type="button" onClick={() => onSelectPage(item.id)} className="block w-full border-[#d9b7c8] py-2.5 text-left text-xs hover:text-[#a52460]">
+              <button key={item.id} type="button" onClick={() => onSelectPage(item.id)} className="block w-full border-[var(--docs-accent-border)] py-2.5 text-left text-xs hover:text-[var(--docs-accent-text)]">
                 {item.title} →
               </button>
             ))}

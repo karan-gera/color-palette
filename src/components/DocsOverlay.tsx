@@ -35,6 +35,7 @@ const CHANGELOG = [
     items: [
       'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
       'help search matches page titles, feature terms, descriptions, and keyboard shortcuts',
+      'documentation accents use pale magenta in light mode and low-luminance berry surfaces in dark modes',
       'first visits now open with a compact guide to help and keyboard shortcuts',
       `the public alpha is identified as ${__APP_VERSION__}`,
       'the production address is paletteport.app',
@@ -1769,7 +1770,9 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
     >
       {/* top bar */}
       <div className="grid min-h-16 grid-cols-[1fr_auto_1fr] items-center border-b px-5">
-        <span className="text-xl" style={{ fontFamily: 'var(--font-serif)' }}>paletteport</span>
+        <span className="text-2xl tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+          Palette<em className="opacity-65">Port</em>
+        </span>
         <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
           {TABS.map((tab) => (
             <button
@@ -1780,7 +1783,7 @@ export default function DocsOverlay({ onClose, initialTab, initialPage }: DocsOv
               data-docs-active={activeTab === tab.id}
               className={`min-h-9 px-3 py-2 text-xs rounded-md transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-[#c9367b] text-white'
+                  ? 'bg-[var(--docs-accent-control)] text-[var(--docs-accent-control-text)]'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
