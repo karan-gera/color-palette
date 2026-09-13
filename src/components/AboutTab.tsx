@@ -73,6 +73,30 @@ export default function AboutTab() {
         </dl>
       </section>
 
+      <section
+        aria-labelledby="about-alpha"
+        className="grid gap-5 rounded-lg border border-[var(--docs-accent-border)] bg-[var(--docs-accent-surface)] p-5 sm:p-6 md:grid-cols-[minmax(0,1.35fr)_minmax(240px,0.65fr)]"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-[var(--docs-accent-text)]">
+            <Monitor className="size-4" aria-hidden="true" />
+            <h3 id="about-alpha" className="text-xs font-medium tracking-[0.16em]">
+              public alpha
+            </h3>
+          </div>
+          <h4 className="text-lg font-medium leading-6">this release is built for desktop browsers.</h4>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            mobile layouts are not ready yet, and offline startup is not guaranteed.
+          </p>
+        </div>
+        <div className="border-t border-[var(--docs-accent-border)] pt-4 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+          <p className="mb-2 text-xs font-medium">how color results are produced</p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            color generation and analysis are deterministic. no generative ai runs in paletteport; ai programming assistance was used during development.
+          </p>
+        </div>
+      </section>
+
       <section aria-labelledby="about-capabilities" className="space-y-4">
         <h3 id="about-capabilities" className="text-xs tracking-[0.16em] text-muted-foreground">
           what it helps you do
@@ -90,27 +114,17 @@ export default function AboutTab() {
 
       <section aria-labelledby="about-data" className="space-y-4">
         <h3 id="about-data" className="text-xs tracking-[0.16em] text-muted-foreground">
-          data and limits
+          your data
         </h3>
-        <div className="grid overflow-hidden rounded-lg border md:grid-cols-2 md:divide-x">
+        <div className="overflow-hidden rounded-lg border">
           <div className="space-y-3 p-5">
             <HardDrive className="size-4 text-muted-foreground" aria-hidden="true" />
             <h4 className="text-sm font-medium">saved in your browser</h4>
             <p className="text-xs leading-5 text-muted-foreground">
-              palettes and preferences use this browser's local storage. there are no accounts, analytics, or palette servers. sharing and exporting are actions you choose.
+              palettes and preferences are saved in this browser. paletteport has no accounts, analytics, or cloud subscription.
             </p>
             <p className="text-xs leading-5 text-muted-foreground">
-              there is no app-level save limit; browser storage limits apply. exports are the safest way to keep a backup.
-            </p>
-          </div>
-          <div className="space-y-3 border-t p-5 md:border-t-0">
-            <Monitor className="size-4 text-muted-foreground" aria-hidden="true" />
-            <h4 className="text-sm font-medium">public alpha scope</h4>
-            <p className="text-xs leading-5 text-muted-foreground">
-              the current release supports desktop browsers. mobile layout work is deferred, and offline startup is not yet guaranteed.
-            </p>
-            <p className="text-xs leading-5 text-muted-foreground">
-              color generation and analysis are deterministic. no generative ai runs in the product; ai programming assistance was used to help build it.
+              export and import palettes whenever you like, whether they are your own backups or files shared by someone else. keep those files in any storage service you choose; palettes saved inside the app are limited only by your browser's available storage.
             </p>
           </div>
         </div>

@@ -42,7 +42,7 @@ const CHANGELOG = [
       'the public alpha supports desktop browsers; mobile ui remains deferred',
       'package metadata and in-app version now share one source',
       'paletteport is licensed under the mit license',
-      'about now explains the desktop alpha scope, browser-local data, storage limits, and project links',
+      'about highlights the desktop alpha scope and explains browser-local ownership, portable backups, and project links',
       'public claims no longer promise offline startup or unlimited browser storage',
       'share documentation now matches the hyphen-separated url format',
       'missing export formats now link to the real issue tracker',
