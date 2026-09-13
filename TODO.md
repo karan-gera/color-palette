@@ -145,7 +145,7 @@ release issue remains.
 - [x] **A-03 P0 — add release identity and license.**
   - Add the actual MIT `LICENSE` file.
   - Choose a SemVer prerelease and align `package.json`, docs, and changelog.
-  - Release identity is `0.21.0-alpha.1`; Vite injects the package version into
+  - Release identity is `0.22.0-alpha.1`; Vite injects the package version into
     the About page and changelog so the displayed value stays aligned.
 - [x] **A-04 P0 — replace or remove dead external actions. ✅**
   - Replace `https://github.com/your-repo/issues` with the real issue tracker.
@@ -218,10 +218,12 @@ release issue remains.
 
 ### Failure containment and constrained-device minimum
 
-- [ ] **A-10 P0 — add a desktop error boundary.**
+- [x] **A-10 P0 — add a desktop error boundary. ✅**
   - Preserve a readable recovery screen instead of a blank app.
   - Provide reload/reset guidance without deleting local data automatically.
   - Add a regression test for the fallback path.
+  - Added a root-level class error boundary with retry and reload actions, a local-data safety note, and a development-only `?test-error-boundary=1` trigger for manual review.
+  - Added regression coverage for fallback rendering, retry data preservation, and delegated reload behavior.
 - [ ] **A-11 P0 — respect reduced-motion preferences.**
   - Configure Framer Motion to respect the user preference.
   - Add CSS reduction for nonessential transitions and animations.
