@@ -25,6 +25,7 @@ export const HELP_CONTENT: HelpSearchEntry[] = [
   { id: 'color-blindness', title: 'color blindness', section: 'accessibility', summary: 'simulate common color-vision differences on palette colors.', keywords: ['cvd', 'deuteranopia', 'protanopia', 'tritanopia'], shortcuts: ['shift+t'], related: ['contrast', 'preview'] },
   { id: 'contrast', title: 'contrast checker', section: 'accessibility', summary: 'compare palette pairs against wcag aa, aaa, and large-text thresholds.', keywords: ['readability', 'hard to read', 'ratio', 'text'], shortcuts: ['k', 'shift+k'], related: ['color-blindness', 'preview'] },
   { id: 'theme', title: 'theme', section: 'reference', summary: 'switch between light, gray, and dark workspace themes.', keywords: ['appearance', 'mode'], shortcuts: ['t'], related: ['reduced-motion', 'contrast'] },
+  { id: 'error-recovery', title: 'error recovery', section: 'reference', summary: 'recover from an unexpected render failure without clearing local palettes.', keywords: ['crash', 'blank', 'broken', 'reload', 'reset', 'failure'], related: ['save-open', 'backup'] },
   { id: 'keyboard', title: 'keyboard shortcuts', section: 'reference', summary: 'view every keyboard command grouped by palette, file, view, and general actions.', keywords: ['hotkey', 'command', 'key', 'faster'], shortcuts: ['?'], related: ['getting-started'] },
 ]
 

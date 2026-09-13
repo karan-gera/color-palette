@@ -4,7 +4,7 @@ Free color palette tool. No accounts, no ads, no paywalls. Everything runs in yo
 
 **[Try it live →](https://paletteport.app/)**
 
-Current release: **0.21.0-alpha.1** (public alpha)
+Current release: **0.22.0-alpha.1** (public alpha)
 
 The public alpha supports desktop browsers. Mobile UI and responsive-layout QA
 are deferred; mobile visitors may continue to the desktop experience at their
