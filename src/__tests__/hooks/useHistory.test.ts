@@ -269,4 +269,25 @@ describe('useHistory - canUndo/canRedo invariants across sequences', () => {
     expect(result.current.current).toBe('c')
     expect(result.current.canRedo).toBe(false)
   })
+
+  it('keeps repeated batched undo and redo synchronized through a blank terminal state', () => {
+    const history = Array.from({ length: 95 }, (_, index) => [`#${index.toString(16).padStart(6, '0')}`])
+    history.push([])
+    const { result } = renderHook(() =>
+      useHistory({ initialHistory: history, initialIndex: history.length - 1 })
+    )
+
+    act(() => {
+      for (let index = history.length - 1; index > 0; index -= 1) result.current.undo()
+    })
+    expect(result.current.index).toBe(0)
+    expect(result.current.current).toEqual(history[0])
+
+    act(() => {
+      for (let index = 1; index < history.length; index += 1) result.current.redo()
+    })
+    expect(result.current.index).toBe(history.length - 1)
+    expect(result.current.current).toEqual([])
+    expect(result.current.canRedo).toBe(false)
+  })
 })

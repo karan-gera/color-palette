@@ -38,6 +38,7 @@ const CHANGELOG = [
       'palette and gradient previews keep keyboard focus inside until they close',
       'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',
       'opening paletteport now takes you straight to the app',
+      'held undo and redo stay synchronized with every palette history entry',
     ],
   },
   {
@@ -522,6 +523,9 @@ function DocPageContent({ pageId }: { pageId: DocPageId }) {
             <h3 className="text-sm font-medium text-foreground lowercase">how it works</h3>
             <p>
               linear stack. each change pushes a snapshot. undo goes back, redo goes forward.
+            </p>
+            <p>
+              hold <Kbd>Z</Kbd> or <Kbd>{getModifierLabel('shift')}</Kbd><Kbd>Z</Kbd> to move quickly through a long history. the palette follows every selected entry, including an empty palette.
             </p>
             <p>
               if you undo and then make a new change, the undone entries are discarded. standard text editor behavior.

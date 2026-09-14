@@ -328,7 +328,7 @@ release issue remains.
 - [ ] **B-10 P1 — burn down alpha feedback.**
   - Classify issues by correctness, accessibility, data loss, performance, and UX.
   - Resolve all P0/P1 items or document an explicit deferral before beta.
-- [ ] **B-10a P0 — keep repeated keyboard redo synchronized with the palette.**
+- [x] **B-10a P0 — keep repeated keyboard redo synchronized with the palette. ✅**
   - Reproduction: create history ending in a blank palette, hold <kbd>z</kbd> to
     traverse backward, then hold <kbd>shift</kbd>+<kbd>z</kbd> to redo to the newest state.
   - Observed: history reaches and selects the newest blank entry (for example,
@@ -338,6 +338,12 @@ release issue remains.
   - Investigate key-repeat batching/stale closures across `useKeyboardShortcuts`
     and `useHistory`, then add a regression test that holds undo and redo through
     the complete history, including a blank terminal state.
+  - The reducer and repeated keyboard callbacks already reached the correct cursor;
+    interrupted Framer Motion exits were retaining stale keyed circles after rapid
+    palette-size changes. Palette row presence now resets only when the color count
+    changes, preserving same-size reroll fades while clearing stale exit state.
+  - Added a 96-entry batched undo/redo regression ending on a blank palette and
+    verified the rendered hold-key sequence in isolated Chromium.
 
 ## v1 gate
 

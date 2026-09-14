@@ -65,6 +65,12 @@ export default function AnimatedPaletteContainer({
   const row2Colors = colors.slice(row1Count)
   const row2Ids = colorIds.slice(row1Count)
 
+  // Rapid history traversal can remove and re-add the same keyed colors before
+  // Framer finishes their exit. Resetting presence when the palette size changes
+  // prevents those interrupted exits from leaving stale circles behind. Same-size
+  // rerolls keep the presence tree (and their color interpolation) intact.
+  const presenceKey = colors.length
+
   const renderItem = (color: string, colorId: string, globalIndex: number) => (
     <AnimatedPaletteItem
       key={colorId}
@@ -119,7 +125,7 @@ export default function AnimatedPaletteContainer({
         <div id="palette-container" className={`flex flex-col items-center${hasRow2 ? ' gap-8' : ''}`}>
           {/* Row 1 — always visible */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
+            <AnimatePresence key={`row-1-${presenceKey}`} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row1Colors.map((color, i) => renderItem(color, row1Ids[i], i))}
               {!hasRow2 && showAddButton && (
                 <motion.div
@@ -141,7 +147,7 @@ export default function AnimatedPaletteContainer({
               Mounting it conditionally causes a one-frame delay where Framer must wait for the
               new parent to appear before it can start layout animations for the whole group. */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
+            <AnimatePresence key={`row-2-${presenceKey}`} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row2Colors.map((color, i) => renderItem(color, row2Ids[i], row1Count + i))}
               {hasRow2 && showAddButton && (
                 <motion.div
