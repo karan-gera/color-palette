@@ -1,6 +1,6 @@
 # PalettePort release TODO
 
-Last updated: 2026-09-12
+Last updated: 2026-09-14
 
 This file is the active release backlog. `AUDIT.md`, `PERFORMANCE_AUDIT.md`,
 `TESTING.md`, and `COMPETITOR_RESEARCH.md` contain the evidence behind it.
@@ -328,6 +328,16 @@ release issue remains.
 - [ ] **B-10 P1 — burn down alpha feedback.**
   - Classify issues by correctness, accessibility, data loss, performance, and UX.
   - Resolve all P0/P1 items or document an explicit deferral before beta.
+- [ ] **B-10a P0 — keep repeated keyboard redo synchronized with the palette.**
+  - Reproduction: create history ending in a blank palette, hold <kbd>z</kbd> to
+    traverse backward, then hold <kbd>shift</kbd>+<kbd>z</kbd> to redo to the newest state.
+  - Observed: history reaches and selects the newest blank entry (for example,
+    `96/96`) while the main palette still renders colors from an older entry.
+  - Expected: every repeated undo/redo step applies the history entry selected by
+    the cursor; reaching the newest blank entry renders a blank palette.
+  - Investigate key-repeat batching/stale closures across `useKeyboardShortcuts`
+    and `useHistory`, then add a regression test that holds undo and redo through
+    the complete history, including a blank terminal state.
 
 ## v1 gate
 
