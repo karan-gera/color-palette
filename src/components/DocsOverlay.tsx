@@ -31,17 +31,27 @@ const TABS: { id: Tab; label: string }[] = [
 const CHANGELOG = [
   {
     version: __APP_VERSION__,
+    title: 'alpha verification & accessibility',
+    items: [
+      'screen readers announce recovery alerts and transient status messages immediately',
+      'open and save dialogs restore focus to their trigger after closing',
+      'palette and gradient previews now trap keyboard focus and restore it when closed',
+      'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',
+      'the separate alpha landing route was retired so paletteport opens directly in the app',
+      'desktop mouse, keyboard, screen reader, persistence, export, and production checks now pass the alpha verification gate',
+    ],
+  },
+  {
+    version: '0.22',
     title: 'public alpha readiness',
     items: [
       'unexpected render failures now show a readable recovery screen instead of a blank app',
-      'screen readers announce recovery alerts and transient status messages immediately',
-      'open and save dialogs restore focus to their trigger after closing',
       'try again and reload actions preserve local palettes; clearing site data remains a manual last resort',
       'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
-      'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',
+      'help search matches page titles, feature terms, descriptions, and keyboard shortcuts',
       'documentation accents use pale magenta in light mode and low-luminance berry surfaces in dark modes',
       'first visits now open with a compact guide to help and keyboard shortcuts',
-      `the public alpha is identified as ${__APP_VERSION__}`,
+      'the public alpha is identified as 0.22.0-alpha.1',
       'the production address is paletteport.app',
       'the public alpha supports desktop browsers; mobile ui remains deferred',
       'package metadata and in-app version now share one source',

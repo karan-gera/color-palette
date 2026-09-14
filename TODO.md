@@ -145,7 +145,7 @@ release issue remains.
 - [x] **A-03 P0 — add release identity and license.**
   - Add the actual MIT `LICENSE` file.
   - Choose a SemVer prerelease and align `package.json`, docs, and changelog.
-  - Release identity is `0.22.0-alpha.1`; Vite injects the package version into
+  - Release identity is `0.23.0-alpha.1`; Vite injects the package version into
     the About page and changelog so the displayed value stays aligned.
 - [x] **A-04 P0 — replace or remove dead external actions. ✅**
   - Replace `https://github.com/your-repo/issues` with the real issue tracker.
