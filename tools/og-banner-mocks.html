@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>paletteport embed banner mocks</title>
+  <style>
+    @font-face { font-family: "DM Serif Display"; src: url("../public/fonts/dm-serif-display-v17-latin-regular.woff2") format("woff2"); }
+    @font-face { font-family: "DM Serif Display"; src: url("../public/fonts/dm-serif-display-v17-latin-italic.woff2") format("woff2"); font-style: italic; }
+    @font-face { font-family: "Fragment Mono"; src: url("../public/fonts/fragment-mono-v6-latin-regular.woff2") format("woff2"); }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 40px; background: #171714; color: #f4f1ea; font-family: "Fragment Mono", monospace; }
+    main { max-width: 1240px; margin: 0 auto; display: grid; gap: 44px; }
+    article { display: grid; gap: 14px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    header div { display: flex; align-items: baseline; gap: 18px; }
+    h2 { margin: 0; font-size: 16px; font-weight: 400; letter-spacing: .08em; text-transform: lowercase; }
+    p { margin: 0; color: #aaa79f; font-size: 12px; }
+    button { border: 1px solid #44443f; border-radius: 999px; background: #23231f; color: #f4f1ea; padding: 8px 13px; font: 11px "Fragment Mono", monospace; cursor: pointer; }
+    button:hover { background: #30302a; }
+    canvas { display: block; width: 100%; height: auto; border-radius: 14px; box-shadow: 0 24px 60px #0008; }
+  </style>
+</head>
+<body>
+  <main>
+    <article><header><div><h2>01 — bold circles</h2><p>recommended · closest to current</p></div><button data-canvas="bold-circles">save png</button></header><canvas id="bold-circles" width="1200" height="630"></canvas></article>
+    <article><header><div><h2>02 — color dock</h2><p>graphic · strongest at thumbnail size</p></div><button data-canvas="color-dock">save png</button></header><canvas id="color-dock" width="1200" height="630"></canvas></article>
+    <article><header><div><h2>03 — crop marks</h2><p>editorial · more distinctive</p></div><button data-canvas="crop-marks">save png</button></header><canvas id="crop-marks" width="1200" height="630"></canvas></article>
+  </main>
+  <script>
+    const W = 1200;
+    const H = 630;
+    const ink = '#171714';
+    const paper = '#f4f1ea';
+    const muted = '#7f7f78';
+    const colors = ['#eda544', '#c65e48', '#4b93a8', '#895f9e', '#78a878'];
+
+    function ctxFor(id) {
+      const canvas = document.getElementById(id);
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      return ctx;
+    }
+
+    function fill(ctx, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    function circle(ctx, x, y, radius, color, options = {}) {
+      const { ring = ink, ringWidth = 7, shadow = false } = options;
+      ctx.save();
+      if (shadow) {
+        ctx.shadowColor = '#1717142f';
+        ctx.shadowBlur = 34;
+        ctx.shadowOffsetY = 14;
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.lineWidth = ringWidth;
+      ctx.strokeStyle = ring;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function wordmark(ctx, x, y, size, light = false) {
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = light ? paper : ink;
+      ctx.font = `${size}px "DM Serif Display"`;
+      ctx.fillText('Palette', x, y);
+      const firstWidth = ctx.measureText('Palette').width;
+      ctx.fillStyle = light ? '#b7b3aa' : muted;
+      ctx.font = `italic ${size}px "DM Serif Display"`;
+      ctx.fillText('Port', x + firstWidth - 2, y);
+    }
+
+    function verticalMetrics(ctx, font, text) {
+      ctx.font = font;
+      const metrics = ctx.measureText(text);
+      return {
+        ascent: metrics.actualBoundingBoxAscent,
+        descent: metrics.actualBoundingBoxDescent,
+      };
+    }
+
+    function wordmarkVerticalMetrics(ctx, size) {
+      const palette = verticalMetrics(ctx, `${size}px "DM Serif Display"`, 'Palette');
+      const port = verticalMetrics(ctx, `italic ${size}px "DM Serif Display"`, 'Port');
+      return {
+        ascent: Math.max(palette.ascent, port.ascent),
+        descent: Math.max(palette.descent, port.descent),
+      };
+    }
+
+    function mono(ctx, text, x, y, size = 22, color = muted, spacing = 1.6) {
+      ctx.fillStyle = color;
+      ctx.font = `${size}px "Fragment Mono"`;
+      ctx.textBaseline = 'alphabetic';
+      if (!spacing) {
+        ctx.fillText(text, x, y);
+        return;
+      }
+      let cursor = x;
+      for (const char of text) {
+        ctx.fillText(char, cursor, y);
+        cursor += ctx.measureText(char).width + spacing;
+      }
+    }
+
+    function line(ctx, x1, y1, x2, y2, color = ink, width = 5) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.stroke();
+    }
+
+    function drawBoldCircles() {
+      const ctx = ctxFor('bold-circles');
+      fill(ctx, paper);
+      colors.forEach((color, i) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(i * W / colors.length, 0, W / colors.length, 12);
+      });
+
+      const typeCenterY = 322;
+      const typeGap = 36;
+      const wordmarkMetrics = wordmarkVerticalMetrics(ctx, 103);
+      const eyebrowMetrics = verticalMetrics(ctx, '18px "Fragment Mono"', 'FREE · FOREVER · NO SIGN-UP');
+      const taglineMetrics = verticalMetrics(ctx, '22px "Fragment Mono"', 'make. test. export. repeat.');
+      const wordmarkBaseline = typeCenterY + (wordmarkMetrics.ascent - wordmarkMetrics.descent) / 2;
+      const eyebrowBaseline = wordmarkBaseline - wordmarkMetrics.ascent - typeGap - eyebrowMetrics.descent;
+      const taglineBaseline = wordmarkBaseline + wordmarkMetrics.descent + typeGap + taglineMetrics.ascent;
+
+      mono(ctx, 'FREE · FOREVER · NO SIGN-UP', 72, eyebrowBaseline, 18, ink, 2.4);
+      wordmark(ctx, 68, wordmarkBaseline, 103);
+      mono(ctx, 'make. test. export. repeat.', 74, taglineBaseline, 22, muted, .6);
+
+      circle(ctx, 845, 218, 108, colors[0], { shadow: true });
+      circle(ctx, 1015, 218, 108, colors[1], { shadow: true });
+      circle(ctx, 845, 426, 108, colors[2], { shadow: true });
+      circle(ctx, 1015, 426, 108, paper, { shadow: true });
+      line(ctx, 996, 426, 1034, 426, ink, 7);
+      line(ctx, 1015, 407, 1015, 445, ink, 7);
+    }
+
+    function drawColorDock() {
+      const ctx = ctxFor('color-dock');
+      fill(ctx, ink);
+      mono(ctx, 'PALETTE TOOLKIT FOR THE REAL WORLD', 66, 100, 17, '#d8d4ca', 2.2);
+      wordmark(ctx, 60, 252, 118, true);
+      mono(ctx, 'generate · extract · preview · export', 67, 320, 22, '#d8d4ca', .4);
+
+      const widths = [212, 254, 186, 230, 210];
+      let x = 64;
+      widths.forEach((width, i) => {
+        ctx.beginPath();
+        ctx.roundRect(x, 417, width, 126, 63);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.lineWidth = 7;
+        ctx.strokeStyle = paper;
+        ctx.stroke();
+        x += width - 16;
+      });
+    }
+
+    function drawCropMarks() {
+      const ctx = ctxFor('crop-marks');
+      fill(ctx, paper);
+
+      circle(ctx, 95, 90, 205, colors[0], { ringWidth: 9 });
+      circle(ctx, 275, 560, 240, colors[2], { ringWidth: 9 });
+      circle(ctx, 1095, 520, 205, colors[1], { ringWidth: 9 });
+      circle(ctx, 1130, 80, 152, colors[4], { ringWidth: 9 });
+
+      ctx.fillStyle = paper;
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.roundRect(282, 128, 648, 374, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      mono(ctx, 'COLOR, READY TO GO', 346, 207, 18, colors[1], 2.5);
+      wordmark(ctx, 338, 330, 100);
+      line(ctx, 344, 367, 864, 367, ink, 5);
+      mono(ctx, 'paletteport.app', 345, 418, 21, ink, .7);
+    }
+
+    async function drawAll() {
+      await Promise.all([
+        document.fonts.load('103px "DM Serif Display"'),
+        document.fonts.load('italic 103px "DM Serif Display"'),
+        document.fonts.load('22px "Fragment Mono"'),
+      ]);
+      await document.fonts.ready;
+      drawBoldCircles();
+      drawColorDock();
+      drawCropMarks();
+
+      const renderId = new URLSearchParams(window.location.search).get('render');
+      if (renderId) {
+        const canvas = document.getElementById(renderId);
+        document.body.replaceChildren(canvas);
+        Object.assign(document.body.style, { margin: '0', padding: '0', background: paper });
+        Object.assign(canvas.style, { width: `${W}px`, height: `${H}px`, borderRadius: '0', boxShadow: 'none' });
+      }
+      document.documentElement.dataset.ready = 'true';
+    }
+
+    window.exportMock = (id) => document.getElementById(id).toDataURL('image/png');
+    document.querySelectorAll('[data-canvas]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.canvas;
+        const link = document.createElement('a');
+        link.download = `og-banner-${id}.png`;
+        link.href = document.getElementById(id).toDataURL('image/png');
+        link.click();
+      });
+    });
+    drawAll();
+  </script>
+</body>
+</html>
