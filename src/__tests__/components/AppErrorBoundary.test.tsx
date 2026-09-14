@@ -28,7 +28,7 @@ describe('AppErrorBoundary', () => {
       </AppErrorBoundary>,
     )
 
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveFocus()
     expect(screen.getByRole('heading', { name: 'something went wrong' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'try again' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'reload app' })).toBeInTheDocument()

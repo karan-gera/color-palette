@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>A-14 alpha candidate verification report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #000;
+      --foreground: #fff;
+      --muted: #b8b8b8;
+      --line: #555;
+      --panel: #101010;
+      --pass: #8cff9b;
+      --open: #ffd479;
+      --link: #9ed0ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--background); color: var(--foreground); }
+
+    body {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    a { color: var(--link); text-underline-offset: 0.2em; }
+    a:hover { text-decoration-thickness: 0.15em; }
+    a:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--foreground);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 1rem;
+      top: -5rem;
+      padding: 0.65rem 0.8rem;
+      background: var(--foreground);
+      color: var(--background);
+      z-index: 2;
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    .shell {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 3.5rem 0 2rem;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 22ch; font-size: clamp(2rem, 6vw, 4.5rem); line-height: 1.02; letter-spacing: -0.06em; }
+    h2 { margin-bottom: 1rem; font-size: clamp(1.45rem, 3vw, 2rem); line-height: 1.2; }
+    h3 { font-size: 1rem; }
+    p, li { max-width: 78ch; }
+    code { font: inherit; color: #e8e8e8; }
+
+    .eyebrow, .meta, .label { color: var(--muted); }
+    .eyebrow { margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; }
+    .lede { max-width: 62ch; font-size: clamp(1.1rem, 2vw, 1.35rem); }
+
+    .status-grid, .measure-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      margin: 2rem 0 0;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .status-card, .measure {
+      min-width: 0;
+      padding: 1rem;
+      background: var(--background);
+    }
+
+    .status-card strong, .measure strong { display: block; margin-top: 0.35rem; overflow-wrap: anywhere; font-size: 1.25rem; }
+    .pass { color: var(--pass); }
+    .open { color: var(--open); }
+
+    main section { padding: 2.5rem 0; border-bottom: 1px solid var(--line); }
+
+    .callout {
+      border: 1px solid var(--foreground);
+      padding: 1rem;
+      background: var(--panel);
+    }
+
+    .callout > :last-child { margin-bottom: 0; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td { padding: 0.85rem; vertical-align: top; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: 0; }
+    th { background: var(--panel); }
+
+    ul, ol { padding-left: 1.4rem; }
+    li + li { margin-top: 0.45rem; }
+
+    .bar-list { display: grid; gap: 1rem; margin-top: 1.5rem; }
+    .bar-row { display: grid; grid-template-columns: 8rem 1fr 6rem; gap: 0.75rem; align-items: center; }
+    .bar-track { height: 1rem; border: 1px solid var(--line); }
+    .bar-fill { height: 100%; background: var(--foreground); }
+    .bar-value { text-align: right; }
+
+    details { border-top: 1px solid var(--line); padding: 1rem 0; }
+    details:last-child { border-bottom: 1px solid var(--line); }
+    summary { width: fit-content; cursor: pointer; font-weight: 700; }
+    details p, details ul { margin-top: 1rem; }
+
+    .source-list { columns: 2; column-gap: 3rem; }
+    .source-list li { break-inside: avoid; }
+
+    footer { padding: 2rem 0 4rem; color: var(--muted); }
+
+    @media (max-width: 780px) {
+      .status-grid, .measure-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .source-list { columns: 1; }
+      .bar-row { grid-template-columns: 1fr auto; }
+      .bar-track { grid-column: 1 / -1; grid-row: 2; }
+    }
+
+    @media (max-width: 600px) {
+      .shell { width: min(100% - 1.25rem, 1120px); }
+      header { padding-top: 2.25rem; }
+      .status-grid, .measure-grid { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      :root { color-scheme: light; --background: #fff; --foreground: #000; --muted: #333; --line: #777; --panel: #eee; --pass: #075f19; --open: #704c00; --link: #003d73; }
+      a { color: inherit; }
+      .skip-link { display: none; }
+      header, main section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#report">skip to report</a>
+
+  <header>
+    <div class="shell">
+      <p class="eyebrow">release evidence / 2026-09-14</p>
+      <h1>A-14 alpha candidate verification</h1>
+      <p class="lede">The desktop alpha gate is complete. The candidate passed automated, clean-profile browser, native color-picker, keyboard, focus, and VoiceOver checks. The implementation is under review in <a href="https://github.com/karan-gera/color-palette/pull/20">pull request #20</a>.</p>
+
+      <div class="status-grid" aria-label="Current status">
+        <div class="status-card">
+          <span class="label">A-14 gate</span>
+          <strong class="pass">complete</strong>
+        </div>
+        <div class="status-card">
+          <span class="label">candidate</span>
+          <strong>0.22.0-alpha.1</strong>
+        </div>
+        <div class="status-card">
+          <span class="label">review</span>
+          <strong class="open">PR #20 open</strong>
+        </div>
+        <div class="status-card">
+          <span class="label">next decision</span>
+          <strong>review / merge</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="report" class="shell">
+    <section aria-labelledby="result-heading">
+      <h2 id="result-heading">Result</h2>
+      <div class="callout">
+        <p><strong>Observed:</strong> every behavior required for A-14 now has either repeatable automated coverage or a completed manual/native verification. No A-14 manual checks remain.</p>
+        <p><strong>Decision boundary:</strong> this evidence supports the stated desktop-only public alpha. It does not certify offline startup, mobile UI, or the public-beta performance budget.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="found-heading">
+      <h2 id="found-heading">What we found and changed</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">surface</th>
+              <th scope="col">before</th>
+              <th scope="col">change</th>
+              <th scope="col">observed after</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">transient status</th>
+              <td>A status node mounted already populated. It appeared in the accessibility tree, but VoiceOver did not speak the update.</td>
+              <td>Keep one empty polite live region mounted and change its text when a notification arrives; mark the visual duplicate hidden from assistive technology.</td>
+              <td><span class="pass">pass</span> — VoiceOver spoke “link copied to clipboard!”</td>
+            </tr>
+            <tr>
+              <th scope="row">fatal recovery</th>
+              <td>The recovery view exposed <code>role="alert"</code>, but VoiceOver initially announced only the web-content container.</td>
+              <td>Make the recovery alert programmatically focusable and move initial focus to it after mount.</td>
+              <td><span class="pass">pass</span> — VoiceOver spoke “something went wrong alert”.</td>
+            </tr>
+            <tr>
+              <th scope="row">open / save dialogs</th>
+              <td>Closing these controlled dialogs returned focus to the browser’s web-content root instead of the invoking control.</td>
+              <td>Add a reusable hook that captures the active trigger before opening and restores it on close.</td>
+              <td><span class="pass">pass</span> — both dialogs returned focus to their triggers; the save dialog was announced as a named dialog.</td>
+            </tr>
+            <tr>
+              <th scope="row">preview overlays</th>
+              <td>Palette and gradient previews lacked complete modal semantics and reusable focus containment/restoration.</td>
+              <td>Add named modal-dialog semantics plus shared initial focus, Tab/Shift+Tab trapping, Escape handling, and trigger restoration.</td>
+              <td><span class="pass">pass</span> — both previews were announced as dialogs; repeated tabbing stayed contained and closing restored focus.</td>
+            </tr>
+            <tr>
+              <th scope="row">native eyedropper</th>
+              <td>The browser/native picker could not be concluded from unit tests or simulated pointer input.</td>
+              <td>Complete a native Helium screen-pixel selection against a known palette color.</td>
+              <td><span class="pass">pass</span> — the picked screen pixel produced the same hex as adding that color directly.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="evidence-heading">
+      <h2 id="evidence-heading">Verification evidence</h2>
+      <div class="measure-grid" aria-label="Automated verification measurements">
+        <div class="measure"><span class="label">build</span><strong class="pass">pass</strong></div>
+        <div class="measure"><span class="label">lint</span><strong class="pass">exit 0</strong></div>
+        <div class="measure"><span class="label">tests</span><strong>514 passed</strong></div>
+        <div class="measure"><span class="label">future tests</span><strong>42 todos</strong></div>
+      </div>
+
+      <div class="bar-list" aria-label="Coverage results">
+        <div class="bar-row">
+          <span>statements</span>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width: 87.54%"></div></div>
+          <span class="bar-value">87.54%</span>
+        </div>
+        <div class="bar-row">
+          <span>branches</span>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width: 81.09%"></div></div>
+          <span class="bar-value">81.09%</span>
+        </div>
+        <div class="bar-row">
+          <span>functions</span>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width: 86.18%"></div></div>
+          <span class="bar-value">86.18%</span>
+        </div>
+        <div class="bar-row">
+          <span>lines</span>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width: 88.48%"></div></div>
+          <span class="bar-value">88.48%</span>
+        </div>
+      </div>
+
+      <details open>
+        <summary>automated gates</summary>
+        <ul>
+          <li><code>npm run build</code>: passed. Vite still reports the known large startup chunk tracked by B-01.</li>
+          <li><code>npm run lint</code>: exit 0, with only the documented pre-existing <code>CircleWipeOverlay.tsx</code> dependency warning.</li>
+          <li><code>npm test</code>: 514 passed, 42 todos, 4 skipped test files, 0 failures.</li>
+          <li><code>npm run test:coverage</code>: 87.54% statements, 81.09% branches, 86.18% functions, 88.48% lines.</li>
+          <li>New regression tests cover notification semantics, recovery focus, focus return, preview initial focus, focus containment, Escape, and restoration.</li>
+        </ul>
+      </details>
+
+      <details>
+        <summary>clean-profile Helium smoke</summary>
+        <p>The production build completed the core desktop flow using a temporary browser profile: add, lock, reroll, relationship selection, undo/redo, save/open, share, export, image export, gradient, image extraction, and reload persistence. Keyboard-only coverage exercised the same flow where applicable.</p>
+      </details>
+
+      <details>
+        <summary>native and assistive-technology smoke</summary>
+        <p>The user completed the native eyedropper check. VoiceOver was driven and inspected through macOS’s AppleScript <code>last phrase</code> API: status, recovery alert, save dialog, palette preview, and gradient preview announcements were observed. Focus containment and restoration were exercised directly. VoiceOver, Quick Start, and VoiceOver AppleScript control were disabled afterward.</p>
+      </details>
+
+      <details>
+        <summary>deployed-resource smoke</summary>
+        <p>The live app, fonts, images, lazy chunks, repository link, and issue link returned successfully. Observed runtime resources remained same-origin, with no unexpected third-party requests. The landing route removed on current <code>main</code> is not part of the current claim.</p>
+      </details>
+    </section>
+
+    <section aria-labelledby="scope-heading">
+      <h2 id="scope-heading">Current scope and open risks</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">item</th>
+              <th scope="col">state now</th>
+              <th scope="col">disposition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">A-14 alpha candidate</th>
+              <td><span class="pass">complete</span></td>
+              <td>Implemented, documented, and verified in PR #20.</td>
+            </tr>
+            <tr>
+              <th scope="row">desktop browser support</th>
+              <td>alpha scope</td>
+              <td>Explicitly published in the README and in-app documentation.</td>
+            </tr>
+            <tr>
+              <th scope="row">offline startup</th>
+              <td><span class="open">not supported</span></td>
+              <td>No service worker. Offline claims remain removed; implementation is tracked as B-04.</td>
+            </tr>
+            <tr>
+              <th scope="row">startup code splitting</th>
+              <td><span class="open">open roadmap work</span></td>
+              <td>The build passes, but the chunk warning remains; the public-beta budget is tracked as B-01.</td>
+            </tr>
+            <tr>
+              <th scope="row">mobile UI</th>
+              <td><span class="open">deferred</span></td>
+              <td>Outside the desktop alpha and desktop v1 scope.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="sources-heading">
+      <h2 id="sources-heading">Review map</h2>
+      <p>These links open the exact source artifacts when this report is viewed from the repository checkout.</p>
+      <ul class="source-list">
+        <li><a href="../TODO.md">A-14 verification record and roadmap</a></li>
+        <li><a href="../src/hooks/useModalOverlayFocus.ts">modal focus hook</a></li>
+        <li><a href="../src/hooks/useFocusReturn.ts">controlled-dialog focus-return hook</a></li>
+        <li><a href="../src/components/NotificationToast.tsx">persistent live region</a></li>
+        <li><a href="../src/components/AppErrorBoundary.tsx">recovery alert focus</a></li>
+        <li><a href="../src/components/PalettePreviewOverlay.tsx">palette preview semantics</a></li>
+        <li><a href="../src/components/GradientPreviewOverlay.tsx">gradient preview semantics</a></li>
+        <li><a href="../src/__tests__/hooks/useModalOverlayFocus.test.ts">modal focus regression tests</a></li>
+        <li><a href="../src/__tests__/hooks/useFocusReturn.test.ts">focus-return regression tests</a></li>
+        <li><a href="https://github.com/karan-gera/color-palette/pull/20">pull request #20 (network required)</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <p>Evidence snapshot: 2026-09-14. Source of truth remains the repository, test output, and PR #20. This file is standalone and requires no scripts, fonts, images, frameworks, or network requests to render.</p>
+    </div>
+  </footer>
+</body>
+</html>

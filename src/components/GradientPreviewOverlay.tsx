@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useModalOverlayFocus } from '@/hooks/useModalOverlayFocus'
 
 type GradientPreviewOverlayProps = {
   onClose: () => void
@@ -8,8 +9,14 @@ type GradientPreviewOverlayProps = {
 
 export default function GradientPreviewOverlay({ onClose }: GradientPreviewOverlayProps) {
   const prefersReducedMotion = usePrefersReducedMotion()
+  const overlayRef = useModalOverlayFocus({ onClose })
   return (
     <motion.div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="gradient preview"
+      tabIndex={-1}
       className="fixed inset-0 z-[9997] bg-background flex flex-col"
       initial={prefersReducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -30,6 +37,7 @@ export default function GradientPreviewOverlay({ onClose }: GradientPreviewOverl
         onClick={e => e.stopPropagation()}
       >
         <button
+          data-overlay-initial-focus
           type="button"
           onClick={onClose}
           className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-foreground/5"

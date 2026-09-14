@@ -34,6 +34,8 @@ const CHANGELOG = [
     title: 'public alpha readiness',
     items: [
       'unexpected render failures now show a readable recovery screen instead of a blank app',
+      'screen readers announce recovery alerts and transient status messages immediately',
+      'open and save dialogs restore focus to their trigger after closing',
       'try again and reload actions preserve local palettes; clearing site data remains a manual last resort',
       'help now uses a searchable manual with a page index, contextual shortcuts, and related pages',
       'help search understands task phrasing, creative apps, file formats, common aliases, descriptions, and keyboard shortcuts',

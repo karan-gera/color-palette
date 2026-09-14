@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, useEffect, useRef, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -19,11 +19,19 @@ type RecoveryScreenProps = {
 }
 
 function RecoveryScreen({ onRetry, onReload }: RecoveryScreenProps) {
+  const alertRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    alertRef.current?.focus()
+  }, [])
+
   return (
     <main
+      ref={alertRef}
       className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-12 text-foreground"
       role="alert"
       aria-labelledby="recovery-title"
+      tabIndex={-1}
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-70">
         <div className="absolute left-[12%] top-[16%] size-48 rounded-full bg-[radial-gradient(circle_at_35%_30%,oklch(0.84_0.16_25),oklch(0.62_0.2_350)_58%,transparent_72%)] blur-2xl" />
