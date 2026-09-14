@@ -248,9 +248,9 @@ release issue remains.
   - Activated 29 pixel-level tests, including the canvas sampling bridge and
     duplicate-centroid repair; extraction now has 100% line coverage.
 
-### Alpha verification
+### ✅ Alpha verification
 
-- [ ] **A-14 P0 — cut and verify an alpha candidate.**
+- [x] **A-14 P0 — cut and verify an alpha candidate. ✅**
   - `npm run build`, `npm run lint`, `npm test`, and `npm run test:coverage` pass.
   - Helium clean-profile smoke: add, lock, reroll, relationship, undo/redo,
     save/open, share, export, image export, gradient, extraction, reload.
@@ -264,25 +264,21 @@ release issue remains.
     including PNG extraction, clipboard sharing, downloads, and reload persistence.
   - Added reusable modal focus containment for palette and gradient previews,
     with regression coverage for initial focus, tab trapping, escape, and focus
-    restoration. Transient notifications now announce through a polite status region.
-  - Final gates: 510 tests pass; coverage is 87.48% statements and 88.43% lines.
+    restoration. Controlled open/save dialogs now return focus to their trigger.
+  - Transient notifications use a persistent polite status region, and the recovery
+    alert receives initial focus so VoiceOver announces both reliably.
+  - Final gates: 514 tests pass; coverage is 87.54% statements and 88.48% lines.
     The live app, landing page, fonts, images, lazy chunks, repository, and issue
     link return successfully, and observed app resources remain same-origin.
   - Desktop-only and no-offline-boot constraints are published in the readme and
     in-app about/changelog content.
   - Helium native eyedropper sign-off is complete: a screen pixel selected through
     the picker produced the same hex as adding that color directly.
-  - VoiceOver checkpoint: macOS's AppleScript `last phrase` API confirmed the save
-    dialog as a named dialog and both preview overlays as dialogs. Repeated tabbing
-    stayed inside each preview, and closing restored focus to the preview trigger.
-    The recovery screen is exposed as an alert named "something went wrong".
-  - VoiceOver sign-off still needs the transient status announcement captured; the
-    API returned the focused-control hint or an empty last phrase after link-copy.
-    Also recheck whether controlled open/save dialogs should restore their trigger:
-    closing them returned focus to the web-content root in the Helium smoke.
-  - Resume cleanup: VoiceOver, Quick Start, and VoiceOver Utility were stopped. The
-    temporary "allow VoiceOver to be controlled with AppleScript" preference still
-    needs to be restored to off after the remaining checks.
+  - VoiceOver sign-off used macOS's AppleScript `last phrase` API. It announced the
+    save dialog and both previews as dialogs, "link copied to clipboard!" for the
+    live status update, and "something went wrong alert" for recovery. Repeated
+    tabbing stayed inside each preview; preview, open, and save focus all returned
+    to their triggers after closing.
 
 ## Public beta gate
 

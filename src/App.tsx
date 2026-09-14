@@ -21,6 +21,7 @@ import ViewTabStrip from '@/components/ViewTabStrip'
 import KeyboardHints from '@/components/KeyboardHints'
 import FirstVisitWelcome from '@/components/FirstVisitWelcome'
 import CVDFilters from '@/components/CVDFilters'
+import NotificationToast from '@/components/NotificationToast'
 import { useTheme } from '@/hooks/useTheme'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { useGradientStops } from '@/hooks/useGradientStops'
@@ -33,6 +34,7 @@ import { useViewNavigation } from '@/hooks/useViewNavigation'
 import { useDialogState } from '@/hooks/useDialogState'
 import { useFirstVisitWelcome } from '@/hooks/useFirstVisitWelcome'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useFocusReturn } from '@/hooks/useFocusReturn'
 import { savePalette, removePalette, getSavedPalettes, getCollections, getAllTags } from '@/helpers/storage'
 import type { PaletteCollection } from '@/helpers/storage'
 import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
@@ -113,6 +115,14 @@ function App() {
   const cycleCVDRef = useRef<CVDToggleHandle>(null)
   const colorInputRef = useRef<HTMLInputElement>(null)
   const {
+    captureFocus: captureOpenDialogFocus,
+    restoreFocus: restoreOpenDialogFocus,
+  } = useFocusReturn()
+  const {
+    captureFocus: captureSaveDialogFocus,
+    restoreFocus: restoreSaveDialogFocus,
+  } = useFocusReturn()
+  const {
     history,
     historyIndex,
     current,
@@ -188,11 +198,31 @@ function App() {
     
     const success = await copyShareUrl(colors, lockedStates)
     if (success) {
-      setNotification('Link copied to clipboard!')
+      setNotification('link copied to clipboard!')
     } else {
-      setNotification('Failed to copy link')
+      setNotification('failed to copy link')
     }
   }, [current, lockedStates, setNotification])
+
+  const openOpenDialog = useCallback(() => {
+    captureOpenDialogFocus()
+    handleOpen()
+  }, [captureOpenDialogFocus, handleOpen])
+
+  const closeOpenDialog = useCallback(() => {
+    setIsOpenDialog(false)
+    restoreOpenDialogFocus()
+  }, [restoreOpenDialogFocus, setIsOpenDialog])
+
+  const openSaveDialog = useCallback(() => {
+    captureSaveDialogFocus()
+    handleSave()
+  }, [captureSaveDialogFocus, handleSave])
+
+  const closeSaveDialog = useCallback(() => {
+    setIsSaveDialog(false)
+    restoreSaveDialogFocus()
+  }, [restoreSaveDialogFocus, setIsSaveDialog])
 
   const handleExport = useCallback(() => {
     if (activeView === 'gradient') {
@@ -257,8 +287,8 @@ function App() {
     onAddColor: addColor,
     onUndo: undo,
     onRedo: redo,
-    onOpen: handleOpen,
-    onSave: handleSave,
+    onOpen: openOpenDialog,
+    onSave: openSaveDialog,
     onShare: handleShare,
     onExport: handleExport,
     onImageExport: handleImageExport,
@@ -312,8 +342,8 @@ function App() {
                 style={{ overflow: 'hidden' }}
               >
                 <Controls
-                  onOpen={handleOpen}
-                  onSave={handleSave}
+                  onOpen={openOpenDialog}
+                  onSave={openSaveDialog}
                   onShare={handleShare}
                   onExport={handleExport}
                   onPresetSelect={handlePresetSelect}
@@ -494,7 +524,7 @@ function App() {
           <OpenDialog
             palettes={savedPalettes}
             collections={savedCollections}
-            onCancel={() => setIsOpenDialog(false)}
+            onCancel={closeOpenDialog}
             onSelect={(id) => {
               const p = savedPalettes.find((x) => x.id === id)
               if (p) {
@@ -508,7 +538,7 @@ function App() {
                   return { locked: new Array(p.colors.length).fill(true), ids: kept }
                 })
               }
-              setIsOpenDialog(false)
+              closeOpenDialog()
             }}
             onRemove={(id) => {
               removePalette(id)
@@ -528,16 +558,16 @@ function App() {
             defaultName={`Palette ${new Date().toLocaleString()}`}
             existingTags={getAllTags()}
             collections={savedCollections}
-            onCancel={() => setIsSaveDialog(false)}
+            onCancel={closeSaveDialog}
             onSave={(name, tags, collection) => {
               if (history.length === 0) {
-                setIsSaveDialog(false)
+                closeSaveDialog()
                 return
               }
               const toSave = (current ?? [])
               savePalette(toSave, name, tags, collection)
               setSavedPalettes(getSavedPalettes())
-              setIsSaveDialog(false)
+              closeSaveDialog()
             }}
             onCollectionsUpdated={() => setSavedCollections(getCollections())}
           />
@@ -607,17 +637,7 @@ function App() {
         />
       ) : null}
 
-      {/* Notification toast */}
-      {notification && (
-        <div
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-md font-mono text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-200 reduced-motion-instant z-50"
-        >
-          {notification}
-        </div>
-      )}
+      <NotificationToast message={notification} />
       </div>
       <AnimatePresence>
         {showDocs && (
