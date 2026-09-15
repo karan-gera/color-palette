@@ -200,6 +200,25 @@ describe('usePaletteColors', () => {
     expect(result.current.canRedo).toBe(false)
   })
 
+  it('resets projection only when history navigation changes ordered color ids', () => {
+    seedHistory([
+      ['#111111', '#222222'],
+      ['#aaaaaa', '#bbbbbb'],
+      ['#cccccc', '#dddddd', '#eeeeee'],
+    ])
+    const { result } = renderHook(() => usePaletteColors())
+
+    expect(result.current.navigationEpoch).toBe(0)
+    act(() => result.current.undo())
+    expect(result.current.navigationEpoch).toBe(1)
+    act(() => result.current.undo())
+    expect(result.current.navigationEpoch).toBe(1)
+    act(() => result.current.redo())
+    expect(result.current.navigationEpoch).toBe(1)
+    act(() => result.current.redo())
+    expect(result.current.navigationEpoch).toBe(2)
+  })
+
   it('keeps a surviving color identity and lock attached across delete history', () => {
     seedHistory([['#111111', '#222222', '#333333']])
     const { result } = renderHook(() => usePaletteColors())

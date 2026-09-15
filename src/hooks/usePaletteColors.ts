@@ -54,6 +54,15 @@ function createSnapshot(colors: string[], ids: string[]): PaletteHistorySnapshot
   return { colors, ids }
 }
 
+function hasDifferentTopology(
+  previous: PaletteHistorySnapshot | undefined,
+  next: PaletteHistorySnapshot | undefined,
+): boolean {
+  if (!previous || !next) return previous !== next
+  return previous.ids.length !== next.ids.length
+    || previous.ids.some((id, index) => id !== next.ids[index])
+}
+
 export function usePaletteColors(): UsePaletteColorsReturn {
   const [persistedHistory] = useState(() =>
     loadPersistedHistory() ?? { history: [] as PaletteHistorySnapshot[], index: -1 }
@@ -73,6 +82,7 @@ export function usePaletteColors(): UsePaletteColorsReturn {
   } = useHistory<PaletteHistorySnapshot>({
     initialHistory: persistedHistory.history,
     initialIndex: persistedHistory.index,
+    shouldResetNavigation: hasDifferentTopology,
   })
 
   const [urlLoaded, setUrlLoaded] = useState(false)

@@ -291,4 +291,35 @@ describe('useHistory - canUndo/canRedo invariants across sequences', () => {
     expect(result.current.navigationEpoch).toBe(4)
   })
 
+  it('can retain the navigation epoch when adjacent values share topology', () => {
+    type Snapshot = { colors: string[]; ids: string[] }
+    const snapshots: Snapshot[] = [
+      { colors: ['#111111', '#222222'], ids: ['one', 'two'] },
+      { colors: ['#aaaaaa', '#bbbbbb'], ids: ['one', 'two'] },
+      { colors: ['#bbbbbb', '#aaaaaa'], ids: ['two', 'one'] },
+    ]
+    const topologyChanged = (previous: Snapshot | undefined, next: Snapshot | undefined) =>
+      previous?.ids.length !== next?.ids.length
+      || previous?.ids.some((id, index) => id !== next?.ids[index]) === true
+    const { result } = renderHook(() => useHistory({
+      initialHistory: snapshots,
+      initialIndex: 0,
+      shouldResetNavigation: topologyChanged,
+    }))
+
+    act(() => {
+      result.current.redo()
+      result.current.redo()
+    })
+    expect(result.current.index).toBe(2)
+    expect(result.current.navigationEpoch).toBe(1)
+
+    act(() => {
+      result.current.undo()
+      result.current.undo()
+    })
+    expect(result.current.index).toBe(0)
+    expect(result.current.navigationEpoch).toBe(2)
+  })
+
 })

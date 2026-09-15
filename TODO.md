@@ -343,9 +343,10 @@ release issue remains.
     lock state, producing missing or duplicate animation keys as palette sizes changed.
   - History snapshots now store colors and animation IDs atomically; locks are keyed
     by those IDs so they follow colors through reorder, delete, undo, and redo.
-  - Effective history navigation advances a projection epoch that replaces the palette
-    layout group, clearing interrupted exits without remounting normal add, delete,
-    edit, preset, or reroll changes. Legacy color-only history migrates to version 2.
+  - History navigation advances a projection epoch only when the ordered color IDs
+    change. That replaces the palette layout group to clear interrupted exits while
+    same-topology undo/redo and normal add, delete, edit, preset, or reroll changes
+    retain their animation tree. Legacy color-only history migrates to version 2.
   - Added a 96-entry varying-size undo/redo regression ending on a blank palette,
     metadata uniqueness and migration checks, lock-identity coverage, and a rendered
     regression that distinguishes normal animation continuity from history isolation.
