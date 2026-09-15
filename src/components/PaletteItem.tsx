@@ -105,6 +105,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
               boxShadow: showSwapHoverRing ? `0 0 0 3px ${BLUEPRINT_COLOR}40` : undefined,
             }}
             aria-label={swapMode ? `select color ${color} to rearrange` : `${isLocked ? 'unlock' : 'lock'} color ${color}`}
+            data-palette-control="circle"
             onClick={handleCircleClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -131,7 +132,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
               >
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onEditStart} aria-label={`edit color ${color}`}>
+                  <Button variant="ghost" size="icon-sm" onClick={onEditStart} aria-label={`edit color ${color}`} data-palette-control="edit">
                     <Pencil className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -148,6 +149,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
                     onClick={onReroll}
                     disabled={isLocked}
                     aria-label={`reroll color ${color}`}
+                    data-palette-control="reroll"
                     className={isLocked ? 'opacity-40' : ''}
                   >
                     <RefreshCw className="size-4" />
@@ -160,7 +162,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onDelete} aria-label={`delete color ${color}`} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="icon-sm" onClick={onDelete} aria-label={`delete color ${color}`} data-palette-control="delete" className="text-destructive hover:text-destructive">
                     <Trash2 className="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -171,7 +173,7 @@ export default function PaletteItem({ color, isLocked, isEditing, onEditStart, o
 
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" onClick={onViewVariations} aria-label={`view variations for ${color}`}>
+                  <Button variant="ghost" size="icon-sm" onClick={onViewVariations} aria-label={`view variations for ${color}`} data-palette-control="variations">
                     <Blend className="size-4" />
                   </Button>
                 </TooltipTrigger>

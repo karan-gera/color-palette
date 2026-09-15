@@ -12,6 +12,11 @@ export type PaletteCollection = {
   createdAt: string
 }
 
+export type PaletteHistorySnapshot = {
+  colors: string[]
+  ids: string[]
+}
+
 const STORAGE_KEY = 'color-palette:saved'
 const COLLECTIONS_KEY = 'color-palette:collections'
 const HISTORY_KEY = 'color-palette:history'
@@ -148,17 +153,45 @@ export function removeCollection(name: string): void {
   write(palettes)
 }
 
-export function loadPersistedHistory(): { history: string[][]; index: number } | null {
+function isHistorySnapshot(value: unknown): value is PaletteHistorySnapshot {
+  if (!value || typeof value !== 'object') return false
+  const { colors, ids } = value as PaletteHistorySnapshot
+  return Array.isArray(colors)
+    && colors.every(color => typeof color === 'string')
+    && Array.isArray(ids)
+    && ids.length === colors.length
+    && ids.every(id => typeof id === 'string' && id.length > 0)
+    && new Set(ids).size === ids.length
+}
+
+function migrateLegacyHistory(history: unknown[]): PaletteHistorySnapshot[] {
+  const colors = history.filter((entry): entry is string[] =>
+    Array.isArray(entry) && entry.every(color => typeof color === 'string')
+  )
+  const slotIds = Array.from(
+    { length: Math.max(0, ...colors.map(entry => entry.length)) },
+    () => crypto.randomUUID(),
+  )
+  return colors.map(entry => ({ colors: entry, ids: slotIds.slice(0, entry.length) }))
+}
+
+export function loadPersistedHistory(): { history: PaletteHistorySnapshot[]; index: number } | null {
   try {
     const raw = localStorage.getItem(HISTORY_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as unknown
     if (!parsed || typeof parsed !== 'object') return null
-    const { history, index, savedAt } = parsed as { history: unknown; index: unknown; savedAt: unknown }
+    const { version, history, index, savedAt } = parsed as {
+      version: unknown
+      history: unknown
+      index: unknown
+      savedAt: unknown
+    }
     if (!Array.isArray(history) || typeof index !== 'number') return null
-    const valid = history.filter((entry): entry is string[] =>
-      Array.isArray(entry) && entry.every(c => typeof c === 'string')
-    )
+    if (version === 2 && !history.every(isHistorySnapshot)) return null
+    const valid = version === 2
+      ? history
+      : migrateLegacyHistory(history)
     if (valid.length === 0) return null
     const expired = typeof savedAt !== 'number' || Date.now() - savedAt > SESSION_TIMEOUT_MS
     return { history: valid, index: expired ? -1 : Math.max(-1, Math.min(index, valid.length - 1)) }
@@ -167,18 +200,18 @@ export function loadPersistedHistory(): { history: string[][]; index: number } |
   }
 }
 
-export function persistHistory(history: string[][], index: number): void {
+export function persistHistory(history: PaletteHistorySnapshot[], index: number): void {
   if (history.length === 0) return
   try {
     const savedAt = Date.now()
     if (history.length <= MAX_HISTORY_ENTRIES) {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify({ history, index, savedAt }))
+      localStorage.setItem(HISTORY_KEY, JSON.stringify({ version: 2, history, index, savedAt }))
       return
     }
     const trim = history.length - MAX_HISTORY_ENTRIES
     const capped = history.slice(trim)
     const cappedIndex = Math.max(0, index - trim)
-    localStorage.setItem(HISTORY_KEY, JSON.stringify({ history: capped, index: cappedIndex, savedAt }))
+    localStorage.setItem(HISTORY_KEY, JSON.stringify({ version: 2, history: capped, index: cappedIndex, savedAt }))
   } catch (e) {
     console.warn('[storage] Failed to persist history:', e)
   }
@@ -308,5 +341,3 @@ export function mergePalettes(
   
   return { imported: importedCount, duplicates: duplicateCount, collectionsImported }
 }
-
-

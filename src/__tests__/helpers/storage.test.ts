@@ -212,10 +212,11 @@ describe('persisted history', () => {
       savedAt: Date.now(),
     }))
 
-    expect(loadPersistedHistory()).toEqual({
-      history: [['#111111'], ['#222222']],
-      index: 1,
-    })
+    const loaded = loadPersistedHistory()
+    expect(loaded?.history.map(snapshot => snapshot.colors)).toEqual([['#111111'], ['#222222']])
+    expect(loaded?.history[0].ids).toHaveLength(1)
+    expect(loaded?.history[1].ids).toEqual(loaded?.history[0].ids)
+    expect(loaded?.index).toBe(1)
   })
 
   it('keeps expired history but resets its active index', () => {
@@ -225,20 +226,64 @@ describe('persisted history', () => {
       savedAt: Date.now() - 9 * 60 * 60 * 1000,
     }))
 
-    expect(loadPersistedHistory()).toEqual({ history: [['#111111']], index: -1 })
+    const loaded = loadPersistedHistory()
+    expect(loaded?.history[0].colors).toEqual(['#111111'])
+    expect(loaded?.history[0].ids).toHaveLength(1)
+    expect(loaded?.index).toBe(-1)
   })
 
   it('persists history with a timestamp and active index', () => {
     vi.spyOn(Date, 'now').mockReturnValue(123456)
 
-    persistHistory([['#111111'], ['#222222']], 1)
+    const history = [
+      { colors: ['#111111'], ids: ['first'] },
+      { colors: ['#222222'], ids: ['second'] },
+    ]
+    persistHistory(history, 1)
 
     expect(JSON.parse(localStorage.getItem('color-palette:history') ?? '')).toEqual({
-      history: [['#111111'], ['#222222']],
+      version: 2,
+      history,
       index: 1,
       savedAt: 123456,
     })
     vi.restoreAllMocks()
+  })
+
+  it('round-trips versioned snapshots without changing their ids', () => {
+    const history = [{ colors: ['#111111', '#222222'], ids: ['one', 'two'] }]
+    persistHistory(history, 0)
+
+    expect(loadPersistedHistory()).toEqual({ history, index: 0 })
+  })
+
+  it('rejects versioned snapshots with missing or duplicate ids', () => {
+    localStorage.setItem('color-palette:history', JSON.stringify({
+      version: 2,
+      history: [
+        { colors: ['#111111'], ids: [] },
+        { colors: ['#222222', '#333333'], ids: ['duplicate', 'duplicate'] },
+      ],
+      index: 0,
+      savedAt: Date.now(),
+    }))
+
+    expect(loadPersistedHistory()).toBeNull()
+  })
+
+  it('rejects an entire versioned history when an entry is invalid', () => {
+    localStorage.setItem('color-palette:history', JSON.stringify({
+      version: 2,
+      history: [
+        { colors: ['#111111'], ids: ['one'] },
+        { colors: ['#222222'], ids: [] },
+        { colors: ['#333333'], ids: ['three'] },
+      ],
+      index: 2,
+      savedAt: Date.now(),
+    }))
+
+    expect(loadPersistedHistory()).toBeNull()
   })
 
   it('does not write empty history', () => {
@@ -248,7 +293,10 @@ describe('persisted history', () => {
   })
 
   it('caps persisted history at 2048 entries and adjusts its index', () => {
-    const history = Array.from({ length: 2050 }, (_, index) => [`#${index.toString(16).padStart(6, '0')}`])
+    const history = Array.from({ length: 2050 }, (_, index) => ({
+      colors: [`#${index.toString(16).padStart(6, '0')}`],
+      ids: [`color-${index}`],
+    }))
 
     persistHistory(history, 2049)
 

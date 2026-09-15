@@ -328,7 +328,7 @@ release issue remains.
 - [ ] **B-10 P1 — burn down alpha feedback.**
   - Classify issues by correctness, accessibility, data loss, performance, and UX.
   - Resolve all P0/P1 items or document an explicit deferral before beta.
-- [ ] **B-10a P0 — keep repeated keyboard redo synchronized with the palette.**
+- [x] **B-10a P0 — keep repeated keyboard redo synchronized with the palette. ✅**
   - Reproduction: create history ending in a blank palette, hold <kbd>z</kbd> to
     traverse backward, then hold <kbd>shift</kbd>+<kbd>z</kbd> to redo to the newest state.
   - Observed: history reaches and selects the newest blank entry (for example,
@@ -338,6 +338,18 @@ release issue remains.
   - Investigate key-repeat batching/stale closures across `useKeyboardShortcuts`
     and `useHistory`, then add a regression test that holds undo and redo through
     the complete history, including a blank terminal state.
+  - The reducer and repeated keyboard callbacks already reached the correct cursor.
+    History navigation changed colors without reconciling their parallel IDs and
+    lock state, producing missing or duplicate animation keys as palette sizes changed.
+  - History snapshots now store colors and animation IDs atomically; locks are keyed
+    by those IDs so they follow colors through reorder, delete, undo, and redo.
+  - History navigation advances a projection epoch only when the ordered color IDs
+    change. That replaces the palette layout group to clear interrupted exits while
+    same-topology undo/redo and normal add, delete, edit, preset, or reroll changes
+    retain their animation tree. Legacy color-only history migrates to version 2.
+  - Added a 96-entry varying-size undo/redo regression ending on a blank palette,
+    metadata uniqueness and migration checks, lock-identity coverage, and a rendered
+    regression that distinguishes normal animation continuity from history isolation.
 
 ## v1 gate
 

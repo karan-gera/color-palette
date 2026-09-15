@@ -1,7 +1,13 @@
-import { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useHistory } from '@/hooks/useHistory'
-import { loadPersistedHistory, persistHistory } from '@/helpers/storage'
-import { generateRelatedColor, MAX_COLORS, getRowSplit, type ColorRelationship } from '@/helpers/colorTheory'
+import { loadPersistedHistory, persistHistory, type PaletteHistorySnapshot } from '@/helpers/storage'
+import {
+  generateRelatedColor,
+  MAX_COLORS,
+  getPresetColorIdKeepCount,
+  getRowSplit,
+  type ColorRelationship,
+} from '@/helpers/colorTheory'
 import { decodePaletteFromUrl, clearUrlParams } from '@/helpers/urlShare'
 
 const RELATIONSHIP_MODES: ColorRelationship[] = [
@@ -9,27 +15,25 @@ const RELATIONSHIP_MODES: ColorRelationship[] = [
   'tetradic', 'split-complementary', 'monochromatic',
 ]
 
-export type ColorMeta = { locked: boolean[]; ids: string[] }
+type LocksById = Record<string, boolean>
 
 export type UsePaletteColorsReturn = {
-  // History passthrough
   history: string[][]
   historyIndex: number
   current: string[] | undefined
   canUndo: boolean
   canRedo: boolean
+  navigationEpoch: number
   undo: () => void
   redo: () => void
   jumpTo: (index: number) => void
-  push: (colors: string[]) => void
-  replace: (nextHistory: string[][], nextIndex?: number) => void
-  // Color meta
+  commitColorValues: (colors: string[]) => void
+  pushFresh: (colors: string[]) => void
+  applyPresetColors: (colors: string[]) => void
+  replacePalette: (colors: string[], locked: boolean[]) => void
   lockedStates: boolean[]
   colorIds: string[]
-  setColorMeta: Dispatch<SetStateAction<ColorMeta>>
-  // Relationship
   globalRelationship: ColorRelationship
-  // Color operations
   addColor: () => void
   rerollAt: (index: number) => void
   rerollAll: () => void
@@ -42,204 +46,232 @@ export type UsePaletteColorsReturn = {
   addPickedColor: (hex: string) => void
 }
 
+function createIds(count: number): string[] {
+  return Array.from({ length: count }, () => crypto.randomUUID())
+}
+
+function createSnapshot(colors: string[], ids: string[]): PaletteHistorySnapshot {
+  return { colors, ids }
+}
+
+function hasDifferentTopology(
+  previous: PaletteHistorySnapshot | undefined,
+  next: PaletteHistorySnapshot | undefined,
+): boolean {
+  if (!previous || !next) return previous !== next
+  return previous.ids.length !== next.ids.length
+    || previous.ids.some((id, index) => id !== next.ids[index])
+}
+
 export function usePaletteColors(): UsePaletteColorsReturn {
   const [persistedHistory] = useState(() =>
-    loadPersistedHistory() ?? { history: [] as string[][], index: -1 }
+    loadPersistedHistory() ?? { history: [] as PaletteHistorySnapshot[], index: -1 }
   )
   const {
-    history,
+    history: snapshots,
     index: historyIndex,
-    current,
+    current: currentSnapshot,
     canUndo,
     canRedo,
-    push,
+    navigationEpoch,
+    push: pushSnapshot,
     undo,
     redo,
-    replace,
+    replace: replaceSnapshots,
     jumpTo,
-  } = useHistory<string[]>({ initialHistory: persistedHistory.history, initialIndex: persistedHistory.index })
+  } = useHistory<PaletteHistorySnapshot>({
+    initialHistory: persistedHistory.history,
+    initialIndex: persistedHistory.index,
+    shouldResetNavigation: hasDifferentTopology,
+  })
 
   const [urlLoaded, setUrlLoaded] = useState(false)
   const [globalRelationship, setGlobalRelationship] = useState<ColorRelationship>('random')
-  const [colorMeta, setColorMeta] = useState<ColorMeta>(() => {
-    const currentPalette = persistedHistory.index >= 0
-      ? (persistedHistory.history[persistedHistory.index] ?? [])
-      : []
-    return {
-      locked: currentPalette.map(() => false),
-      ids: currentPalette.map(() => crypto.randomUUID()),
-    }
-  })
-  const { locked: lockedStates, ids: colorIds } = colorMeta
+  const [locksById, setLocksById] = useState<LocksById>({})
 
-  // Load palette from URL on mount
+  const history = useMemo(() => snapshots.map(snapshot => snapshot.colors), [snapshots])
+  const current = currentSnapshot?.colors
+  const colorIds = useMemo(() => currentSnapshot?.ids ?? [], [currentSnapshot])
+  const lockedStates = colorIds.map(id => locksById[id] ?? false)
+
+  const setLocksForIds = useCallback((ids: string[], locked: boolean[]) => {
+    setLocksById(previous => {
+      const next = { ...previous }
+      ids.forEach((id, index) => { next[id] = locked[index] ?? false })
+      return next
+    })
+  }, [])
+
+  const commitColorValues = useCallback((colors: string[]) => {
+    if (colors.length !== colorIds.length) {
+      throw new Error('commitColorValues requires an unchanged palette size')
+    }
+    pushSnapshot(createSnapshot(colors, colorIds))
+  }, [colorIds, pushSnapshot])
+
+  const pushFresh = useCallback((colors: string[]) => {
+    const ids = createIds(colors.length)
+    pushSnapshot(createSnapshot(colors, ids))
+    setLocksById({})
+  }, [pushSnapshot])
+
+  const applyPresetColors = useCallback((colors: string[]) => {
+    const keepCount = getPresetColorIdKeepCount(colorIds.length, colors.length)
+    const ids = [...colorIds.slice(0, keepCount), ...createIds(colors.length - keepCount)]
+    pushSnapshot(createSnapshot(colors, ids))
+    setLocksById({})
+  }, [colorIds, pushSnapshot])
+
+  const replacePalette = useCallback((colors: string[], locked: boolean[]) => {
+    const keepCount = getPresetColorIdKeepCount(colorIds.length, colors.length)
+    const ids = [...colorIds.slice(0, keepCount), ...createIds(colors.length - keepCount)]
+    replaceSnapshots([createSnapshot(colors, ids)], 0)
+    setLocksById(Object.fromEntries(ids.map((id, index) => [id, locked[index] ?? false])))
+  }, [colorIds, replaceSnapshots])
+
   useEffect(() => {
     if (urlLoaded) return
     const shared = decodePaletteFromUrl()
     if (shared && shared.colors.length > 0) {
-      replace([shared.colors], 0)
-      setColorMeta({ locked: shared.lockedStates, ids: shared.colors.map(() => crypto.randomUUID()) })
+      const ids = createIds(shared.colors.length)
+      replaceSnapshots([createSnapshot(shared.colors, ids)], 0)
+      setLocksForIds(ids, shared.lockedStates)
       clearUrlParams()
     }
     setUrlLoaded(true)
-  }, [urlLoaded, replace])
+  }, [urlLoaded, replaceSnapshots, setLocksForIds])
 
-  // Persist undo/redo history to localStorage
   useEffect(() => {
-    persistHistory(history, historyIndex)
-  }, [history, historyIndex])
-
-  // After an expired-session restore via history strip, colorMeta.ids will be empty.
-  // Regenerate them so the restored palette has stable React keys.
-  useEffect(() => {
-    if (!current || current.length === 0) return
-    setColorMeta(prev => {
-      if (prev.ids.length > 0) return prev
-      return {
-        locked: current.map(() => false),
-        ids: current.map(() => crypto.randomUUID()),
-      }
-    })
-  }, [current])
+    persistHistory(snapshots, historyIndex)
+  }, [snapshots, historyIndex])
 
   const addColor = useCallback(() => {
     const base = current ?? []
     if (base.length >= MAX_COLORS) return
-    const lockedColors = base.filter((_, i) => lockedStates[i])
+    const lockedColors = base.filter((_, index) => lockedStates[index])
     const nextColor = generateRelatedColor(lockedColors, globalRelationship, base[base.length - 1])
-    push([...base, nextColor])
-    setColorMeta(prev => ({ locked: [...prev.locked, false], ids: [...prev.ids, crypto.randomUUID()] }))
-  }, [current, globalRelationship, lockedStates, push])
+    pushSnapshot(createSnapshot([...base, nextColor], [...colorIds, crypto.randomUUID()]))
+  }, [colorIds, current, globalRelationship, lockedStates, pushSnapshot])
 
   const rerollAt = useCallback((index: number) => {
     const base = current ?? []
     if (!base[index] || lockedStates[index]) return
-    const lockedColors = base.filter((_, i) => lockedStates[i])
-    const next = [...base]
-    next[index] = generateRelatedColor(lockedColors, globalRelationship, base[index])
-    push(next)
-  }, [current, globalRelationship, lockedStates, push])
+    const lockedColors = base.filter((_, colorIndex) => lockedStates[colorIndex])
+    const colors = [...base]
+    colors[index] = generateRelatedColor(lockedColors, globalRelationship, base[index])
+    commitColorValues(colors)
+  }, [commitColorValues, current, globalRelationship, lockedStates])
 
   const rerollAll = useCallback(() => {
     const base = current ?? []
-    if (base.length === 0) return
-    if (base.every((_, i) => lockedStates[i])) return
-    const lockedColors = base.filter((_, i) => lockedStates[i])
+    if (base.length === 0 || base.every((_, index) => lockedStates[index])) return
+    const lockedColors = base.filter((_, index) => lockedStates[index])
     const needsSeed = lockedColors.length === 0 && globalRelationship !== 'random'
     const seed = needsSeed
       ? '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
       : null
-    const ref = seed ? [seed] : lockedColors
+    const reference = seed ? [seed] : lockedColors
     let seedPlaced = false
-    const next = base.map((color, index) => {
+    const colors = base.map((color, index) => {
       if (lockedStates[index]) return color
       if (seed && !seedPlaced) {
         seedPlaced = true
         return seed
       }
-      return generateRelatedColor(ref, globalRelationship, color)
+      return generateRelatedColor(reference, globalRelationship, color)
     })
-    push(next)
-  }, [current, globalRelationship, lockedStates, push])
+    commitColorValues(colors)
+  }, [commitColorValues, current, globalRelationship, lockedStates])
 
   const deleteAt = useCallback((index: number) => {
     const base = current ?? []
-    const next = base.filter((_, i) => i !== index)
-    push(next)
-    setColorMeta(prev => {
-      const filteredLocked = prev.locked.filter((_, i) => i !== index)
-      const filteredIds = prev.ids.filter((_, i) => i !== index)
-      const [oldRow1Count] = getRowSplit(base.length)
-      const [newRow1Count] = getRowSplit(next.length)
-      // When the row split changes, items that cross between rows would trigger a
-      // cross-parent layoutId flight animation. That keeps the source row populated
-      // (and thus tall) for the full spring duration, blocking the layout shift that
-      // lets GlobalColorRelationshipSelector animate upward. Break the layoutId
-      // connection by giving crossing items new IDs so they simply exit/enter in place.
-      if (oldRow1Count !== newRow1Count) {
-        const crossStart = Math.min(oldRow1Count, newRow1Count)
-        const crossEnd   = Math.max(oldRow1Count, newRow1Count)
-        return { locked: filteredLocked, ids: filteredIds.map((id, i) => (i >= crossStart && i < crossEnd ? crypto.randomUUID() : id)) }
+    const colors = base.filter((_, colorIndex) => colorIndex !== index)
+    let ids = colorIds.filter((_, colorIndex) => colorIndex !== index)
+    const [oldRow1Count] = getRowSplit(base.length)
+    const [newRow1Count] = getRowSplit(colors.length)
+
+    if (oldRow1Count !== newRow1Count) {
+      const crossStart = Math.min(oldRow1Count, newRow1Count)
+      const crossEnd = Math.max(oldRow1Count, newRow1Count)
+      const replacements: Array<[string, string]> = []
+      ids = ids.map((id, colorIndex) => {
+        if (colorIndex < crossStart || colorIndex >= crossEnd) return id
+        const replacement = crypto.randomUUID()
+        replacements.push([id, replacement])
+        return replacement
+      })
+      if (replacements.length > 0) {
+        setLocksById(previous => {
+          const next = { ...previous }
+          replacements.forEach(([oldId, newId]) => { next[newId] = previous[oldId] ?? false })
+          return next
+        })
       }
-      return { locked: filteredLocked, ids: filteredIds }
-    })
-  }, [current, push])
+    }
+
+    pushSnapshot(createSnapshot(colors, ids))
+  }, [colorIds, current, pushSnapshot])
 
   const toggleLockAt = useCallback((index: number) => {
-    setColorMeta(prev => {
-      const next = [...prev.locked]
-      next[index] = !next[index]
-      return { ...prev, locked: next }
-    })
-  }, [])
+    const id = colorIds[index]
+    if (!id) return
+    setLocksById(previous => ({ ...previous, [id]: !(previous[id] ?? false) }))
+  }, [colorIds])
 
   const reorderColors = useCallback((fromIndex: number, toIndex: number) => {
     const base = current ?? []
     if (fromIndex === toIndex) return
-    const newColors = [...base]
-    const [moved] = newColors.splice(fromIndex, 1)
-    newColors.splice(toIndex, 0, moved)
-    push(newColors)
-    setColorMeta(prev => {
-      const nextLocked = [...prev.locked]
-      const [movedLock] = nextLocked.splice(fromIndex, 1)
-      nextLocked.splice(toIndex, 0, movedLock)
-      const nextIds = [...prev.ids]
-      const [movedId] = nextIds.splice(fromIndex, 1)
-      nextIds.splice(toIndex, 0, movedId)
-      return { locked: nextLocked, ids: nextIds }
-    })
-  }, [current, push])
+    const colors = [...base]
+    const [movedColor] = colors.splice(fromIndex, 1)
+    colors.splice(toIndex, 0, movedColor)
+    const ids = [...colorIds]
+    const [movedId] = ids.splice(fromIndex, 1)
+    ids.splice(toIndex, 0, movedId)
+    pushSnapshot(createSnapshot(colors, ids))
+  }, [colorIds, current, pushSnapshot])
 
   const swapColors = useCallback((indexA: number, indexB: number) => {
     const base = current ?? []
     if (indexA === indexB) return
-    const newColors = [...base]
-    ;[newColors[indexA], newColors[indexB]] = [newColors[indexB], newColors[indexA]]
-    push(newColors)
-    setColorMeta(prev => {
-      const nextLocked = [...prev.locked]
-      ;[nextLocked[indexA], nextLocked[indexB]] = [nextLocked[indexB], nextLocked[indexA]]
-      const nextIds = [...prev.ids]
-      ;[nextIds[indexA], nextIds[indexB]] = [nextIds[indexB], nextIds[indexA]]
-      return { locked: nextLocked, ids: nextIds }
-    })
-  }, [current, push])
+    const colors = [...base]
+    ;[colors[indexA], colors[indexB]] = [colors[indexB], colors[indexA]]
+    const ids = [...colorIds]
+    ;[ids[indexA], ids[indexB]] = [ids[indexB], ids[indexA]]
+    pushSnapshot(createSnapshot(colors, ids))
+  }, [colorIds, current, pushSnapshot])
 
   const handleRelationshipChange = useCallback((relationship: ColorRelationship) => {
     setGlobalRelationship(relationship)
     const base = current ?? []
-    if (base.length > 0) {
-      const lockedColors = base.filter((_, i) => lockedStates[i])
-      const needsSeed = lockedColors.length === 0 && relationship !== 'random'
-      const seed = needsSeed
-        ? '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
-        : null
-      const ref = seed ? [seed] : lockedColors
-      let seedPlaced = false
-      const next = base.map((color, index) => {
-        if (lockedStates[index]) return color
-        if (seed && !seedPlaced) {
-          seedPlaced = true
-          return seed
-        }
-        return generateRelatedColor(ref, relationship, color)
-      })
-      push(next)
-    }
-  }, [current, lockedStates, push])
+    if (base.length === 0) return
+    const lockedColors = base.filter((_, index) => lockedStates[index])
+    const needsSeed = lockedColors.length === 0 && relationship !== 'random'
+    const seed = needsSeed
+      ? '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')
+      : null
+    const reference = seed ? [seed] : lockedColors
+    let seedPlaced = false
+    const colors = base.map((color, index) => {
+      if (lockedStates[index]) return color
+      if (seed && !seedPlaced) {
+        seedPlaced = true
+        return seed
+      }
+      return generateRelatedColor(reference, relationship, color)
+    })
+    commitColorValues(colors)
+  }, [commitColorValues, current, lockedStates])
 
   const cycleRelationship = useCallback(() => {
-    const idx = RELATIONSHIP_MODES.indexOf(globalRelationship)
-    handleRelationshipChange(RELATIONSHIP_MODES[(idx + 1) % RELATIONSHIP_MODES.length])
+    const index = RELATIONSHIP_MODES.indexOf(globalRelationship)
+    handleRelationshipChange(RELATIONSHIP_MODES[(index + 1) % RELATIONSHIP_MODES.length])
   }, [globalRelationship, handleRelationshipChange])
 
   const addPickedColor = useCallback((hex: string) => {
     const base = current ?? []
     if (base.length >= MAX_COLORS) return
-    push([...base, hex])
-    setColorMeta(prev => ({ locked: [...prev.locked, false], ids: [...prev.ids, crypto.randomUUID()] }))
-  }, [current, push])
+    pushSnapshot(createSnapshot([...base, hex], [...colorIds, crypto.randomUUID()]))
+  }, [colorIds, current, pushSnapshot])
 
   return {
     history,
@@ -247,14 +279,16 @@ export function usePaletteColors(): UsePaletteColorsReturn {
     current,
     canUndo,
     canRedo,
+    navigationEpoch,
     undo,
     redo,
     jumpTo,
-    push,
-    replace,
+    commitColorValues,
+    pushFresh,
+    applyPresetColors,
+    replacePalette,
     lockedStates,
     colorIds,
-    setColorMeta,
     globalRelationship,
     addColor,
     rerollAt,
