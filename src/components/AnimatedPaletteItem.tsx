@@ -51,6 +51,8 @@ export default function AnimatedPaletteItem({
         opacity: { duration: 0.15, ease: 'easeOut' },
         scale: { duration: 0.15, ease: 'easeOut' },
       }}
+      data-palette-color-id={layoutId}
+      data-palette-index={index}
       className="relative flex flex-col items-center"
     >
       {swapMode && (

@@ -338,12 +338,17 @@ release issue remains.
   - Investigate key-repeat batching/stale closures across `useKeyboardShortcuts`
     and `useHistory`, then add a regression test that holds undo and redo through
     the complete history, including a blank terminal state.
-  - The reducer and repeated keyboard callbacks already reached the correct cursor;
-    interrupted Framer Motion exits were retaining stale keyed circles after rapid
-    palette-size changes. Palette row presence now resets only when the color count
-    changes, preserving same-size reroll fades while clearing stale exit state.
-  - Added a 96-entry batched undo/redo regression ending on a blank palette and
-    verified the rendered hold-key sequence in isolated Chromium.
+  - The reducer and repeated keyboard callbacks already reached the correct cursor.
+    History navigation changed colors without reconciling their parallel IDs and
+    lock state, producing missing or duplicate animation keys as palette sizes changed.
+  - History snapshots now store colors and animation IDs atomically; locks are keyed
+    by those IDs so they follow colors through reorder, delete, undo, and redo.
+  - Effective history navigation advances a projection epoch that replaces the palette
+    layout group, clearing interrupted exits without remounting normal add, delete,
+    edit, preset, or reroll changes. Legacy color-only history migrates to version 2.
+  - Added a 96-entry varying-size undo/redo regression ending on a blank palette,
+    metadata uniqueness and migration checks, lock-identity coverage, and a rendered
+    regression that distinguishes normal animation continuity from history isolation.
 
 ## v1 gate
 

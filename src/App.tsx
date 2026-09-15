@@ -37,7 +37,7 @@ import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { useFocusReturn } from '@/hooks/useFocusReturn'
 import { savePalette, removePalette, getSavedPalettes, getCollections, getAllTags } from '@/helpers/storage'
 import type { PaletteCollection } from '@/helpers/storage'
-import { MAX_COLORS, getPresetColorIdKeepCount } from '@/helpers/colorTheory'
+import { MAX_COLORS } from '@/helpers/colorTheory'
 import { copyShareUrl } from '@/helpers/urlShare'
 import { hasEyeDropper, pickColorNative } from '@/helpers/eyeDropper'
 
@@ -128,14 +128,16 @@ function App() {
     current,
     canUndo,
     canRedo,
+    navigationEpoch,
     undo,
     redo,
     jumpTo,
-    push,
-    replace,
+    commitColorValues,
+    pushFresh,
+    applyPresetColors,
+    replacePalette,
     lockedStates,
     colorIds,
-    setColorMeta,
     globalRelationship,
     addColor,
     rerollAt,
@@ -160,7 +162,7 @@ function App() {
     replaceColorFromVariation,
     isAnyOpen: isColorEditingOpen,
     closeAll: closeColorEditing,
-  } = useColorEditing({ current, push })
+  } = useColorEditing({ current, push: commitColorValues })
   const {
     swapMode,
     swapSelection,
@@ -249,7 +251,7 @@ function App() {
     handlePresetSelect,
     rerollPreset,
     cyclePreset,
-  } = usePresetControl({ current, lockedStates, push, setColorMeta, onNeedsConfirmation: setPendingPreset })
+  } = usePresetControl({ current, lockedStates, onApplyPalette: applyPresetColors, onNeedsConfirmation: setPendingPreset })
 
   const closeAllDialogs = useCallback(() => {
     closeDialogs()
@@ -399,6 +401,7 @@ function App() {
                       <AnimatedPaletteContainer
                         colors={current ?? []}
                         colorIds={colorIds}
+                        navigationEpoch={navigationEpoch}
                         lockedStates={lockedStates}
                         editIndex={variationsIndex !== null ? null : editIndex}
                         onEditStart={openEdit}
@@ -509,8 +512,7 @@ function App() {
                       setPendingExtractColors(colors)
                     } else {
                       const next = colors.slice(0, MAX_COLORS)
-                      push(next)
-                      setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
+                      pushFresh(next)
                       handleSwitchView('palette')
                     }
                   }}
@@ -528,15 +530,7 @@ function App() {
             onSelect={(id) => {
               const p = savedPalettes.find((x) => x.id === id)
               if (p) {
-                const currentCount = (current ?? []).length
-                replace([p.colors], 0)
-
-                const keepCount = getPresetColorIdKeepCount(currentCount, p.colors.length)
-                setColorMeta(prev => {
-                  const kept = prev.ids.slice(0, keepCount)
-                  while (kept.length < p.colors.length) kept.push(crypto.randomUUID())
-                  return { locked: new Array(p.colors.length).fill(true), ids: kept }
-                })
+                replacePalette(p.colors, p.colors.map(() => true))
               }
               closeOpenDialog()
             }}
@@ -597,8 +591,7 @@ function App() {
           confirmLabel="replace"
           onConfirm={() => {
             const next = pendingExtractColors!.slice(0, MAX_COLORS)
-            push(next)
-            setColorMeta({ locked: next.map(() => false), ids: next.map(() => crypto.randomUUID()) })
+            pushFresh(next)
             setPendingExtractColors(null)
             handleSwitchView('palette')
           }}

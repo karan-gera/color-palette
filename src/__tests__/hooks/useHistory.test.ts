@@ -270,24 +270,25 @@ describe('useHistory - canUndo/canRedo invariants across sequences', () => {
     expect(result.current.canRedo).toBe(false)
   })
 
-  it('keeps repeated batched undo and redo synchronized through a blank terminal state', () => {
-    const history = Array.from({ length: 95 }, (_, index) => [`#${index.toString(16).padStart(6, '0')}`])
-    history.push([])
+  it('advances navigation epoch only for effective navigation and replacement', () => {
     const { result } = renderHook(() =>
-      useHistory({ initialHistory: history, initialIndex: history.length - 1 })
+      useHistory({ initialHistory: ['a', 'b'], initialIndex: 1 })
     )
 
-    act(() => {
-      for (let index = history.length - 1; index > 0; index -= 1) result.current.undo()
-    })
-    expect(result.current.index).toBe(0)
-    expect(result.current.current).toEqual(history[0])
+    expect(result.current.navigationEpoch).toBe(0)
+    act(() => result.current.push('c'))
+    expect(result.current.navigationEpoch).toBe(0)
 
-    act(() => {
-      for (let index = 1; index < history.length; index += 1) result.current.redo()
-    })
-    expect(result.current.index).toBe(history.length - 1)
-    expect(result.current.current).toEqual([])
-    expect(result.current.canRedo).toBe(false)
+    act(() => result.current.undo())
+    expect(result.current.navigationEpoch).toBe(1)
+    act(() => result.current.jumpTo(0))
+    expect(result.current.navigationEpoch).toBe(2)
+    act(() => result.current.jumpTo(0))
+    expect(result.current.navigationEpoch).toBe(2)
+    act(() => result.current.redo())
+    expect(result.current.navigationEpoch).toBe(3)
+    act(() => result.current.replace(['x']))
+    expect(result.current.navigationEpoch).toBe(4)
   })
+
 })

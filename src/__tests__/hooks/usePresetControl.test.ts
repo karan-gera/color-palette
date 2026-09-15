@@ -1,87 +1,56 @@
 import { act, renderHook } from '@testing-library/react'
-import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { usePresetControl } from '@/hooks/usePresetControl'
-import type { ColorMeta } from '@/hooks/usePaletteColors'
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
 
 describe('usePresetControl', () => {
-  it('keeps existing color identities when applying a same-size preset', () => {
-    const push = vi.fn()
-    const originalIds = ['one', 'two', 'three', 'four', 'five']
-    const { result } = renderHook(() => {
-      const [colorMeta, setColorMeta] = useState<ColorMeta>({
-        locked: new Array(5).fill(false),
-        ids: originalIds,
-      })
-      const preset = usePresetControl({
-        current: ['#111111', '#222222', '#333333', '#444444', '#555555'],
-        lockedStates: colorMeta.locked,
-        push,
-        setColorMeta,
-        onNeedsConfirmation: vi.fn(),
-      })
-      return { ...preset, colorMeta }
-    })
+  it('sends generated preset colors through the palette callback', () => {
+    const onApplyPalette = vi.fn()
+    const { result } = renderHook(() => usePresetControl({
+      current: ['#111111', '#222222'],
+      lockedStates: [false, false],
+      onApplyPalette,
+      onNeedsConfirmation: vi.fn(),
+    }))
 
     act(() => result.current.applyPreset('pastel'))
 
-    expect(push).toHaveBeenCalledOnce()
-    expect(result.current.colorMeta.ids).toEqual(originalIds)
-    expect(result.current.colorMeta.locked).toEqual(new Array(5).fill(false))
+    expect(onApplyPalette).toHaveBeenCalledOnce()
+    expect(onApplyPalette.mock.calls[0][0]).toHaveLength(5)
   })
 
-  it('keeps the stationary row identities and creates ids for new preset colors', () => {
-    const push = vi.fn()
-    const originalIds = ['one', 'two', 'three']
-    const { result } = renderHook(() => {
-      const [colorMeta, setColorMeta] = useState<ColorMeta>({
-        locked: new Array(3).fill(false),
-        ids: originalIds,
-      })
-      const preset = usePresetControl({
-        current: ['#111111', '#222222', '#333333'],
-        lockedStates: colorMeta.locked,
-        push,
-        setColorMeta,
-        onNeedsConfirmation: vi.fn(),
-      })
-      return { ...preset, colorMeta }
-    })
+  it('requests confirmation instead of applying when a color is locked', () => {
+    const onApplyPalette = vi.fn()
+    const onNeedsConfirmation = vi.fn()
+    const { result } = renderHook(() => usePresetControl({
+      current: ['#111111', '#222222'],
+      lockedStates: [true, false],
+      onApplyPalette,
+      onNeedsConfirmation,
+    }))
 
-    act(() => result.current.applyPreset('neon'))
+    act(() => result.current.handlePresetSelect('neon'))
 
-    expect(result.current.colorMeta.ids.slice(0, 3)).toEqual(originalIds)
-    expect(result.current.colorMeta.ids).toHaveLength(5)
-    expect(new Set(result.current.colorMeta.ids).size).toBe(5)
+    expect(onNeedsConfirmation).toHaveBeenCalledWith('neon')
+    expect(onApplyPalette).not.toHaveBeenCalled()
   })
 
-  it('rerolls the active preset without replacing stationary color identities', () => {
-    const push = vi.fn()
-    const originalIds = ['one', 'two', 'three']
-    const { result } = renderHook(() => {
-      const [colorMeta, setColorMeta] = useState<ColorMeta>({
-        locked: new Array(3).fill(false),
-        ids: originalIds,
-      })
-      const preset = usePresetControl({
-        current: ['#333333', '#777777', '#bbbbbb'],
-        lockedStates: colorMeta.locked,
-        push,
-        setColorMeta,
-        onNeedsConfirmation: vi.fn(),
-      })
-      return { ...preset, colorMeta }
-    })
+  it('rerolls an active preset through the palette callback', () => {
+    const onApplyPalette = vi.fn()
+    const { result } = renderHook(() => usePresetControl({
+      current: ['#333333', '#777777', '#bbbbbb'],
+      lockedStates: [false, false, false],
+      onApplyPalette,
+      onNeedsConfirmation: vi.fn(),
+    }))
 
     expect(result.current.activePresetId).toBe('monochrome')
 
     act(() => result.current.rerollPreset())
 
-    expect(push).toHaveBeenCalledOnce()
-    expect(result.current.colorMeta.ids.slice(0, 3)).toEqual(originalIds)
+    expect(onApplyPalette).toHaveBeenCalledOnce()
   })
 })

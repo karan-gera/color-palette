@@ -167,4 +167,102 @@ describe('usePaletteColors', () => {
     act(() => result.current.cycleRelationship())
     expect(result.current.globalRelationship).toBe('analogous')
   })
+
+  it('keeps colors and metadata aligned through repeated varying-size undo and redo', () => {
+    const history = Array.from({ length: 95 }, (_, index) =>
+      Array.from({ length: (index % MAX_COLORS) + 1 }, (_, colorIndex) =>
+        `#${(index * MAX_COLORS + colorIndex).toString(16).padStart(6, '0')}`
+      )
+    )
+    history.push([])
+    seedHistory(history)
+    const { result } = renderHook(() => usePaletteColors())
+
+    const expectSnapshot = (index: number) => {
+      expect(result.current.historyIndex).toBe(index)
+      expect(result.current.current).toEqual(history[index])
+      expect(result.current.colorIds).toHaveLength(history[index].length)
+      expect(result.current.lockedStates).toHaveLength(history[index].length)
+      expect(new Set(result.current.colorIds).size).toBe(result.current.colorIds.length)
+    }
+
+    expectSnapshot(history.length - 1)
+    for (let index = history.length - 2; index >= 0; index -= 1) {
+      act(() => result.current.undo())
+      expectSnapshot(index)
+    }
+    for (let index = 1; index < history.length; index += 1) {
+      act(() => result.current.redo())
+      expectSnapshot(index)
+    }
+
+    expect(result.current.current).toEqual([])
+    expect(result.current.canRedo).toBe(false)
+  })
+
+  it('keeps a surviving color identity and lock attached across delete history', () => {
+    seedHistory([['#111111', '#222222', '#333333']])
+    const { result } = renderHook(() => usePaletteColors())
+
+    act(() => result.current.toggleLockAt(2))
+    const survivingId = result.current.colorIds[2]
+    act(() => result.current.deleteAt(1))
+    expect(result.current.colorIds[1]).toBe(survivingId)
+    expect(result.current.lockedStates).toEqual([false, true])
+
+    act(() => result.current.undo())
+    expect(result.current.colorIds[2]).toBe(survivingId)
+    expect(result.current.lockedStates).toEqual([false, false, true])
+
+    act(() => result.current.redo())
+    expect(result.current.colorIds[1]).toBe(survivingId)
+    expect(result.current.lockedStates).toEqual([false, true])
+  })
+
+  it('applies preset colors atomically and clears locks across retained history', () => {
+    seedHistory([['#111111', '#222222', '#333333']])
+    const { result } = renderHook(() => usePaletteColors())
+    const originalIds = result.current.colorIds
+
+    act(() => result.current.toggleLockAt(0))
+    act(() => result.current.applyPresetColors([
+      '#aaaaaa', '#bbbbbb', '#cccccc', '#dddddd', '#eeeeee',
+    ]))
+
+    expect(result.current.colorIds.slice(0, 3)).toEqual(originalIds)
+    expect(result.current.colorIds).toHaveLength(5)
+    expect(result.current.lockedStates).toEqual(new Array(5).fill(false))
+
+    act(() => result.current.undo())
+    expect(result.current.colorIds).toEqual(originalIds)
+    expect(result.current.lockedStates).toEqual(new Array(3).fill(false))
+  })
+
+  it('keeps locks attached when a direct delete regenerates row-crossing ids', () => {
+    const colors = ['#111111', '#222222', '#333333', '#444444', '#555555', '#666666']
+    seedHistory([colors])
+    const { result } = renderHook(() => usePaletteColors())
+    const originalIds = result.current.colorIds
+
+    act(() => result.current.toggleLockAt(4))
+    act(() => result.current.deleteAt(0))
+
+    expect(result.current.current).toEqual(colors.slice(1))
+    expect(result.current.colorIds).toHaveLength(5)
+    expect(new Set(result.current.colorIds).size).toBe(5)
+    expect(result.current.colorIds[3]).not.toBe(originalIds[4])
+    expect(result.current.lockedStates).toEqual([false, false, false, true, false])
+  })
+
+  it('clears the current lock registry when pushing a fresh replacement', () => {
+    seedHistory([['#111111', '#222222']])
+    const { result } = renderHook(() => usePaletteColors())
+
+    act(() => result.current.toggleLockAt(0))
+    act(() => result.current.pushFresh(['#aaaaaa']))
+    expect(result.current.lockedStates).toEqual([false])
+
+    act(() => result.current.undo())
+    expect(result.current.lockedStates).toEqual([false, false])
+  })
 })

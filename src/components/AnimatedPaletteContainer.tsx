@@ -1,3 +1,4 @@
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { LayoutGroup, AnimatePresence, motion } from 'framer-motion'
 import AnimatedPaletteItem from './AnimatedPaletteItem'
 import AddColor from './AddColor'
@@ -24,6 +25,7 @@ const BLUEPRINT_BG = `
 type AnimatedPaletteContainerProps = {
   colors: string[]
   colorIds: string[]
+  navigationEpoch: number
   lockedStates: boolean[]
   editIndex: number | null
   onEditStart: (index: number) => void
@@ -39,9 +41,14 @@ type AnimatedPaletteContainerProps = {
   onSwapClick: (index: number) => void
 }
 
+type PaletteFocusTarget =
+  | { kind: 'color'; id: string; index: number; control: string | undefined }
+  | { kind: 'add' }
+
 export default function AnimatedPaletteContainer({
   colors,
   colorIds,
+  navigationEpoch,
   lockedStates,
   editIndex,
   onEditStart,
@@ -57,6 +64,8 @@ export default function AnimatedPaletteContainer({
   onSwapClick,
 }: AnimatedPaletteContainerProps) {
   const prefersReducedMotion = usePrefersReducedMotion()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const focusTargetRef = useRef<PaletteFocusTarget | null>(null)
   const showAddButton = colors.length < MAX_COLORS && !swapMode
 
   const [row1Count] = getRowSplit(colors.length)
@@ -64,12 +73,6 @@ export default function AnimatedPaletteContainer({
   const row1Ids = colorIds.slice(0, row1Count)
   const row2Colors = colors.slice(row1Count)
   const row2Ids = colorIds.slice(row1Count)
-
-  // Rapid history traversal can remove and re-add the same keyed colors before
-  // Framer finishes their exit. Resetting presence when the palette size changes
-  // prevents those interrupted exits from leaving stale circles behind. Same-size
-  // rerolls keep the presence tree (and their color interpolation) intact.
-  const presenceKey = colors.length
 
   const renderItem = (color: string, colorId: string, globalIndex: number) => (
     <AnimatedPaletteItem
@@ -94,9 +97,54 @@ export default function AnimatedPaletteContainer({
 
   const hasRow2 = row2Colors.length > 0
 
+  const setContainerRef = useCallback((node: HTMLDivElement | null) => {
+    const previousContainer = containerRef.current
+    if (previousContainer && previousContainer !== node) {
+      const activeElement = document.activeElement
+      if (activeElement instanceof HTMLElement && previousContainer.contains(activeElement)) {
+        const item = activeElement.closest<HTMLElement>('[data-palette-color-id]')
+        if (item?.dataset.paletteColorId) {
+          focusTargetRef.current = {
+            kind: 'color',
+            id: item.dataset.paletteColorId,
+            index: Number(item.dataset.paletteIndex ?? 0),
+            control: activeElement.dataset.paletteControl,
+          }
+        } else if (activeElement.matches('button[aria-label="add color"]')) {
+          focusTargetRef.current = { kind: 'add' }
+        }
+      }
+    }
+    containerRef.current = node
+  }, [])
+
+  useLayoutEffect(() => {
+    const container = containerRef.current
+    const pendingTarget = focusTargetRef.current
+    focusTargetRef.current = null
+    if (pendingTarget) {
+      let target: HTMLElement | null = null
+
+      if (pendingTarget.kind === 'color') {
+        const items = [...(container?.querySelectorAll<HTMLElement>('[data-palette-color-id]') ?? [])]
+        const item = items.find(candidate => candidate.dataset.paletteColorId === pendingTarget.id)
+          ?? items[Math.min(pendingTarget.index, items.length - 1)]
+        target = (pendingTarget.control
+          ? item?.querySelector<HTMLElement>(`[data-palette-control="${pendingTarget.control}"]`)
+          : null)
+          ?? item?.querySelector<HTMLElement>('button')
+          ?? null
+      }
+
+      target ??= container?.querySelector<HTMLElement>('button[aria-label="add color"]') ?? null
+      target?.focus()
+    }
+  }, [navigationEpoch])
+
   return (
-    <LayoutGroup>
+    <LayoutGroup key={navigationEpoch}>
       <motion.div
+        ref={setContainerRef}
         layout={!prefersReducedMotion}
         transition={prefersReducedMotion ? { duration: 0 } : {
           layout: {
@@ -125,7 +173,7 @@ export default function AnimatedPaletteContainer({
         <div id="palette-container" className={`flex flex-col items-center${hasRow2 ? ' gap-8' : ''}`}>
           {/* Row 1 — always visible */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence key={`row-1-${presenceKey}`} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
+            <AnimatePresence initial={false} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row1Colors.map((color, i) => renderItem(color, row1Ids[i], i))}
               {!hasRow2 && showAddButton && (
                 <motion.div
@@ -147,7 +195,7 @@ export default function AnimatedPaletteContainer({
               Mounting it conditionally causes a one-frame delay where Framer must wait for the
               new parent to appear before it can start layout animations for the whole group. */}
           <div className="flex gap-5 items-start justify-center">
-            <AnimatePresence key={`row-2-${presenceKey}`} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
+            <AnimatePresence initial={false} mode={prefersReducedMotion ? 'sync' : 'popLayout'}>
               {row2Colors.map((color, i) => renderItem(color, row2Ids[i], row1Count + i))}
               {hasRow2 && showAddButton && (
                 <motion.div
